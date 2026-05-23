@@ -39,27 +39,45 @@ const NAV = [
 ];
 
 const PROFILES = [
-  { id:1, name:"Visa Switch",   format:"ISO87 ASCII",  formatId:1, env:"PROD", active:true,  isDefault:true,  rulesCount:14, lastUsed:"2025-05-14 14:30", host:"10.0.1.10:8583" },
-  { id:2, name:"MasterCard GW", format:"ISO87 ASCII",  formatId:1, env:"UAT",  active:true,  isDefault:false, rulesCount:11, lastUsed:"2025-05-14 12:10", host:"10.0.1.20:8583" },
-  { id:3, name:"Legacy Switch", format:"ISO93 EBCDIC", formatId:2, env:"DEV",  active:false, isDefault:false, rulesCount:8,  lastUsed:"2025-05-13 09:00", host:"10.0.2.5:9000"  },
+  { id:1, name:"Visa Switch",   format:"ISO87 ASCII",  formatId:1, env:"PROD", active:true,  isDefault:true,  rulesCount:14, lastUsed:"2025-05-14 14:30", host:"10.0.1.10", port:"8583", timezone:"Asia/Kolkata",    connectionTimeout:30000, tpduEnabled:false, tpduValue:""           },
+  { id:2, name:"MasterCard GW", format:"ISO87 ASCII",  formatId:1, env:"UAT",  active:true,  isDefault:false, rulesCount:11, lastUsed:"2025-05-14 12:10", host:"10.0.1.20", port:"8583", timezone:"UTC",             connectionTimeout:20000, tpduEnabled:true,  tpduValue:"6000000000" },
+  { id:3, name:"Legacy Switch", format:"ISO93 EBCDIC", formatId:2, env:"DEV",  active:false, isDefault:false, rulesCount:8,  lastUsed:"2025-05-13 09:00", host:"10.0.2.5",  port:"9000", timezone:"America/New_York", connectionTimeout:60000, tpduEnabled:true,  tpduValue:"6000000001" },
 ];
 
+const MTI_DESCRIPTIONS = {
+  "0200":"Authorization Request",   "0210":"Authorization Response",
+  "0420":"Reversal Request",        "0422":"Reversal Advice",
+  "0430":"Reversal Response",       "0800":"Network Management Request",
+  "0810":"Network Management Response",
+};
+
+const DE39_LABELS = {
+  "00":"Approved","01":"Refer to Card Issuer","05":"Do Not Honor","12":"Invalid Transaction",
+  "13":"Invalid Amount","14":"Invalid Card Number","30":"Format Error","51":"Insufficient Funds",
+  "54":"Expired Card","55":"Incorrect PIN","57":"Transaction Not Permitted","62":"Restricted Card",
+  "91":"Issuer Unavailable","96":"System Malfunction",
+};
+
 const DE_NAMES = {
-  DE2:"Primary Account Number", DE3:"Processing Code",      DE4:"Transaction Amount",
-  DE7:"Transmission Date & Time", DE11:"System Trace Audit", DE12:"Local Transaction Time",
-  DE13:"Local Transaction Date",  DE22:"POS Entry Mode",     DE37:"Retrieval Ref Number",
-  DE39:"Response Code",           DE41:"Card Acceptor Term ID", DE42:"Card Acceptor ID",
+  DE2:"Primary Account Number",  DE3:"Processing Code",         DE4:"Transaction Amount",
+  DE7:"Transmission Date & Time",DE11:"System Trace Audit",     DE12:"Local Transaction Time",
+  DE13:"Local Transaction Date", DE14:"Expiry Date (YYMM)",     DE18:"Merchant Category Code",
+  DE22:"POS Entry Mode",         DE25:"POS Condition Code",     DE35:"Track 2 Data",
+  DE37:"Retrieval Ref Number",   DE39:"Response Code",          DE41:"Card Acceptor Term ID",
+  DE42:"Card Acceptor ID",       DE43:"Merchant Name/Location", DE49:"Currency Code",
+  DE55:"EMV / ICC Data",         DE70:"Network Mgmt Code",      DE90:"Original Data Elements",
 };
 
 const MOCK_FIELDS = [
-  { de:"MTI",  name:"Message Type Indicator",    value:"0200",             present:true  },
-  { de:"DE2",  name:"Primary Account Number",    value:"4111111111111111", present:true  },
-  { de:"DE3",  name:"Processing Code",           value:"000000",           present:true  },
-  { de:"DE4",  name:"Transaction Amount",        value:"00000010000",      present:true  },
-  { de:"DE7",  name:"Transmission Date & Time",  value:"—",                present:false },
-  { de:"DE11", name:"System Trace Audit",        value:"123456",           present:true  },
-  { de:"DE22", name:"POS Entry Mode",            value:"—",                present:false },
-  { de:"DE41", name:"Card Acceptor Terminal ID", value:"TERM0001",         present:true  },
+  { de:"MTI",  name:"Message Type Indicator",    value:"0200",             present:true,  summary:"Authorization Request"                    },
+  { de:"DE2",  name:"Primary Account Number",    value:"4111111111111111", present:true,  summary:"4111 •••• •••• 1111"                      },
+  { de:"DE3",  name:"Processing Code",           value:"000000",           present:true,  summary:"Purchase (00) · From acct (00) · To (00)" },
+  { de:"DE4",  name:"Transaction Amount",        value:"00000010000",      present:true,  summary:"₹100.00"                                  },
+  { de:"DE7",  name:"Transmission Date & Time",  value:"—",                present:false, summary:"Missing — CRITICAL"                       },
+  { de:"DE11", name:"System Trace Audit",        value:"123456",           present:true,  summary:"Trace #123456"                            },
+  { de:"DE22", name:"POS Entry Mode",            value:"—",                present:false, summary:"Missing — recommended for 0200"           },
+  { de:"DE39", name:"Response Code",             value:"00",               present:true,  summary:"Approved"                                 },
+  { de:"DE41", name:"Card Acceptor Terminal ID", value:"TERM0001",         present:true,  summary:"Terminal: TERM0001"                       },
 ];
 
 const MOCK_ERRORS = [
@@ -78,15 +96,15 @@ const MOCK_AI = [
 ];
 
 const MOCK_RULES = [
-  { id:1, profileId:1, mti:"0200", de:"DE2",  name:"Primary Account Number",   mandatory:true,  minLen:13, maxLen:19, type:"numeric",      pattern:"^[0-9]+$",      severity:"CRITICAL", active:true,  desc:"PAN must be present for all purchase transactions", updatedBy:"john.d",  updatedAt:"2025-05-10" },
-  { id:2, profileId:1, mti:"0200", de:"DE3",  name:"Processing Code",           mandatory:true,  minLen:6,  maxLen:6,  type:"numeric",      pattern:"^[0-9]{6}$",    severity:"CRITICAL", active:true,  desc:"6-digit code identifying transaction type",         updatedBy:"john.d",  updatedAt:"2025-05-10" },
-  { id:3, profileId:1, mti:"0200", de:"DE4",  name:"Transaction Amount",        mandatory:true,  minLen:12, maxLen:12, type:"numeric",      pattern:"^[0-9]{12}$",   severity:"WARNING",  active:true,  desc:"Amount in smallest currency unit, 12 digits zero-padded", updatedBy:"priya.s", updatedAt:"2025-05-12" },
-  { id:4, profileId:1, mti:"0200", de:"DE7",  name:"Transmission Date & Time",  mandatory:true,  minLen:10, maxLen:10, type:"numeric",      pattern:"^[0-9]{10}$",   severity:"CRITICAL", active:true,  desc:"MMDDHHmmss — switch timestamp",                     updatedBy:"priya.s", updatedAt:"2025-05-12" },
-  { id:5, profileId:1, mti:"0200", de:"DE11", name:"System Trace Audit Number", mandatory:true,  minLen:6,  maxLen:6,  type:"numeric",      pattern:"^[0-9]{6}$",    severity:"CRITICAL", active:true,  desc:"Unique trace per transaction within a day",         updatedBy:"john.d",  updatedAt:"2025-05-10" },
-  { id:6, profileId:1, mti:"0200", de:"DE41", name:"Card Acceptor Terminal ID", mandatory:false, minLen:8,  maxLen:8,  type:"alphanumeric", pattern:"^[A-Z0-9]{8}$", severity:"INFO",     active:true,  desc:"8-char terminal identifier, spaces for unused",     updatedBy:"admin",   updatedAt:"2025-05-08" },
-  { id:7, profileId:2, mti:"0200", de:"DE2",  name:"Primary Account Number",    mandatory:true,  minLen:13, maxLen:19, type:"numeric",      pattern:"^[0-9]+$",      severity:"CRITICAL", active:true,  desc:"PAN required",                                      updatedBy:"john.d",  updatedAt:"2025-05-10" },
-  { id:8, profileId:2, mti:"0200", de:"DE4",  name:"Transaction Amount",        mandatory:true,  minLen:12, maxLen:12, type:"numeric",      pattern:"^[0-9]{12}$",   severity:"CRITICAL", active:true,  desc:"12-digit amount",                                   updatedBy:"priya.s", updatedAt:"2025-05-12" },
-  { id:9, profileId:2, mti:"0200", de:"DE7",  name:"Transmission Date & Time",  mandatory:true,  minLen:10, maxLen:10, type:"numeric",      pattern:"^[0-9]{10}$",   severity:"CRITICAL", active:true,  desc:"MMDDHHmmss timestamp",                              updatedBy:"priya.s", updatedAt:"2025-05-12" },
+  { id:1, profileId:1, mti:"0200", de:"DE2",  name:"Primary Account Number",   mandatory:true,  minLen:13, maxLen:19, type:"numeric",      pattern:"^[0-9]+$",      severity:"CRITICAL", active:true,  priority:1, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"PAN must be present for all purchase transactions",       updatedBy:"john.d",  updatedAt:"2025-05-10" },
+  { id:2, profileId:1, mti:"0200", de:"DE3",  name:"Processing Code",           mandatory:true,  minLen:6,  maxLen:6,  type:"numeric",      pattern:"^[0-9]{6}$",    severity:"CRITICAL", active:true,  priority:2, allowedValues:["000000","010000","310000"], effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"6-digit code identifying transaction type",               updatedBy:"john.d",  updatedAt:"2025-05-10" },
+  { id:3, profileId:1, mti:"0200", de:"DE4",  name:"Transaction Amount",        mandatory:true,  minLen:12, maxLen:12, type:"numeric",      pattern:"^[0-9]{12}$",   severity:"WARNING",  active:true,  priority:3, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"Amount in smallest currency unit, 12 digits zero-padded", updatedBy:"priya.s", updatedAt:"2025-05-12" },
+  { id:4, profileId:1, mti:"0200", de:"DE7",  name:"Transmission Date & Time",  mandatory:true,  minLen:10, maxLen:10, type:"numeric",      pattern:"^[0-9]{10}$",   severity:"CRITICAL", active:true,  priority:4, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"MMDDHHmmss — switch timestamp",                           updatedBy:"priya.s", updatedAt:"2025-05-12" },
+  { id:5, profileId:1, mti:"0200", de:"DE11", name:"System Trace Audit Number", mandatory:true,  minLen:6,  maxLen:6,  type:"numeric",      pattern:"^[0-9]{6}$",    severity:"CRITICAL", active:true,  priority:5, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"Unique trace per transaction within a day",               updatedBy:"john.d",  updatedAt:"2025-05-10" },
+  { id:6, profileId:1, mti:"0200", de:"DE41", name:"Card Acceptor Terminal ID", mandatory:false, minLen:8,  maxLen:8,  type:"alphanumeric", pattern:"^[A-Z0-9]{8}$", severity:"INFO",     active:true,  priority:6, allowedValues:[],                         effectiveFrom:"2025-05-08", effectiveTo:"2025-12-31", desc:"8-char terminal identifier, spaces for unused",           updatedBy:"admin",   updatedAt:"2025-05-08" },
+  { id:7, profileId:2, mti:"0200", de:"DE2",  name:"Primary Account Number",    mandatory:true,  minLen:13, maxLen:19, type:"numeric",      pattern:"^[0-9]+$",      severity:"CRITICAL", active:true,  priority:1, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"PAN required",                                            updatedBy:"john.d",  updatedAt:"2025-05-10" },
+  { id:8, profileId:2, mti:"0200", de:"DE4",  name:"Transaction Amount",        mandatory:true,  minLen:12, maxLen:12, type:"numeric",      pattern:"^[0-9]{12}$",   severity:"CRITICAL", active:true,  priority:2, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"12-digit amount",                                         updatedBy:"priya.s", updatedAt:"2025-05-12" },
+  { id:9, profileId:2, mti:"0200", de:"DE7",  name:"Transmission Date & Time",  mandatory:true,  minLen:10, maxLen:10, type:"numeric",      pattern:"^[0-9]{10}$",   severity:"CRITICAL", active:true,  priority:3, allowedValues:[],                         effectiveFrom:"2025-05-10", effectiveTo:"",           desc:"MMDDHHmmss timestamp",                                    updatedBy:"priya.s", updatedAt:"2025-05-12" },
 ];
 
 const MOCK_FORMATS = [
@@ -96,56 +114,155 @@ const MOCK_FORMATS = [
 ];
 
 const MOCK_HISTORY = [
-  { id:"VLD-0041", ts:"2025-05-14 14:30:22", mti:"0200", profile:"Visa Switch",   env:"PROD", errors:2, status:"FAILED", parsMs:12, valMs:8,  aiMs:420, totalMs:440, raw:"0200723A00010AC08012345..." },
-  { id:"VLD-0040", ts:"2025-05-14 14:28:11", mti:"0210", profile:"Visa Switch",   env:"PROD", errors:0, status:"PASSED", parsMs:11, valMs:6,  aiMs:0,   totalMs:17,  raw:"0210823A00010AC08098765..." },
-  { id:"VLD-0039", ts:"2025-05-14 14:15:05", mti:"0420", profile:"MasterCard GW", env:"UAT",  errors:1, status:"WARNED", parsMs:14, valMs:9,  aiMs:390, totalMs:413, raw:"0420923A00010AC08011111..." },
-  { id:"VLD-0038", ts:"2025-05-14 13:50:44", mti:"0200", profile:"Visa Switch",   env:"PROD", errors:0, status:"PASSED", parsMs:10, valMs:7,  aiMs:0,   totalMs:17,  raw:"0200123A00010AC08099999..." },
-  { id:"VLD-0037", ts:"2025-05-14 13:20:10", mti:"0200", profile:"Legacy Switch", env:"DEV",  errors:4, status:"FAILED", parsMs:18, valMs:12, aiMs:510, totalMs:540, raw:"0200FF3A00010AC08077777..." },
+  { id:"VLD-0041", ts:"2025-05-14 14:30:22", mti:"0200", profile:"Visa Switch",   env:"PROD", errors:2, status:"FAILED", parsMs:12, valMs:8,  aiMs:420, totalMs:440, raw:"0200723A00010AC08012345...", responseCode:"30", responseLabel:"Format Error",  amount:"₹100.00",   merchant:"ACME STORE / TERM0001"    },
+  { id:"VLD-0040", ts:"2025-05-14 14:28:11", mti:"0210", profile:"Visa Switch",   env:"PROD", errors:0, status:"PASSED", parsMs:11, valMs:6,  aiMs:0,   totalMs:17,  raw:"0210823A00010AC08098765...", responseCode:"00", responseLabel:"Approved",      amount:"₹100.00",   merchant:"ACME STORE / TERM0001"    },
+  { id:"VLD-0039", ts:"2025-05-14 14:15:05", mti:"0420", profile:"MasterCard GW", env:"UAT",  errors:1, status:"WARNED", parsMs:14, valMs:9,  aiMs:390, totalMs:413, raw:"0420923A00010AC08011111...", responseCode:"—",  responseLabel:"—",             amount:"₹500.00",   merchant:"BIGMART / POS00002"       },
+  { id:"VLD-0038", ts:"2025-05-14 13:50:44", mti:"0200", profile:"Visa Switch",   env:"PROD", errors:0, status:"PASSED", parsMs:10, valMs:7,  aiMs:0,   totalMs:17,  raw:"0200123A00010AC08099999...", responseCode:"—",  responseLabel:"—",             amount:"₹250.00",   merchant:"CAFE CORP / ATM00001"     },
+  { id:"VLD-0037", ts:"2025-05-14 13:20:10", mti:"0200", profile:"Legacy Switch", env:"DEV",  errors:4, status:"FAILED", parsMs:18, valMs:12, aiMs:510, totalMs:540, raw:"0200FF3A00010AC08077777...", responseCode:"05", responseLabel:"Do Not Honor",  amount:"₹1,000.00", merchant:"TEST MERCHANT / TERM9999" },
 ];
 
 const BITMAP_PRESENT = ["DE2","DE3","DE4","DE11","DE41"];
 
-const BUILDER_DE_CATALOG = {
-  "0200": [
-    { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"4111111111111111", type:"numeric",      mandatory:true  },
-    { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",           type:"numeric",      mandatory:true  },
-    { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",     type:"numeric",      mandatory:true  },
-    { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",       type:"numeric",      mandatory:true  },
-    { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",           type:"numeric",      mandatory:true  },
-    { de:"DE12", name:"Local Transaction Time",     maxLen:6,  placeholder:"143022",           type:"numeric",      mandatory:false },
-    { de:"DE13", name:"Local Transaction Date",     maxLen:4,  placeholder:"0514",             type:"numeric",      mandatory:false },
-    { de:"DE22", name:"POS Entry Mode",             maxLen:3,  placeholder:"022",              type:"numeric",      mandatory:false },
-    { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",     type:"alphanumeric", mandatory:false },
-    { de:"DE41", name:"Card Acceptor Terminal ID",  maxLen:8,  placeholder:"TERM0001",         type:"alphanumeric", mandatory:false },
-    { de:"DE42", name:"Card Acceptor ID Code",      maxLen:15, placeholder:"MERCHANT001    ",  type:"alphanumeric", mandatory:false },
-  ],
-  "0210": [
-    { de:"DE2",  name:"Primary Account Number",    maxLen:19, placeholder:"4111111111111111", type:"numeric", mandatory:true  },
-    { de:"DE3",  name:"Processing Code",           maxLen:6,  placeholder:"000000",           type:"numeric", mandatory:true  },
-    { de:"DE4",  name:"Transaction Amount",        maxLen:12, placeholder:"000000010000",     type:"numeric", mandatory:true  },
-    { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022",       type:"numeric", mandatory:true  },
-    { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",           type:"numeric", mandatory:true  },
-    { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",               type:"numeric", mandatory:true  },
-  ],
-  "0420": [
-    { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"4111111111111111", type:"numeric",      mandatory:true },
-    { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",           type:"numeric",      mandatory:true },
-    { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",     type:"numeric",      mandatory:true },
-    { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",       type:"numeric",      mandatory:true },
-    { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",           type:"numeric",      mandatory:true },
-    { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",     type:"alphanumeric", mandatory:true },
-  ],
-  "0800": [
-    { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
-    { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
-    { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
-  ],
-  "0810": [
-    { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
-    { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
-    { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",         type:"numeric", mandatory:true },
-    { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
-  ],
+const PROFILE_DE_CATALOG = {
+  1: {
+    "0200":[
+      { de:"DE2",  name:"Primary Account Number",       maxLen:19, placeholder:"4111111111111111",             type:"numeric",      mandatory:true  },
+      { de:"DE3",  name:"Processing Code",              maxLen:6,  placeholder:"000000",                       type:"numeric",      mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",           maxLen:12, placeholder:"000000010000",                 type:"numeric",      mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",     maxLen:10, placeholder:"0514143022",                   type:"numeric",      mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number",    maxLen:6,  placeholder:"123456",                       type:"numeric",      mandatory:true  },
+      { de:"DE14", name:"Expiry Date (YYMM)",           maxLen:4,  placeholder:"2612",                         type:"numeric",      mandatory:true  },
+      { de:"DE22", name:"POS Entry Mode",               maxLen:3,  placeholder:"022",                          type:"numeric",      mandatory:true  },
+      { de:"DE12", name:"Local Transaction Time",       maxLen:6,  placeholder:"143022",                       type:"numeric",      mandatory:false },
+      { de:"DE13", name:"Local Transaction Date",       maxLen:4,  placeholder:"0514",                         type:"numeric",      mandatory:false },
+      { de:"DE18", name:"Merchant Category Code (MCC)", maxLen:4,  placeholder:"5411",                         type:"numeric",      mandatory:false },
+      { de:"DE35", name:"Track 2 Data",                 maxLen:37, placeholder:"4111111111111111=26121011234500000", type:"alphanumeric", mandatory:false },
+      { de:"DE37", name:"Retrieval Reference Number",   maxLen:12, placeholder:"123456789012",                 type:"alphanumeric", mandatory:false },
+      { de:"DE41", name:"Card Acceptor Terminal ID",    maxLen:8,  placeholder:"TERM0001",                     type:"alphanumeric", mandatory:false },
+      { de:"DE42", name:"Card Acceptor ID Code",        maxLen:15, placeholder:"MERCHANT001    ",              type:"alphanumeric", mandatory:false },
+      { de:"DE43", name:"Merchant Name / Location",     maxLen:40, placeholder:"ACME STORE       CHENNAI  IN", type:"alphanumeric", mandatory:false },
+      { de:"DE49", name:"Currency Code (ISO 4217)",     maxLen:3,  placeholder:"356",                          type:"numeric",      mandatory:false },
+    ],
+    "0210":[
+      { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"4111111111111111", type:"numeric",      mandatory:true  },
+      { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",           type:"numeric",      mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",     type:"numeric",      mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",       type:"numeric",      mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",           type:"numeric",      mandatory:true  },
+      { de:"DE39", name:"Response Code",              maxLen:2,  placeholder:"00",               type:"numeric",      mandatory:true  },
+      { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",     type:"alphanumeric", mandatory:false },
+      { de:"DE41", name:"Card Acceptor Terminal ID",  maxLen:8,  placeholder:"TERM0001",         type:"alphanumeric", mandatory:false },
+    ],
+    "0420":[
+      { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"4111111111111111",       type:"numeric",      mandatory:true },
+      { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",                 type:"numeric",      mandatory:true },
+      { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",           type:"numeric",      mandatory:true },
+      { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",             type:"numeric",      mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",                 type:"numeric",      mandatory:true },
+      { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",           type:"alphanumeric", mandatory:true },
+      { de:"DE90", name:"Original Data Elements",     maxLen:42, placeholder:"0200123456051414302212345", type:"numeric",  mandatory:true },
+    ],
+    "0800":[
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
+      { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
+    ],
+    "0810":[
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
+      { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",         type:"numeric", mandatory:true },
+      { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
+    ],
+  },
+  2: {
+    "0200":[
+      { de:"DE2",  name:"Primary Account Number",       maxLen:19, placeholder:"5111111111111118",             type:"numeric",      mandatory:true  },
+      { de:"DE3",  name:"Processing Code",              maxLen:6,  placeholder:"000000",                       type:"numeric",      mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",           maxLen:12, placeholder:"000000010000",                 type:"numeric",      mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",     maxLen:10, placeholder:"0514143022",                   type:"numeric",      mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number",    maxLen:6,  placeholder:"123456",                       type:"numeric",      mandatory:true  },
+      { de:"DE22", name:"POS Entry Mode",               maxLen:3,  placeholder:"022",                          type:"numeric",      mandatory:true  },
+      { de:"DE25", name:"POS Condition Code",           maxLen:2,  placeholder:"00",                           type:"numeric",      mandatory:true  },
+      { de:"DE49", name:"Currency Code (ISO 4217)",     maxLen:3,  placeholder:"356",                          type:"numeric",      mandatory:true  },
+      { de:"DE14", name:"Expiry Date (YYMM)",           maxLen:4,  placeholder:"2612",                         type:"numeric",      mandatory:false },
+      { de:"DE12", name:"Local Transaction Time",       maxLen:6,  placeholder:"143022",                       type:"numeric",      mandatory:false },
+      { de:"DE13", name:"Local Transaction Date",       maxLen:4,  placeholder:"0514",                         type:"numeric",      mandatory:false },
+      { de:"DE18", name:"Merchant Category Code (MCC)", maxLen:4,  placeholder:"5411",                         type:"numeric",      mandatory:false },
+      { de:"DE37", name:"Retrieval Reference Number",   maxLen:12, placeholder:"123456789012",                 type:"alphanumeric", mandatory:false },
+      { de:"DE41", name:"Card Acceptor Terminal ID",    maxLen:8,  placeholder:"TERM0001",                     type:"alphanumeric", mandatory:false },
+      { de:"DE42", name:"Card Acceptor ID Code",        maxLen:15, placeholder:"MERCHANT001    ",              type:"alphanumeric", mandatory:false },
+      { de:"DE43", name:"Merchant Name / Location",     maxLen:40, placeholder:"ACME STORE       CHENNAI  IN", type:"alphanumeric", mandatory:false },
+    ],
+    "0210":[
+      { de:"DE2",  name:"Primary Account Number",    maxLen:19, placeholder:"5111111111111118", type:"numeric", mandatory:true  },
+      { de:"DE3",  name:"Processing Code",           maxLen:6,  placeholder:"000000",           type:"numeric", mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",        maxLen:12, placeholder:"000000010000",     type:"numeric", mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022",       type:"numeric", mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",           type:"numeric", mandatory:true  },
+      { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",               type:"numeric", mandatory:true  },
+      { de:"DE49", name:"Currency Code (ISO 4217)",  maxLen:3,  placeholder:"356",              type:"numeric", mandatory:true  },
+    ],
+    "0420":[
+      { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"5111111111111118",       type:"numeric",      mandatory:true  },
+      { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",                 type:"numeric",      mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",           type:"numeric",      mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",             type:"numeric",      mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",                 type:"numeric",      mandatory:true  },
+      { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",           type:"alphanumeric", mandatory:true  },
+      { de:"DE90", name:"Original Data Elements",     maxLen:42, placeholder:"0200123456051414302212345", type:"numeric",  mandatory:false },
+    ],
+    "0800":[
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
+      { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
+    ],
+    "0810":[
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
+      { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",         type:"numeric", mandatory:true },
+      { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
+    ],
+  },
+  3: {
+    "0200":[
+      { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"4111111111111111", type:"numeric",      mandatory:true  },
+      { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",           type:"numeric",      mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",     type:"numeric",      mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",       type:"numeric",      mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",           type:"numeric",      mandatory:true  },
+      { de:"DE12", name:"Local Transaction Time",     maxLen:6,  placeholder:"143022",           type:"numeric",      mandatory:false },
+      { de:"DE13", name:"Local Transaction Date",     maxLen:4,  placeholder:"0514",             type:"numeric",      mandatory:false },
+      { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",     type:"alphanumeric", mandatory:false },
+      { de:"DE41", name:"Card Acceptor Terminal ID",  maxLen:8,  placeholder:"TERM0001",         type:"alphanumeric", mandatory:false },
+    ],
+    "0210":[
+      { de:"DE2",  name:"Primary Account Number",    maxLen:19, placeholder:"4111111111111111", type:"numeric", mandatory:true },
+      { de:"DE3",  name:"Processing Code",           maxLen:6,  placeholder:"000000",           type:"numeric", mandatory:true },
+      { de:"DE4",  name:"Transaction Amount",        maxLen:12, placeholder:"000000010000",     type:"numeric", mandatory:true },
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022",       type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",           type:"numeric", mandatory:true },
+      { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",               type:"numeric", mandatory:true },
+    ],
+    "0420":[
+      { de:"DE2",  name:"Primary Account Number",     maxLen:19, placeholder:"4111111111111111", type:"numeric",      mandatory:true  },
+      { de:"DE3",  name:"Processing Code",            maxLen:6,  placeholder:"000000",           type:"numeric",      mandatory:true  },
+      { de:"DE4",  name:"Transaction Amount",         maxLen:12, placeholder:"000000010000",     type:"numeric",      mandatory:true  },
+      { de:"DE7",  name:"Transmission Date & Time",   maxLen:10, placeholder:"0514143022",       type:"numeric",      mandatory:true  },
+      { de:"DE11", name:"System Trace Audit Number",  maxLen:6,  placeholder:"123456",           type:"numeric",      mandatory:true  },
+      { de:"DE37", name:"Retrieval Reference Number", maxLen:12, placeholder:"123456789012",     type:"alphanumeric", mandatory:false },
+    ],
+    "0800":[
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
+      { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
+    ],
+    "0810":[
+      { de:"DE7",  name:"Transmission Date & Time",  maxLen:10, placeholder:"0514143022", type:"numeric", mandatory:true },
+      { de:"DE11", name:"System Trace Audit Number", maxLen:6,  placeholder:"123456",     type:"numeric", mandatory:true },
+      { de:"DE39", name:"Response Code",             maxLen:2,  placeholder:"00",         type:"numeric", mandatory:true },
+      { de:"DE70", name:"Network Management Code",   maxLen:3,  placeholder:"001",        type:"numeric", mandatory:true },
+    ],
+  },
 };
 
 /* ═══════════════════════════════════════════
@@ -379,6 +496,7 @@ function ValidatorPage({ role, initialMsg }) {
                 <div style={{ fontSize:10, color:T.muted, marginTop:4, display:"flex", gap:8 }}>
                   <span>{profile.format}</span><span style={{ color:T.faint }}>·</span>
                   <Tag color={ENV_COLORS[profile.env]} small>{profile.env}</Tag>
+                  {profile.timezone && <span style={{ color:T.faint }}>· {profile.timezone}</span>}
                 </div>
               )}
             </div>
@@ -414,14 +532,23 @@ function ValidatorPage({ role, initialMsg }) {
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
             <Card title="Parsed Fields" badge={`${MOCK_FIELDS.filter(f=>f.present).length} / ${MOCK_FIELDS.length} present`}>
               <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-                <thead><tr style={{ borderBottom:`1px solid ${T.border}` }}>{["DE","Field Name","Value","Status"].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
+                <thead>
+                  <tr style={{ borderBottom:`1px solid ${T.border}` }}>
+                    {["DE","Field Name","Value","Status","Summary"].map(h=><Th key={h}>{h}</Th>)}
+                  </tr>
+                </thead>
                 <tbody>
                   {MOCK_FIELDS.map(f => (
                     <tr key={f.de} style={{ borderBottom:`1px solid ${T.border}22` }}>
                       <td style={{ padding:"6px 8px", color:T.accent, fontWeight:700, fontSize:11 }}>{f.de}</td>
                       <td style={{ padding:"6px 8px", color:T.muted, fontSize:10 }}>{f.name}</td>
                       <td style={{ padding:"6px 8px", color:f.present?T.text:T.faint }}>{f.value}</td>
-                      <td style={{ padding:"6px 8px" }}><span style={{ fontSize:9, padding:"2px 6px", borderRadius:3, background:f.present?T.green+"22":T.red+"22", color:f.present?T.green:T.red }}>{f.present?"PRESENT":"ABSENT"}</span></td>
+                      <td style={{ padding:"6px 8px" }}>
+                        <span style={{ fontSize:9, padding:"2px 6px", borderRadius:3, background:f.present?T.green+"22":T.red+"22", color:f.present?T.green:T.red }}>
+                          {f.present?"PRESENT":"ABSENT"}
+                        </span>
+                      </td>
+                      <td style={{ padding:"6px 8px", color:f.present?T.muted:T.faint, fontSize:10, fontStyle:f.present?"normal":"italic" }}>{f.summary}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -546,7 +673,7 @@ function MessageBuilderPage({ role, onSendToValidator }) {
   const [buildError, setBuildError]     = useState(null);
 
   const profile   = PROFILES.find(p => p.id === profileId);
-  const catalog   = BUILDER_DE_CATALOG[mti] || [];
+  const catalog   = ((PROFILE_DE_CATALOG[profileId] || {})[mti]) || [];
   const mandatory = catalog.filter(f => f.mandatory);
   const optional  = catalog.filter(f => !f.mandatory);
 
@@ -564,13 +691,9 @@ function MessageBuilderPage({ role, onSendToValidator }) {
     ? Math.round((mandatory.filter(f => fieldValues[f.de]?.trim()).length / mandatory.length) * 100)
     : 0;
 
-  const deIndex = built
-    ? built.parts.length
-    : Object.keys(fieldValues).filter(k => fieldValues[k]?.trim()).length;
-
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <PageHeader title="Message Builder" sub="Construct well-formed ISO8583 raw messages from scratch using connection rules — optional tool" />
+      <PageHeader title="Message Builder" sub="Construct well-formed ISO8583 raw messages — mandatory & optional fields driven by switch profile + MTI" />
 
       <Card>
         <div style={{ display:"grid", gridTemplateColumns:"300px 1fr", gap:16, alignItems:"end" }}>
@@ -579,7 +702,13 @@ function MessageBuilderPage({ role, onSendToValidator }) {
             <select value={profileId} onChange={e => { setProfileId(+e.target.value); resetAll(); }} style={selectStyle}>
               {PROFILES.map(p => <option key={p.id} value={p.id}>{p.name} ({p.env})</option>)}
             </select>
-            {profile && <div style={{ fontSize:10, color:T.muted, marginTop:4 }}>Format: <span style={{ color:T.accent }}>{profile.format}</span> · <Tag color={ENV_COLORS[profile.env]} small>{profile.env}</Tag></div>}
+            {profile && (
+              <div style={{ fontSize:10, color:T.muted, marginTop:4, display:"flex", flexDirection:"column", gap:2 }}>
+                <span>Format: <span style={{ color:T.accent }}>{profile.format}</span> · <Tag color={ENV_COLORS[profile.env]} small>{profile.env}</Tag></span>
+                <span style={{ color:T.faint }}>Timezone: {profile.timezone} · Timeout: {profile.connectionTimeout/1000}s</span>
+                {profile.tpduEnabled && <span style={{ color:T.faint }}>TPDU: <span style={{ color:T.yellow }}>{profile.tpduValue}</span></span>}
+              </div>
+            )}
           </div>
           <div>
             <Label>Message Type Indicator (MTI)</Label>
@@ -593,6 +722,12 @@ function MessageBuilderPage({ role, onSendToValidator }) {
           </div>
         </div>
       </Card>
+
+      <div style={{ background:T.accent+"10", border:`1px solid ${T.accent}33`, borderRadius:6, padding:"8px 14px", fontSize:11, color:T.accent, display:"flex", gap:8, alignItems:"center" }}>
+        <span>⬡</span>
+        <span>Fields loaded for <strong>{profile?.name}</strong> · MTI <strong>{mti}</strong> — <strong>{mandatory.length}</strong> mandatory, <strong>{optional.length}</strong> optional</span>
+        {catalog.length === 0 && <span style={{ color:T.yellow }}>⚠ No fields configured for this MTI on this profile</span>}
+      </div>
 
       <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"10px 14px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:7 }}>
@@ -609,16 +744,19 @@ function MessageBuilderPage({ role, onSendToValidator }) {
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 360px", gap:14 }}>
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          <Card title="Mandatory Fields" badge={<Tag color={T.red} small>REQUIRED</Tag>}>
-            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-              {mandatory.map(f => <FieldInput key={f.de} field={f} value={fieldValues[f.de]||""} onChange={val => updateField(f.de, val)} />)}
-            </div>
+          <Card title="Mandatory Fields" badge={<Tag color={T.red} small>REQUIRED · {profile?.name}</Tag>}>
+            {mandatory.length === 0
+              ? <div style={{ textAlign:"center", color:T.faint, fontSize:12, padding:"12px 0" }}>No mandatory fields for {mti} on {profile?.name}</div>
+              : <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  {mandatory.map(f => <FieldInput key={f.de} field={f} value={fieldValues[f.de]||""} onChange={val => updateField(f.de, val)} />)}
+                </div>
+            }
           </Card>
-          <Card title="Optional Fields" badge={<Tag color={T.blue} small>OPTIONAL</Tag>} extra={<Toggle label={showOptional?"Hide":"Show"} active={showOptional} onClick={() => setShowOptional(x=>!x)} />}>
+          <Card title="Optional Fields" badge={<Tag color={T.blue} small>OPTIONAL · {profile?.name}</Tag>} extra={<Toggle label={showOptional?"Hide":"Show"} active={showOptional} onClick={() => setShowOptional(x=>!x)} />}>
             {showOptional
               ? <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                   {optional.length===0
-                    ? <div style={{ textAlign:"center", color:T.faint, fontSize:12, padding:"12px 0" }}>No optional fields for {mti}</div>
+                    ? <div style={{ textAlign:"center", color:T.faint, fontSize:12, padding:"12px 0" }}>No optional fields for {mti} on {profile?.name}</div>
                     : optional.map(f => <FieldInput key={f.de} field={f} value={fieldValues[f.de]||""} onChange={val => updateField(f.de,val)} />)}
                 </div>
               : <div style={{ textAlign:"center", color:T.faint, fontSize:11, padding:"8px 0" }}>{optional.length} optional fields hidden</div>}
@@ -640,6 +778,7 @@ function MessageBuilderPage({ role, onSendToValidator }) {
                   </div>
                 );
               })}
+              {catalog.length===0 && <div style={{ textAlign:"center", color:T.faint, fontSize:11, padding:"12px 0" }}>Select a profile and MTI to see fields</div>}
             </div>
           </Card>
 
@@ -647,9 +786,9 @@ function MessageBuilderPage({ role, onSendToValidator }) {
             <Card title="Load Template" badge="quick-fill">
               <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
                 {[
-                  { label:"Purchase · Visa", values:{ DE2:"4111111111111111", DE3:"000000", DE4:"000000010000", DE7:"0514143022", DE11:"123456", DE41:"TERM0001" } },
-                  { label:"Cash Advance",    values:{ DE2:"4222222222222222", DE3:"010000", DE4:"000000050000", DE7:"0514150000", DE11:"654321", DE41:"ATM00001" } },
-                  { label:"Balance Enquiry", values:{ DE2:"4333333333333333", DE3:"310000", DE4:"000000000000", DE7:"0514160000", DE11:"111111", DE41:"POS00001" } },
+                  { label:"Purchase · Visa", values:{ DE2:"4111111111111111", DE3:"000000", DE4:"000000010000", DE7:"0514143022", DE11:"123456", DE14:"2612", DE22:"022", DE41:"TERM0001", DE49:"356" } },
+                  { label:"Cash Advance",    values:{ DE2:"4222222222222222", DE3:"010000", DE4:"000000050000", DE7:"0514150000", DE11:"654321", DE14:"2612", DE22:"011", DE41:"ATM00001", DE49:"356" } },
+                  { label:"Balance Enquiry", values:{ DE2:"4333333333333333", DE3:"310000", DE4:"000000000000", DE7:"0514160000", DE11:"111111", DE14:"2612", DE22:"022", DE41:"POS00001", DE49:"356" } },
                 ].map(t => (
                   <button key={t.label} onClick={() => setFieldValues(v=>({...v,...t.values}))} style={{ background:T.bg, border:`1px solid ${T.border}`, color:T.muted, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:10, cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                     <span>{t.label}</span><span style={{ color:T.faint, fontSize:9 }}>⊞ Apply</span>
@@ -676,7 +815,7 @@ function MessageBuilderPage({ role, onSendToValidator }) {
               <span style={{ color:T.text }}>{built.raw.substring(20)}</span>
             </div>
             <div style={{ display:"flex", gap:14, fontSize:10, flexWrap:"wrap" }}>
-              <span style={{ display:"flex", alignItems:"center", gap:5 }}><Tag color={T.yellow} small>MTI</Tag>{mti}</span>
+              <span style={{ display:"flex", alignItems:"center", gap:5 }}><Tag color={T.yellow} small>MTI</Tag>{mti} — {MTI_DESCRIPTIONS[mti]||mti}</span>
               <span style={{ display:"flex", alignItems:"center", gap:5 }}><Tag color={T.accent} small>BITMAP</Tag>{built.bitmapHex} · {built.parts.length} DEs set</span>
               <span style={{ color:T.muted }}>Total length: <span style={{ color:T.text }}>{built.raw.length} chars</span></span>
               <span style={{ color:T.muted }}>Profile: <span style={{ color:T.text }}>{profile?.name}</span></span>
@@ -781,12 +920,13 @@ function RulesPage({ role }) {
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
             <thead>
               <tr style={{ borderBottom:`1px solid ${T.border}` }}>
-                {["DE","Field Name","Mandatory","Min","Max","Type","Severity","Pattern","Active","Description","Audit",...(role.can.edit?["Actions"]:[])].map(h=><Th key={h}>{h}</Th>)}
+                {["#","DE","Field Name","Mandatory","Min","Max","Type","Severity","Pattern","Allowed Values","Active","Effective From","Effective To","Description","Audit",...(role.can.edit?["Actions"]:[])].map(h=><Th key={h}>{h}</Th>)}
               </tr>
             </thead>
             <tbody>
               {rules.map(r=>(
                 <tr key={r.id} style={{ borderBottom:`1px solid ${T.border}22`, opacity:r.active?1:0.45 }}>
+                  <td style={{ padding:"8px 8px", color:T.faint, fontSize:10, textAlign:"center" }}>{r.priority}</td>
                   <td style={{ padding:"8px 8px", color:T.accent, fontWeight:700 }}>{r.de}</td>
                   <td style={{ padding:"8px 8px", color:T.muted, fontSize:10, maxWidth:130 }}>{r.name}</td>
                   <td style={{ padding:"8px 8px", textAlign:"center" }}><span style={{ color:r.mandatory?T.green:T.faint, fontSize:12 }}>{r.mandatory?"✓":"✗"}</span></td>
@@ -795,17 +935,27 @@ function RulesPage({ role }) {
                   <td style={{ padding:"8px 8px" }}><Tag color={T.blue} small>{r.type}</Tag></td>
                   <td style={{ padding:"8px 8px" }}><Tag color={SEV[r.severity].text} small>{r.severity}</Tag></td>
                   <td style={{ padding:"8px 8px", color:T.faint, fontSize:10 }}>{r.pattern}</td>
+                  <td style={{ padding:"8px 8px", fontSize:9 }}>
+                    {r.allowedValues.length > 0
+                      ? <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
+                          {r.allowedValues.map(v => <span key={v} style={{ background:T.accent+"15", color:T.accent, padding:"1px 5px", borderRadius:3, fontSize:9 }}>{v}</span>)}
+                        </div>
+                      : <span style={{ color:T.faint }}>Any</span>
+                    }
+                  </td>
                   <td style={{ padding:"8px 8px", textAlign:"center" }}>
                     <div style={{ width:28, height:15, borderRadius:8, background:r.active?T.green+"44":T.faint+"44", border:`1px solid ${r.active?T.green:T.faint}`, display:"inline-flex", alignItems:"center", padding:"0 2px", cursor:role.can.edit?"pointer":"default" }}>
                       <div style={{ width:11, height:11, borderRadius:"50%", background:r.active?T.green:T.faint, marginLeft:r.active?12:0, transition:"margin 0.15s" }} />
                     </div>
                   </td>
+                  <td style={{ padding:"8px 8px", color:T.muted, fontSize:10, whiteSpace:"nowrap" }}>{r.effectiveFrom||"—"}</td>
+                  <td style={{ padding:"8px 8px", color:r.effectiveTo?T.yellow:T.faint, fontSize:10, whiteSpace:"nowrap" }}>{r.effectiveTo||"∞"}</td>
                   <td style={{ padding:"8px 8px", color:T.muted, fontSize:10, maxWidth:160 }}>{r.desc}</td>
                   <td style={{ padding:"8px 8px", fontSize:9, color:T.faint, whiteSpace:"nowrap" }}><div>{r.updatedBy}</div><div>{r.updatedAt}</div></td>
                   {role.can.edit && <td style={{ padding:"8px 8px" }}><div style={{ display:"flex", gap:4 }}><SmBtn>Edit</SmBtn><SmBtn>History</SmBtn><SmBtn danger>Del</SmBtn></div></td>}
                 </tr>
               ))}
-              {rules.length===0 && <tr><td colSpan={12} style={{ padding:"24px", textAlign:"center", color:T.faint, fontSize:12 }}>No rules configured for {mti} on this connection</td></tr>}
+              {rules.length===0 && <tr><td colSpan={16} style={{ padding:"24px", textAlign:"center", color:T.faint, fontSize:12 }}>No rules configured for {mti} on this connection</td></tr>}
             </tbody>
           </table>
         </div>
@@ -829,20 +979,88 @@ function RulesPage({ role }) {
 }
 
 function AddRuleModal({ onClose, profile, mti }) {
+  const [allowedValues, setAllowedValues] = useState([]);
+  const [newValue, setNewValue]           = useState("");
+
+  const addValue = () => {
+    if (newValue.trim() && !allowedValues.includes(newValue.trim())) {
+      setAllowedValues(v => [...v, newValue.trim()]);
+      setNewValue("");
+    }
+  };
+  const removeValue = (v) => setAllowedValues(x => x.filter(i => i !== v));
+
   return (
     <div style={{ position:"fixed", inset:0, background:"#000a", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
-      <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:24, width:520, maxHeight:"80vh", overflow:"auto" }}>
+      <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:10, padding:24, width:560, maxHeight:"85vh", overflowY:"auto" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
           <span style={{ fontSize:14, fontWeight:700, color:T.text }}>Add Rule — {profile?.name} · {mti}</span>
           <button onClick={onClose} style={{ background:"none", border:"none", color:T.muted, cursor:"pointer", fontSize:16 }}>✕</button>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, fontSize:12 }}>
-          {[{ label:"DE Number", placeholder:"DE7" },{ label:"Field Name", placeholder:"Transmission Date & Time" },{ label:"Min Length", placeholder:"10" },{ label:"Max Length", placeholder:"10" },{ label:"Pattern / Regex", placeholder:"^[0-9]{10}$" },{ label:"Effective From", placeholder:"2025-05-14", type:"date" }].map(f=>(
-            <div key={f.label}><Label>{f.label}</Label><input type={f.type||"text"} placeholder={f.placeholder} style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} /></div>
-          ))}
-          <div><Label>Data Type</Label><select style={selectStyle}>{["numeric","alpha","alphanumeric","binary","special"].map(t=><option key={t}>{t}</option>)}</select></div>
-          <div><Label>Severity</Label><select style={selectStyle}>{["CRITICAL","WARNING","INFO"].map(s=><option key={s}>{s}</option>)}</select></div>
-          <div style={{ gridColumn:"1/-1" }}><Label>Description</Label><textarea rows={2} style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none", resize:"vertical" }} /></div>
+          <div>
+            <Label>Priority / Order</Label>
+            <input type="number" placeholder="1" min="1" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div>
+            <Label>DE Number</Label>
+            <input type="text" placeholder="DE7" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <Label>Field Name</Label>
+            <input type="text" placeholder="Transmission Date & Time" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div>
+            <Label>Min Length</Label>
+            <input type="number" placeholder="10" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div>
+            <Label>Max Length</Label>
+            <input type="number" placeholder="10" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div>
+            <Label>Data Type</Label>
+            <select style={selectStyle}>{["numeric","alpha","alphanumeric","binary","special"].map(t=><option key={t}>{t}</option>)}</select>
+          </div>
+          <div>
+            <Label>Severity</Label>
+            <select style={selectStyle}>{["CRITICAL","WARNING","INFO"].map(s=><option key={s}>{s}</option>)}</select>
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <Label>Pattern / Regex</Label>
+            <input type="text" placeholder="^[0-9]{10}$" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div>
+            <Label>Effective From</Label>
+            <input type="date" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div>
+            <Label>Effective To <span style={{ color:T.faint, fontSize:9 }}>(leave blank = no expiry)</span></Label>
+            <input type="date" style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <Label>Allowed Values <span style={{ color:T.faint, fontSize:9 }}>(enum — leave empty to allow any)</span></Label>
+            <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <input value={newValue} onChange={e => setNewValue(e.target.value)} onKeyDown={e => e.key==="Enter" && addValue()} placeholder="e.g. 000000"
+                style={{ flex:1, background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+              <Btn secondary onClick={addValue}>+ Add</Btn>
+            </div>
+            {allowedValues.length > 0 && (
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", padding:"8px 10px", background:T.bg, border:`1px solid ${T.border}`, borderRadius:5 }}>
+                {allowedValues.map(v => (
+                  <span key={v} style={{ display:"flex", alignItems:"center", gap:5, background:T.accent+"15", color:T.accent, padding:"3px 8px", borderRadius:4, fontSize:11 }}>
+                    {v}
+                    <button onClick={() => removeValue(v)} style={{ background:"none", border:"none", color:T.accent, cursor:"pointer", fontSize:12, padding:0, lineHeight:1 }}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {allowedValues.length === 0 && <div style={{ fontSize:10, color:T.faint, padding:"6px 0" }}>No values added — any value will be accepted</div>}
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <Label>Description</Label>
+            <textarea rows={2} style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none", resize:"vertical" }} />
+          </div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}><Label>Mandatory</Label><Toggle label="Yes" active={true} /></div>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}><Label>Active</Label><Toggle label="Yes" active={true} /></div>
         </div>
@@ -923,24 +1141,34 @@ function FormatsPage({ role }) {
    5. SWITCH PROFILE
 ═══════════════════════════════════════════ */
 function ProfilesPage({ role }) {
-  const [testing, setTesting]       = useState(null);
-  const [testResult, setTestResult] = useState({});
+  const [testing, setTesting]         = useState(null);
+  const [testResult, setTestResult]   = useState({});
+  const [editingId, setEditingId]     = useState(null);
+  const [advancedState, setAdvancedState] = useState(
+    Object.fromEntries(PROFILES.map(p => [p.id, { timezone:p.timezone, connectionTimeout:p.connectionTimeout, tpduEnabled:p.tpduEnabled, tpduValue:p.tpduValue }]))
+  );
 
   const testConn = (id) => {
     setTesting(id);
     setTimeout(()=>{ setTesting(null); setTestResult(x=>({...x,[id]:id===3?"FAILED":"OK"})); }, 1200);
   };
 
+  const updateAdv = (id, key, val) => setAdvancedState(x => ({ ...x, [id]:{ ...x[id], [key]:val } }));
+
+  const TIMEZONES = ["Asia/Kolkata","UTC","Asia/Singapore","Asia/Dubai","Europe/London","America/New_York","America/Los_Angeles","Asia/Tokyo","Australia/Sydney"];
+
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <PageHeader title="Switch Profile" sub="Each connection binds a message format + validation rules + switch host. One dropdown to rule them all." />
+      <PageHeader title="Switch Profile" sub="Each connection binds a message format + validation rules + switch host. Message Formats & Rules Manager handle DE-level config." />
       {!role.can.edit && <RoleBanner roleNeeded="ADMIN" action="edit Switch Profile" />}
       <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-        {role.can.add && <Btn primary>+ New Connection</Btn>}
+        {role.can.add && <Btn primary>+ New Profile</Btn>}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
         {PROFILES.map(p=>{
           const conn = testResult[p.id];
+          const adv  = advancedState[p.id];
+          const isEditing = editingId === p.id;
           return (
             <div key={p.id} style={{ background:T.surface, borderRadius:8, border:`1px solid ${p.isDefault?T.accent:T.border}`, borderTop:`2px solid ${p.active?ENV_COLORS[p.env]:T.faint}`, padding:16, opacity:p.active?1:0.6 }}>
               <div style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:12 }}>
@@ -960,14 +1188,63 @@ function ProfilesPage({ role }) {
               </div>
               <div style={{ fontSize:11, color:T.muted, display:"flex", flexDirection:"column", gap:5, marginBottom:12 }}>
                 <Row><span>Message Format:</span><span style={{ color:T.accent }}>{p.format}</span></Row>
-                <Row><span>Host:</span><span style={{ color:T.text }}>{p.host}</span></Row>
+                <Row><span>Host:</span><span style={{ color:T.text }}>{p.host}:{p.port}</span></Row>
                 <Row><span>Rules Configured:</span><span style={{ color:T.yellow, fontWeight:700 }}>{p.rulesCount} rules</span></Row>
                 <Row><span>Last Used:</span><span style={{ color:T.text }}>{p.lastUsed}</span></Row>
               </div>
+              <div style={{ background:T.surface2, border:`1px solid ${T.border}`, borderRadius:5, padding:"8px 10px", marginBottom:12, fontSize:10, display:"flex", flexDirection:"column", gap:4 }}>
+                <div style={{ fontSize:9, color:T.faint, fontWeight:700, marginBottom:4, textTransform:"uppercase", letterSpacing:"0.04em" }}>Advanced</div>
+                <Row><span style={{ color:T.muted }}>Timezone:</span><span style={{ color:T.text }}>{adv.timezone}</span></Row>
+                <Row><span style={{ color:T.muted }}>Connection Timeout:</span><span style={{ color:T.text }}>{adv.connectionTimeout/1000}s ({adv.connectionTimeout}ms)</span></Row>
+                <Row>
+                  <span style={{ color:T.muted }}>TPDU / Header:</span>
+                  {adv.tpduEnabled
+                    ? <span style={{ color:T.yellow }}>Enabled — {adv.tpduValue}</span>
+                    : <span style={{ color:T.faint }}>Disabled</span>
+                  }
+                </Row>
+              </div>
+              {isEditing && role.can.edit && (
+                <div style={{ background:T.bg, border:`1px solid ${T.accent}33`, borderRadius:6, padding:"12px 14px", marginBottom:12 }}>
+                  <div style={{ fontSize:11, color:T.accent, fontWeight:700, marginBottom:10 }}>Edit Advanced Settings</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    <div>
+                      <Label>Timezone</Label>
+                      <select value={adv.timezone} onChange={e=>updateAdv(p.id,"timezone",e.target.value)} style={selectStyle}>
+                        {TIMEZONES.map(tz=><option key={tz}>{tz}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Connection Timeout (ms)</Label>
+                      <input type="number" value={adv.connectionTimeout} onChange={e=>updateAdv(p.id,"connectionTimeout",+e.target.value)} min="1000" step="1000"
+                        style={{ width:"100%", boxSizing:"border-box", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+                    </div>
+                    <div>
+                      <Label>TPDU / Message Header</Label>
+                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+                        <span style={{ fontSize:11, color:T.muted }}>Enabled?</span>
+                        <Toggle label={adv.tpduEnabled?"Yes":"No"} active={adv.tpduEnabled} onClick={()=>updateAdv(p.id,"tpduEnabled",!adv.tpduEnabled)} />
+                      </div>
+                      {adv.tpduEnabled && (
+                        <div>
+                          <Label>TPDU Value</Label>
+                          <input type="text" value={adv.tpduValue} onChange={e=>updateAdv(p.id,"tpduValue",e.target.value)} placeholder="e.g. 6000000000"
+                            style={{ width:"100%", boxSizing:"border-box", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"7px 10px", borderRadius:5, fontFamily:"inherit", fontSize:11, outline:"none" }} />
+                          <div style={{ fontSize:9, color:T.faint, marginTop:3 }}>10-digit TPDU header prefixed to every message on this connection</div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <Btn primary onClick={()=>setEditingId(null)}>💾 Save Advanced</Btn>
+                      <Btn secondary onClick={()=>setEditingId(null)}>Cancel</Btn>
+                    </div>
+                  </div>
+                </div>
+              )}
               {conn && <div style={{ marginBottom:10, padding:"6px 10px", borderRadius:4, fontSize:11, background:conn==="OK"?T.green+"12":T.red+"12", color:conn==="OK"?T.green:T.red, border:`1px solid ${conn==="OK"?T.green+"33":T.red+"33"}` }}>{conn==="OK"?"✓ Connection OK — switch reachable":"✗ Connection FAILED — host unreachable"}</div>}
               <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                 <SmBtn onClick={()=>testConn(p.id)}>{testing===p.id?"Testing…":"Test Connection"}</SmBtn>
-                {role.can.edit && <SmBtn>Edit</SmBtn>}
+                {role.can.edit && <SmBtn onClick={()=>setEditingId(isEditing?null:p.id)}>{isEditing?"✕ Close":"⚙ Edit Advanced"}</SmBtn>}
                 {role.can.add && <SmBtn>Clone</SmBtn>}
                 {role.can.edit && !p.isDefault && <SmBtn>Set Default</SmBtn>}
                 {role.can.delete && !p.isDefault && <SmBtn danger>Delete</SmBtn>}
@@ -978,16 +1255,20 @@ function ProfilesPage({ role }) {
       </div>
       <Card title="Connection → Format Mapping" badge="overview">
         <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-          <thead><tr style={{ borderBottom:`1px solid ${T.border}` }}>{["Connection","Environment","Message Format","Encoding","DEs","Rules","Default","Status"].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
+          <thead><tr style={{ borderBottom:`1px solid ${T.border}` }}>{["Connection","Environment","Host","Message Format","Encoding","DEs","Rules","Timezone","Timeout","TPDU","Default","Status"].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
           <tbody>
-            {PROFILES.map(p=>{ const fmt=MOCK_FORMATS.find(f=>f.id===p.formatId); return (
+            {PROFILES.map(p=>{ const fmt=MOCK_FORMATS.find(f=>f.id===p.formatId); const adv=advancedState[p.id]; return (
               <tr key={p.id} style={{ borderBottom:`1px solid ${T.border}22` }}>
                 <td style={{ padding:"8px 8px", color:T.text, fontWeight:700 }}>{p.name}</td>
                 <td style={{ padding:"8px 8px" }}><Tag color={ENV_COLORS[p.env]} small>{p.env}</Tag></td>
+                <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>{p.host}:{p.port}</td>
                 <td style={{ padding:"8px 8px", color:T.accent }}>{fmt?.name}</td>
                 <td style={{ padding:"8px 8px", color:T.muted }}>{fmt?.encoding}</td>
                 <td style={{ padding:"8px 8px", color:T.muted }}>{fmt?.fields}</td>
                 <td style={{ padding:"8px 8px", color:T.yellow }}>{p.rulesCount}</td>
+                <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>{adv.timezone}</td>
+                <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>{adv.connectionTimeout/1000}s</td>
+                <td style={{ padding:"8px 8px" }}>{adv.tpduEnabled?<Tag color={T.yellow} small>ON · {adv.tpduValue}</Tag>:<span style={{ color:T.faint, fontSize:10 }}>Off</span>}</td>
                 <td style={{ padding:"8px 8px" }}>{p.isDefault&&<Tag color={T.accent} small>YES</Tag>}</td>
                 <td style={{ padding:"8px 8px" }}><Tag color={p.active?T.green:T.faint} small>{p.active?"ACTIVE":"INACTIVE"}</Tag></td>
               </tr>
@@ -1047,7 +1328,11 @@ function HistoryPage({ role }) {
       </div>
       <Card title="Records" badge={`${filtered.length} results`}>
         <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
-          <thead><tr style={{ borderBottom:`1px solid ${T.border}` }}>{["","ID","Timestamp","MTI","Connection","Env","Errors","Parse","Validate","AI","Total","Status",""].map((h,i)=><Th key={h+i}>{h}</Th>)}</tr></thead>
+          <thead>
+            <tr style={{ borderBottom:`1px solid ${T.border}` }}>
+              {["","ID","Timestamp","MTI","Connection","Env","DE39 Response","Amount","Merchant / Terminal","Errors","Parse","Val","AI","Total","Status",""].map((h,i)=><Th key={h+i}>{h}</Th>)}
+            </tr>
+          </thead>
           <tbody>
             {filtered.map(h=>{
               const sc={ PASSED:T.green, FAILED:T.red, WARNED:T.yellow }[h.status];
@@ -1058,10 +1343,21 @@ function HistoryPage({ role }) {
                     <button onClick={()=>setExpanded(isOpen?null:h.id)} style={{ background:"none", border:`1px solid ${T.border}`, color:T.muted, width:20, height:20, borderRadius:3, cursor:"pointer", fontSize:10, display:"flex", alignItems:"center", justifyContent:"center" }}>{isOpen?"▲":"▼"}</button>
                   </td>
                   <td style={{ padding:"8px 8px", color:T.accent }}>{h.id}</td>
-                  <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>{h.ts}</td>
+                  <td style={{ padding:"8px 8px", color:T.muted, fontSize:10, whiteSpace:"nowrap" }}>{h.ts}</td>
                   <td style={{ padding:"8px 8px", color:T.text, fontWeight:700 }}>{h.mti}</td>
-                  <td style={{ padding:"8px 8px", color:T.text }}>{h.profile}</td>
+                  <td style={{ padding:"8px 8px", color:T.text, fontSize:10 }}>{h.profile}</td>
                   <td style={{ padding:"8px 8px" }}><Tag color={ENV_COLORS[h.env]} small>{h.env}</Tag></td>
+                  <td style={{ padding:"8px 8px", fontSize:10, whiteSpace:"nowrap" }}>
+                    {h.responseCode && h.responseCode !== "—"
+                      ? <span>
+                          <span style={{ color:h.responseCode==="00"?T.green:T.yellow, fontWeight:700 }}>{h.responseCode}</span>
+                          <span style={{ color:T.faint }}> {h.responseLabel}</span>
+                        </span>
+                      : <span style={{ color:T.faint }}>—</span>
+                    }
+                  </td>
+                  <td style={{ padding:"8px 8px", color:T.text, fontSize:10, whiteSpace:"nowrap" }}>{h.amount}</td>
+                  <td style={{ padding:"8px 8px", color:T.muted, fontSize:10, maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{h.merchant}</td>
                   <td style={{ padding:"8px 8px", color:h.errors>0?T.yellow:T.green, textAlign:"center", fontWeight:700 }}>{h.errors}</td>
                   <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.parsMs}ms</td>
                   <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.valMs}ms</td>
@@ -1070,7 +1366,7 @@ function HistoryPage({ role }) {
                   <td style={{ padding:"8px 8px" }}><Tag color={sc} small>{h.status}</Tag></td>
                   <td style={{ padding:"8px 8px" }}><div style={{ display:"flex", gap:4 }}><SmBtn>View</SmBtn>{role.can.validate&&<SmBtn>↺ Re-run</SmBtn>}<SmBtn>⬇ JSON</SmBtn></div></td>
                 </tr>
-                {isOpen && <tr key={h.id+"_exp"} style={{ borderBottom:`1px solid ${T.border}22`, background:T.surface2 }}><td colSpan={13} style={{ padding:"10px 14px" }}><div style={{ fontSize:11, color:T.muted, marginBottom:6 }}>Raw Message Preview:</div><div style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:4, padding:"8px 12px", fontFamily:"inherit", fontSize:11, color:T.accent, wordBreak:"break-all" }}>{h.raw}<span style={{ color:T.faint }}>…</span></div></td></tr>}
+                {isOpen && <tr key={h.id+"_exp"} style={{ borderBottom:`1px solid ${T.border}22`, background:T.surface2 }}><td colSpan={16} style={{ padding:"10px 14px" }}><div style={{ fontSize:11, color:T.muted, marginBottom:6 }}>Raw Message Preview:</div><div style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:4, padding:"8px 12px", fontFamily:"inherit", fontSize:11, color:T.accent, wordBreak:"break-all" }}>{h.raw}<span style={{ color:T.faint }}>…</span></div></td></tr>}
               </>);
             })}
           </tbody>
