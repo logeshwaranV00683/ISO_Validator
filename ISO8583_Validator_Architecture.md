@@ -2302,4 +2302,145 @@ This gives daily-reset sequences, human-readable, collision-free across multiple
 
 ---
 
+---
+
+# PART 11 — API DOCUMENTATION (SWAGGER / OPENAPI)
+
+## 11.1 Setup — Each Service
+
+Add to every service's pom.xml (already managed in root — just add the dependency):
+
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.5.0</version>
+</dependency>
+```
+
+For api-gateway (WebFlux — reactive):
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+    <version>2.5.0</version>
+</dependency>
+```
+
+## 11.2 application.yaml — Each Service
+
+```yaml
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    tags-sorter: alpha
+    operations-sorter: method
+  show-actuator: false
+```
+
+## 11.3 OpenApiConfig.java — Each Service
+
+Create in each service under config/:
+
+```java
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI openAPI() {
+        return new OpenAPI()
+            .info(new Info()
+                .title("ISO 8583 Validator — Auth Service")   // change per service
+                .description("Authentication, session management, RBAC")
+                .version("1.0.0")
+                .contact(new Contact()
+                    .name("Verinite")
+                    .email("dev@verinite.com")))
+            .addSecurityItem(new SecurityRequirement()
+                .addList("BearerAuth"))
+            .components(new Components()
+                .addSecuritySchemes("BearerAuth",
+                    new SecurityScheme()
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+                        .description("RS256 JWT — obtain from POST /auth/login")));
+    }
+}
+```
+
+## 11.4 Controller Annotations
+
+```java
+// On the controller class:
+@Tag(name = "Authentication", description = "Login, logout, token management")
+
+// On each endpoint:
+@Operation(summary = "Login", description = "BCrypt verify + RS256 JWT issued + session created")
+@ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Login successful"),
+    @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+    @ApiResponse(responseCode = "423", description = "Account locked")
+})
+
+// On DTOs:
+@Schema(description = "Login request payload")
+private @Schema(description = "Username", example = "admin") String username;
+private @Schema(description = "Raw password", example = "Admin@123") String password;
+```
+
+## 11.5 Swagger UI URLs (per service)
+
+| Service | Swagger UI |
+|---|---|
+| auth-service | http://localhost:8081/swagger-ui.html |
+| profile-service | http://localhost:8082/swagger-ui.html |
+| rules-service | http://localhost:8083/swagger-ui.html |
+| validation-engine | http://localhost:8084/swagger-ui.html |
+| ai-service | http://localhost:8085/swagger-ui.html |
+| history-service | http://localhost:8086/swagger-ui.html |
+
+## 11.6 Security — Allow Swagger in SecurityConfig
+
+Add these paths to the public routes in each service's SecurityConfig:
+
+```java
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers(
+        "/swagger-ui.html",
+        "/swagger-ui/**",
+        "/api-docs/**",
+        "/v3/api-docs/**"
+    ).permitAll()
+    ...
+)
+```
+
+## 11.7 Aggregated Docs at API Gateway (Optional)
+
+To see all services' docs in one place at the gateway, add to gateway's application.yaml:
+
+```yaml
+springdoc:
+  swagger-ui:
+    urls:
+      - name: auth-service
+        url: /auth/api-docs
+      - name: profile-service
+        url: /profiles/api-docs
+      - name: rules-service
+        url: /rules/api-docs
+      - name: validation-engine
+        url: /validate/api-docs
+      - name: ai-service
+        url: /ai/api-docs
+      - name: history-service
+        url: /history/api-docs
+```
+
+Gateway Swagger UI: http://localhost:8080/swagger-ui.html → dropdown to switch between services.
+
 > **Blueprint Status:** Complete. Every field in schema defined. Every API endpoint listed with request/response. Every key workflow has a sequence diagram. Every architecture decision documented and justified. This is your production baseline — build on this, don't deviate from the service boundary rules.
