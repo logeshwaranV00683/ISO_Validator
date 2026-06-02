@@ -140,28 +140,44 @@ mock.onPut(/\/field-definitions\/\d+/).reply(200, { success:true, data: MOCK_FIE
 mock.onDelete(/\/field-definitions\/\d+/).reply(204);
 
 // ── VALIDATE ──────────────────────────────────────────────────────────────────
-mock.onPost("/validate").reply(200, { success:true, data:{
-  runReference:"VLD-0248", status:"FAILED", mti:"0200", mtiDescription:"Authorization Request",
-  profile:{ profileName:"Visa Switch", environment:"PROD" },
-  timing:{ parseDurationMs:12, validationDurationMs:8, aiDurationMs:420, totalDurationMs:440 },
-  bitmap:{ primary:"723A00010AC08000", extended:null, bitsSet:[2,3,4,7,11,41] },
-  parsedFields:[
-    { deNumber:"MTI",  fieldName:"Message Type Indicator",    rawValue:"0200",             displayValue:"Authorization Request",                isPresent:true  },
-    { deNumber:"DE2",  fieldName:"Primary Account Number",    rawValue:"4111111111111111", displayValue:"4111 •••• •••• 1111",                 isPresent:true  },
-    { deNumber:"DE3",  fieldName:"Processing Code",           rawValue:"000000",           displayValue:"Purchase (00) · From (00) · To (00)", isPresent:true  },
-    { deNumber:"DE4",  fieldName:"Transaction Amount",        rawValue:"00000010000",      displayValue:"₹100.00 (11 digits)",                 isPresent:true  },
-    { deNumber:"DE7",  fieldName:"Transmission Date & Time",  rawValue:null,               displayValue:"Missing — CRITICAL",                  isPresent:false },
-    { deNumber:"DE11", fieldName:"System Trace Audit Number", rawValue:"123456",           displayValue:"Trace #123456",                       isPresent:true  },
-    { deNumber:"DE41", fieldName:"Card Acceptor Terminal ID", rawValue:"TERM0001",         displayValue:"Terminal: TERM0001",                  isPresent:true  },
-  ],
-  errors:[
-    { deNumber:"DE7",  fieldName:"Transmission Date & Time", severity:"CRITICAL", issueDescription:"Field is mandatory but absent in the message",      ruleSnapshot:"mandatory=true, length=10", aiExplanation:"DE7 timestamps when the transaction was initiated. Its absence causes acquirer switches to reject with response code 30 (Format Error).", aiFixSuggestion:"Populate with MMDDHHmmss format. Example: 0524174800 (May 24, 17:48:00)" },
-    { deNumber:"DE4",  fieldName:"Transaction Amount",        severity:"WARNING",  issueDescription:"Length is 11 digits, expected exactly 12 digits",  ruleSnapshot:"length=12",                 aiExplanation:"DE4 must be exactly 12 digits, right-justified and zero-padded. You sent 11 digits.", aiFixSuggestion:"Pad with leading zero: 00000010000 → 000000010000" },
-    { deNumber:"DE22", fieldName:"POS Entry Mode",            severity:"INFO",     issueDescription:"Recommended field absent for 0200 transactions",   ruleSnapshot:"mandatory=false",           aiExplanation:null, aiFixSuggestion:null },
-  ],
-  summary:{ criticalCount:1, warningCount:1, infoCount:1, totalCount:3 },
-  ai:{ enabled:false, modelUsed:null, durationMs:null },
-}});
+const VALIDATE_ERRORS_BASE = [
+  { deNumber:"DE7",  fieldName:"Transmission Date & Time", severity:"CRITICAL", issueDescription:"Field is mandatory but absent in the message",     ruleSnapshot:"mandatory=true, length=10" },
+  { deNumber:"DE4",  fieldName:"Transaction Amount",        severity:"WARNING",  issueDescription:"Length is 11 digits, expected exactly 12 digits", ruleSnapshot:"length=12"                 },
+  { deNumber:"DE22", fieldName:"POS Entry Mode",            severity:"INFO",     issueDescription:"Recommended field absent for 0200 transactions",  ruleSnapshot:"mandatory=false"           },
+];
+
+const VALIDATE_ERRORS_WITH_AI = [
+  { ...VALIDATE_ERRORS_BASE[0], aiExplanation:"DE7 timestamps when the transaction was initiated. Its absence causes acquirer switches to reject with response code 30 (Format Error). The originating switch uses this field to sequence and de-duplicate transactions in real-time authorization flows.", aiFixSuggestion:"Populate with MMDDHHmmss format. Example: 0524174800 (May 24, 17:48:00)" },
+  { ...VALIDATE_ERRORS_BASE[1], aiExplanation:"DE4 must be exactly 12 digits, right-justified and zero-padded per ISO8583 spec. Sending 11 digits causes a parse offset error that corrupts all subsequent fixed-length fields downstream in the message.", aiFixSuggestion:"Pad with a leading zero: 00000010000 → 000000010000" },
+  { ...VALIDATE_ERRORS_BASE[2], aiExplanation:null, aiFixSuggestion:null },
+];
+
+mock.onPost("/validate").reply(({ data }) => {
+  const body = JSON.parse(data);
+  const withAi = !!body.enableAi;
+  return [200, { success:true, data:{
+    runReference:"VLD-0248", status:"FAILED", mti:"0200", mtiDescription:"Authorization Request",
+    profile:{ profileName:"Visa Switch", environment:"PROD" },
+    timing:{
+      parseDurationMs:12, validationDurationMs:8,
+      aiDurationMs: withAi ? 420 : null,
+      totalDurationMs: withAi ? 440 : 20,
+    },
+    bitmap:{ primary:"723A00010AC08000", extended:null, bitsSet:[2,3,4,7,11,41] },
+    parsedFields:[
+      { deNumber:"MTI",  fieldName:"Message Type Indicator",    rawValue:"0200",             displayValue:"Authorization Request",                isPresent:true  },
+      { deNumber:"DE2",  fieldName:"Primary Account Number",    rawValue:"4111111111111111", displayValue:"4111 •••• •••• 1111",                 isPresent:true  },
+      { deNumber:"DE3",  fieldName:"Processing Code",           rawValue:"000000",           displayValue:"Purchase (00) · From (00) · To (00)", isPresent:true  },
+      { deNumber:"DE4",  fieldName:"Transaction Amount",        rawValue:"00000010000",      displayValue:"₹100.00 (11 digits)",                 isPresent:true  },
+      { deNumber:"DE7",  fieldName:"Transmission Date & Time",  rawValue:null,               displayValue:"Missing — CRITICAL",                  isPresent:false },
+      { deNumber:"DE11", fieldName:"System Trace Audit Number", rawValue:"123456",           displayValue:"Trace #123456",                       isPresent:true  },
+      { deNumber:"DE41", fieldName:"Card Acceptor Terminal ID", rawValue:"TERM0001",         displayValue:"Terminal: TERM0001",                  isPresent:true  },
+    ],
+    errors: withAi ? VALIDATE_ERRORS_WITH_AI : VALIDATE_ERRORS_BASE.map(e => ({ ...e, aiExplanation:null, aiFixSuggestion:null })),
+    summary:{ criticalCount:1, warningCount:1, infoCount:1, totalCount:3 },
+    ai:{ enabled:withAi, modelUsed: withAi ? "mistral:7b" : null, durationMs: withAi ? 420 : null },
+  }}];
+});
 
 mock.onPost(/\/validate\/VLD-\w+\/rerun/).reply(200, { success:true, data:{ runReference:"VLD-0249", status:"PASSED", errors:[], summary:{ criticalCount:0, warningCount:0, infoCount:0, totalCount:0 } } });
 
