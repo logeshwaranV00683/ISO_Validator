@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
@@ -7,22 +7,37 @@ import { getProfiles } from "../api/profiles";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner, Th, Toggle } from "../components/shared";
 import FieldDefModal from "./modals/FieldDefModal";
 
-const MTIS = ["0200","0210","0420","0800","0810"];
+const MTIS = ["0200", "0210", "0420", "0800", "0810"];
 
 export default function FieldDefinitions() {
   const { can } = useAuth();
   const [profileId, setProfileId] = useState("");
-  const [mti, setMti]             = useState("0200");
+  const [mti, setMti] = useState("0200");
   const [showModal, setShowModal] = useState(false);
-  const [editDef, setEditDef]     = useState(null);
+  const [editDef, setEditDef] = useState(null);
 
   const { data: profiles } = useApi(getProfiles);
+
+  useEffect(() => {
+    const list = Array.isArray(profiles)
+      ? profiles
+      : profiles?.content || [];
+
+    if (!profileId && list.length > 0) {
+      setProfileId(String(list[0].id));
+    }
+  }, [profiles, profileId]);
+
+
   const { data: defs, loading, error, refetch } = useApi(
-    () => getFieldDefinitions({ profileId, mti }),
+    () =>
+      profileId
+        ? getFieldDefinitions({ profileId, mti })
+        : Promise.resolve([]),
     [profileId, mti]
   );
   const { mutate: doDelete } = useMutation(deleteFieldDef);
-  const { mutate: doUpdate } = useMutation((id,d) => updateFieldDef(id,d));
+  const { mutate: doUpdate } = useMutation((id, d) => updateFieldDef(id, d));
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this field definition?")) return;
@@ -34,77 +49,83 @@ export default function FieldDefinitions() {
     refetch();
   };
 
-  const SL = { background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" };
+  const SL = { background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" };
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <PageHeader title="Field Definitions" sub="DE catalog per profile + MTI — drives the Message Builder form dynamically. Replaces hardcoded PROFILE_DE_CATALOG." />
 
       <Card>
-        <div style={{ display:"grid", gridTemplateColumns:"300px 1fr", gap:16, alignItems:"end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16, alignItems: "end" }}>
           <div>
-            <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>Switch Profile</div>
-            <select value={profileId} onChange={e=>setProfileId(e.target.value)} style={{ ...SL, width:"100%" }}>
-              <option value="">All Profiles</option>
-              {profiles?.content?.map(p => <option key={p.profileId} value={p.profileId}>{p.profileName}</option>)}
+            <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>Switch Profile</div>
+            <select value={profileId} onChange={e => setProfileId(e.target.value)} style={{ ...SL, width: "100%" }}>
+              {(Array.isArray(profiles)
+                ? profiles
+                : profiles?.content || []
+              ).map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.profileName}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>MTI</div>
-            <div style={{ display:"flex", gap:8 }}>
+            <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
+            <div style={{ display: "flex", gap: 8 }}>
               {MTIS.map(m => (
-                <button key={m} onClick={()=>setMti(m)}
-                  style={{ background:mti===m?T.accent+"22":T.surface2, border:`1px solid ${mti===m?T.accent:T.border}`, color:mti===m?T.accent:T.muted, padding:"7px 16px", borderRadius:6, fontFamily:"inherit", fontSize:11, cursor:"pointer" }}>{m}</button>
+                <button key={m} onClick={() => setMti(m)}
+                  style={{ background: mti === m ? T.accent + "22" : T.surface2, border: `1px solid ${mti === m ? T.accent : T.border}`, color: mti === m ? T.accent : T.muted, padding: "7px 16px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, cursor: "pointer" }}>{m}</button>
               ))}
             </div>
           </div>
         </div>
       </Card>
 
-      <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-        {can.add && <Btn primary onClick={()=>{ setEditDef(null); setShowModal(true); }}>+ Add Field</Btn>}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        {can.add && <Btn primary onClick={() => { setEditDef(null); setShowModal(true); }}>+ Add Field</Btn>}
         {can.add && <SmBtn>⬆ Bulk Import</SmBtn>}
       </div>
 
       {loading && <LoadingBar text="Loading field definitions…" />}
-      {error   && <ErrorBanner message={error} onRetry={refetch} />}
+      {error && <ErrorBanner message={error} onRetry={refetch} />}
 
-      <Card title={`Field Definitions`} badge={`${defs?.length||0} fields`}>
-        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+      <Card title={`Field Definitions`} badge={`${defs?.length || 0} fields`}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
           <thead>
-            <tr style={{ borderBottom:`1px solid ${T.border}` }}>
-              {["Order","DE","Field Name","Type","Max Len","LLVAR","Mandatory","Placeholder","Builder Visible","Active",...(can.edit?["Actions"]:[])].map(h=><Th key={h}>{h}</Th>)}
+            <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+              {["Order", "DE", "Field Name", "Type", "Max Len", "LLVAR", "Mandatory", "Placeholder", "Builder Visible", "Active", ...(can.edit ? ["Actions"] : [])].map(h => <Th key={h}>{h}</Th>)}
             </tr>
           </thead>
           <tbody>
-            {(defs||[]).map(d => (
-              <tr key={d.definitionId} style={{ borderBottom:`1px solid ${T.border}22`, opacity:d.isActive?1:0.5 }}>
-                <td style={{ padding:"8px 8px", color:T.faint, textAlign:"center" }}>{d.displayOrder}</td>
-                <td style={{ padding:"8px 8px", color:T.accent, fontWeight:700 }}>{d.deNumber}</td>
-                <td style={{ padding:"8px 8px", color:T.text }}>{d.fieldName}</td>
-                <td style={{ padding:"8px 8px" }}><Tag color={T.blue} small>{d.dataType}</Tag></td>
-                <td style={{ padding:"8px 8px", textAlign:"center", color:T.text }}>{d.maxLength}</td>
-                <td style={{ padding:"8px 8px", textAlign:"center" }}>
-                  {(d.isLlvar||d.isLllvar) && <Tag color={T.purple} small>{d.isLllvar?"LLLVAR":"LLVAR"}</Tag>}
+            {(defs || []).map(d => (
+              <tr key={d.definitionId} style={{ borderBottom: `1px solid ${T.border}22`, opacity: d.isActive ? 1 : 0.5 }}>
+                <td style={{ padding: "8px 8px", color: T.faint, textAlign: "center" }}>{d.displayOrder}</td>
+                <td style={{ padding: "8px 8px", color: T.accent, fontWeight: 700 }}>{d.deNumber}</td>
+                <td style={{ padding: "8px 8px", color: T.text }}>{d.fieldName}</td>
+                <td style={{ padding: "8px 8px" }}><Tag color={T.blue} small>{d.dataType}</Tag></td>
+                <td style={{ padding: "8px 8px", textAlign: "center", color: T.text }}>{d.maxLength}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center" }}>
+                  {(d.isLlvar || d.isLllvar) && <Tag color={T.purple} small>{d.isLllvar ? "LLLVAR" : "LLVAR"}</Tag>}
                 </td>
-                <td style={{ padding:"8px 8px", textAlign:"center", color:d.isMandatory?T.green:T.faint }}>{d.isMandatory?"✓":"✗"}</td>
-                <td style={{ padding:"8px 8px", color:T.faint, fontSize:10, maxWidth:140, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{d.placeholderValue||"—"}</td>
-                <td style={{ padding:"8px 8px", textAlign:"center" }}>
-                  <Toggle label="" active={d.isBuilderVisible} onClick={()=>can.edit && handleToggleVisible(d)} />
+                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isMandatory ? T.green : T.faint }}>{d.isMandatory ? "✓" : "✗"}</td>
+                <td style={{ padding: "8px 8px", color: T.faint, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center" }}>
+                  <Toggle label="" active={d.isBuilderVisible} onClick={() => can.edit && handleToggleVisible(d)} />
                 </td>
-                <td style={{ padding:"8px 8px", textAlign:"center", color:d.isActive?T.green:T.faint }}>{d.isActive?"✓":"✗"}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isActive ? T.green : T.faint }}>{d.isActive ? "✓" : "✗"}</td>
                 {can.edit && (
-                  <td style={{ padding:"8px 8px" }}>
-                    <div style={{ display:"flex", gap:4 }}>
-                      <SmBtn onClick={()=>{ setEditDef(d); setShowModal(true); }}>Edit</SmBtn>
-                      <SmBtn danger onClick={()=>handleDelete(d.definitionId)}>Del</SmBtn>
+                  <td style={{ padding: "8px 8px" }}>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <SmBtn onClick={() => { setEditDef(d); setShowModal(true); }}>Edit</SmBtn>
+                      <SmBtn danger onClick={() => handleDelete(d.definitionId)}>Del</SmBtn>
                     </div>
                   </td>
                 )}
               </tr>
             ))}
             {!defs?.length && !loading && (
-              <tr><td colSpan={11} style={{ padding:"24px", textAlign:"center", color:T.faint, fontSize:12 }}>
+              <tr><td colSpan={11} style={{ padding: "24px", textAlign: "center", color: T.faint, fontSize: 12 }}>
                 No field definitions for {mti}. Add fields to enable the Message Builder for this profile + MTI.
               </td></tr>
             )}
@@ -117,8 +138,12 @@ export default function FieldDefinitions() {
           def={editDef}
           profileId={profileId}
           mti={mti}
-          profiles={profiles?.content||[]}
-          onClose={()=>setShowModal(false)}
+          profiles={
+            Array.isArray(profiles)
+              ? profiles
+              : profiles?.content || []
+          }
+          onClose={() => setShowModal(false)}
           onSaved={refetch}
         />
       )}

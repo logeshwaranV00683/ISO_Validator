@@ -7,12 +7,20 @@ export const getRule         = async (id)   => unwrap(await apiClient.get(`/rule
 export const createRule      = async (d)    => unwrap(await apiClient.post("/rules", d));
 export const updateRule      = async (id,d) => unwrap(await apiClient.put(`/rules/${id}`, d));
 export const deleteRule      = async (id)   => apiClient.delete(`/rules/${id}`);
-export const toggleRule      = async (id,v) => unwrap(await apiClient.patch(`/rules/${id}/status`, { isActive: v }));
-export const reorderRules    = async (arr)  => unwrap(await apiClient.patch("/rules/reorder", { updates: arr }));
+
+// FIX: Backend PATCH /rules/{id}/status takes NO body — it toggles internally.
+// Removed { isActive: v } body; `v` param removed since backend ignores it.
+export const toggleRule      = async (id)   => unwrap(await apiClient.patch(`/rules/${id}/status`));
+
+// FIX: Backend ReorderRulesRequest expects { priorities: [...] }, not { updates: [...] }
+export const reorderRules    = async (arr)  => unwrap(await apiClient.patch("/rules/reorder", { priorities: arr }));
 // arr: [{ ruleId, priority }]
-export const bulkImportRules = async (profileId, mti, rules, strategy="MERGE") =>
-  unwrap(await apiClient.post("/rules/bulk-import", { profileId, mti, strategy, rules }));
+
+// FIX: BulkImportRulesRequest requires profileName — pass it through
+export const bulkImportRules = async (profileId, profileName, mti, rules, strategy="MERGE") =>
+  unwrap(await apiClient.post("/rules/bulk-import", { profileId, profileName, mti, strategy, rules }));
 // returns: { imported, updated, skipped, errors[] }
+
 export const exportRules     = async (profileId, mti) =>
   unwrap(await apiClient.get("/rules/export", { params: buildParams({ profileId, mti }) }));
 

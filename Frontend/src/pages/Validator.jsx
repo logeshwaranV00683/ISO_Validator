@@ -30,7 +30,7 @@ export default function Validator({ initialMsg = "" }) {
     }
   }, [profiles, profileId]);
 
-  const profile = profiles?.content?.find(p => p.profileId === profileId);
+  const profile = profiles?.content?.find(p => p.id === profileId);
 
   const validate = async () => {
     if (!profileId || !rawMsg.trim()) return;
@@ -77,7 +77,7 @@ export default function Validator({ initialMsg = "" }) {
                 style={{ width:"100%", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" }}>
                 {!profiles && <option>Loading…</option>}
                 {profiles?.content?.map(p => (
-                  <option key={p.profileId} value={p.profileId}>{p.profileName}{p.isDefault?" (default)":""}</option>
+                  <option key={p.id} value={p.id}>{p.profileName}{p.isDefault?" (default)":""}</option>
                 ))}
               </select>
               {profile && (

@@ -5,12 +5,12 @@ export const getProfiles        = async (f={}) => unwrap(await apiClient.get("/p
 export const getProfile         = async (id)   => unwrap(await apiClient.get(`/profiles/${id}`));
 export const createProfile      = async (data) => unwrap(await apiClient.post("/profiles", data));
 export const updateProfile      = async (id,d) => unwrap(await apiClient.put(`/profiles/${id}`, d));
-export const deleteProfile      = async (id)   => apiClient.delete(`/profiles/${id}`);
-export const setProfileDefault  = async (id)   => unwrap(await apiClient.patch(`/profiles/${id}/default`));
-export const toggleProfileStatus= async (id,v) => unwrap(await apiClient.patch(`/profiles/${id}/status`, { isActive: v }));
-export const cloneProfile       = async (id,n) => unwrap(await apiClient.post(`/profiles/${id}/clone`, { newName: n }));
+export const deleteProfile      = async (id, username) => apiClient.delete(`/profiles/${id}`, { params: { username } });
+export const setProfileDefault  = async (id, username) => unwrap(await apiClient.patch(`/profiles/${id}/default`, null, { params: { username } }));
+export const toggleProfileStatus= async (id, v, username) => unwrap(await apiClient.patch(`/profiles/${id}/status`, null, { params: { active: v, username } }));
+export const cloneProfile       = async (id,n) => unwrap(await apiClient.post(`/profiles/${id}/clone`, null, { params: { newName: n } }));
 export const testConnection     = async (id)   => unwrap(await apiClient.post(`/profiles/${id}/test-connection`));
-// returns: { profileId, host, port, result:"SUCCESS"|"FAILED", message, latencyMs, testedAt }
+// returns: { profileId, host, port, result:"OK"|"FAILED", message, latencyMs, testedAt }
 
 // ── Formats ───────────────────────────────────────────────────────────────────
 export const getFormats         = async (f={}) => unwrap(await apiClient.get("/formats", { params: buildParams(f) }));

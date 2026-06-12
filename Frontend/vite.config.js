@@ -6,19 +6,43 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Proxy all /auth, /profiles, /formats, /rules, /validate,
-      // /history, /audit, /ai, /users, /config to API gateway
-      "/auth":             { target: "http://localhost:8080", changeOrigin: true },
-      "/profiles":         { target: "http://localhost:8080", changeOrigin: true },
-      "/formats":          { target: "http://localhost:8080", changeOrigin: true },
-      "/rules":            { target: "http://localhost:8080", changeOrigin: true },
-      "/field-definitions":{ target: "http://localhost:8080", changeOrigin: true },
-      "/validate":         { target: "http://localhost:8080", changeOrigin: true },
-      "/history":          { target: "http://localhost:8080", changeOrigin: true },
-      "/audit":            { target: "http://localhost:8080", changeOrigin: true },
-      "/ai":               { target: "http://localhost:8080", changeOrigin: true },
-      "/users":            { target: "http://localhost:8080", changeOrigin: true },
-      "/config":           { target: "http://localhost:8080", changeOrigin: true },
+      // FIX: Only proxy paths that start with these exact segments
+      // AND are clearly API calls (not page routes).
+      // Using regex-based proxy with stricter matching:
+
+      // /auth/... → backend (login, logout, change-password etc.)
+      "^/auth/":             { target: "http://localhost:8080", changeOrigin: true },
+
+      // /profiles/... → backend
+      "^/profiles/":         { target: "http://localhost:8080", changeOrigin: true },
+
+      // /formats/... → backend
+      "^/formats/":          { target: "http://localhost:8080", changeOrigin: true },
+
+      // /rules/... → backend (only /rules/something, NOT /rules page itself)
+      // FIX: /rules alone (page route) was being proxied to backend!
+      "^/rules/":            { target: "http://localhost:8080", changeOrigin: true },
+
+      // /field-definitions/... → backend
+      "^/field-definitions/":{ target: "http://localhost:8080", changeOrigin: true },
+
+      // /validate/... → backend
+      "^/validate/":         { target: "http://localhost:8080", changeOrigin: true },
+
+      // /history/... → backend
+      "^/history/":          { target: "http://localhost:8080", changeOrigin: true },
+
+      // /audit/... → backend
+      "^/audit/":            { target: "http://localhost:8080", changeOrigin: true },
+
+      // /ai/... → backend
+      "^/ai/":               { target: "http://localhost:8080", changeOrigin: true },
+
+      // /users/... → backend
+      "^/users/":            { target: "http://localhost:8080", changeOrigin: true },
+
+      // /config/... → backend
+      "^/config/":           { target: "http://localhost:8080", changeOrigin: true },
     },
   },
   build: {

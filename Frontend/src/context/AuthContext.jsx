@@ -14,10 +14,23 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (username, password) => {
     const data = await apiLogin(username, password);
-    localStorage.setItem("jwt_token", data.token);
-    localStorage.setItem("user_info", JSON.stringify(data.user));
-    setUser(data.user);
-    return data.user;
+
+    // FIX: backend returns { token, expiresAt, user: { username, role, ... } }
+    // data.role / data.username are undefined — must read from data.user
+    const userInfo = {
+      username:       data.user.username,
+      fullName:       data.user.fullName,
+      email:          data.user.email,
+      role:           data.user.role,
+      avatarInitials: data.user.avatarInitials,
+      userId:         data.user.userId,
+    };
+
+    localStorage.setItem("jwt_token",  data.token);
+    localStorage.setItem("user_info",  JSON.stringify(userInfo));
+
+    setUser(userInfo);
+    return userInfo;
   }, []);
 
   const logout = useCallback(async () => {

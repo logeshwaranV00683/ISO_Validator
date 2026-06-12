@@ -77,7 +77,7 @@ export default function History() {
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>Profile</div>
             <select onChange={e=>setFilter("profileId",e.target.value)} style={SL}>
               <option value="">ALL</option>
-              {profiles?.content?.map(p=><option key={p.profileId} value={p.profileId}>{p.profileName}</option>)}
+              {profiles?.content?.map(p=><option key={p.id} value={p.id}>{p.profileName}</option>)}
             </select>
           </div>
           <div>
