@@ -18,12 +18,12 @@ export const validateMessage = async (profileId, rawMessage, enableAi = false) =
 };
 
 // POST /validate/build — Build raw message from DE field values
-export const buildMessage = async (profileId, mti, fields) => {
-  const res = await apiClient.post("/validate/build", { profileId, mti, fields });
-  return unwrap(res);
   // returns: { rawMessage, mti, bitmapHex, bitsSet[], totalLength,
   //   fieldBreakdown: [{ deNumber, fieldName, rawValue, encoding:"FIXED"|"LLVAR"|"LLLVAR" }],
   //   missingMandatory[], profile }
+export const buildMessage = async (profileId, mti, fields, outputFormat = "HEX") => {
+  const res = await apiClient.post("/validate/build", { profileId, mti, fields, outputFormat });
+  return res.data?.data ?? res.data;
 };
 
 // POST /validate/:runReference/rerun

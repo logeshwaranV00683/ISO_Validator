@@ -32,3 +32,31 @@ input:focus, textarea:focus, select:focus {
 
 /* Transition for interactive elements */
 button { transition: opacity 0.12s, background 0.12s, border-color 0.12s; }
+
+/* ── Bitmap Visualizer animations ─────────────────────────────────────── */
+
+/* Soft pulsing glow for bits that have a value set */
+@keyframes bitGlow {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%      { box-shadow: 0 0 8px 1px currentColor; opacity: 0.85; }
+}
+
+/* Flash highlight on the target field when its bit is clicked */
+@keyframes flashHighlight {
+  0%   { box-shadow: 0 0 0 0 #00d2ff66; background: #00d2ff14; }
+  60%  { box-shadow: 0 0 0 6px #00d2ff00; background: #00d2ff0a; }
+  100% { box-shadow: 0 0 0 0 #00d2ff00; background: transparent; }
+}
+
+/* Slide+fade in for newly added custom DE fields */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Pop-in for the bit itself when toggled */
+@keyframes bitPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
