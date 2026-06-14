@@ -9,6 +9,12 @@ export const getSystemConfig = async () => {
 
 // PUT /config/:key
 export const updateSystemConfig = async (key, value, description) => {
-  const res = await apiClient.put(`/config/${encodeURIComponent(key)}`, { value, description });
+  const res = await apiClient.put(
+    `/config/${encodeURIComponent(key)}`,
+    {
+      configValue: value,
+      description
+    }
+  );
   return unwrap(res);
 };

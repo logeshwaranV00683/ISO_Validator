@@ -32,15 +32,15 @@ export default function SystemConfig() {
           </thead>
           <tbody>
             {(data||[]).map(c => {
-              const isEditing = edits[c.key] !== undefined;
+              const isEditing = edits[c.configKey] !== undefined;
               return (
-                <tr key={c.key} style={{ borderBottom:`1px solid ${T.border}22`, background:isEditing?T.surface2:"transparent" }}>
-                  <td style={{ padding:"10px 8px", color:T.accent, fontWeight:700, fontFamily:"monospace", fontSize:11 }}>{c.key}</td>
+                <tr key={c.configKey} style={{ borderBottom:`1px solid ${T.border}22`, background:isEditing?T.surface2:"transparent" }}>
+                  <td style={{ padding:"10px 8px", color:T.accent, fontWeight:700, fontFamily:"monospace", fontSize:11 }}>{c.configKey}</td>
                   <td style={{ padding:"10px 8px", minWidth:200 }}>
                     <input
-                      value={isEditing ? edits[c.key] : c.value}
-                      onChange={e => setEdits(x=>({...x,[c.key]:e.target.value}))}
-                      onFocus={() => { if (!isEditing) setEdits(x=>({...x,[c.key]:c.value})); }}
+                      value={isEditing ? edits[c.configKey] : c.configValue}
+                      onChange={e => setEdits(x=>({...x,[c.configKey]:e.target.value}))}
+                      onFocus={() => { if (!isEditing) setEdits(x=>({...x,[c.configKey]:c.configValue})); }}
                       style={{ width:"100%", boxSizing:"border-box", background:isEditing?T.bg:T.surface2, border:`1px solid ${isEditing?T.accent:T.border}`, color:T.text, padding:"6px 10px", borderRadius:5, fontFamily:"monospace", fontSize:11, outline:"none" }} />
                   </td>
                   <td style={{ padding:"10px 8px", color:T.muted, fontSize:10, maxWidth:200 }}>{c.description}</td>
@@ -48,8 +48,8 @@ export default function SystemConfig() {
                   <td style={{ padding:"10px 8px", color:T.faint, fontSize:10 }}>{c.updatedAt ? new Date(c.updatedAt).toLocaleString() : "—"}</td>
                   <td style={{ padding:"10px 8px" }}>
                     <div style={{ display:"flex", gap:4 }}>
-                      {isEditing && <Btn primary onClick={()=>handleSave(c.key,c.description)} style={{ padding:"3px 10px", fontSize:10 }}>{saving===c.key?"Saving…":"Save"}</Btn>}
-                      {isEditing && <SmBtn onClick={()=>setEdits(x=>{ const n={...x}; delete n[c.key]; return n; })}>Cancel</SmBtn>}
+                      {isEditing && <Btn primary onClick={()=>handleSave(c.configKey,c.description)} style={{ padding:"3px 10px", fontSize:10 }}>{saving===c.configKey?"Saving…":"Save"}</Btn>}
+                      {isEditing && <SmBtn onClick={()=>setEdits(x=>{ const n={...x}; delete n[c.configKey]; return n; })}>Cancel</SmBtn>}
                     </div>
                   </td>
                 </tr>

@@ -270,20 +270,89 @@ export default function AI() {
 
 function ProfilePromptCard({ profile, canEdit }) {
   const [content, setContent] = useState("");
+  const [versions, setVersions] = useState(null);
   const { data, refetch } = useApi(() => getProfilePrompt(profile.id), [profile.id]);
   const { mutate: doUpsert } = useMutation((c, n) => upsertProfilePrompt(profile.id, c, n));
   const { mutate: doDelete } = useMutation(() => deleteProfilePrompt(profile.id));
+  const { mutate: doRollback } = useMutation((id, v) => rollbackPrompt(id, v));
+
+  const loadVersions = async () => {
+    if (!data?.id) return;
+    const v = await getPromptVersions(data.id);
+    setVersions(v);
+  };
+
+  const envColor = { PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" }[profile.environment] || "#888";
 
   return (
-    <Card title={profile.profileName} badge={<Tag color={{ PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" }[profile.environment] || "#888"} small>{profile.environment}</Tag>}>
+    <Card
+      title={profile.profileName}
+      badge={
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {data?.currentVersion && (
+            <Tag color={T.purple} small>v{data.currentVersion}</Tag>
+          )}
+          <Tag color={envColor} small>{profile.environment}</Tag>
+        </div>
+      }
+    >
       <textarea rows={3} disabled={!canEdit} placeholder="Leave blank to use global template…"
         value={content || (data?.promptTemplate || "")}
         onChange={e => setContent(e.target.value)}
         style={{ width: "100%", boxSizing: "border-box", background: "#070a0f", border: "1px solid #1e2d3d", color: "#e6edf3", padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
       {canEdit && (
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <Btn primary onClick={async () => { await doUpsert(content, "Updated via UI"); refetch(); }}>💾 Save Override</Btn>
-          {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(""); }}>↺ Clear</Btn>}
+          <Btn primary onClick={async () => {
+            await doUpsert(content, "Updated via UI");
+            await refetch();
+            setContent("");
+            if (versions) {
+              const v = await getPromptVersions(data.id);
+              setVersions(v);
+            }
+          }}>💾 Save Override</Btn>
+          {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(""); setVersions(null); }}>↺ Clear</Btn>}
+          {data?.id && <SmBtn onClick={loadVersions}>Version History</SmBtn>}
+        </div>
+      )}
+
+      {/* Version history table */}
+      {versions && (
+        <div style={{ marginTop: 12, borderTop: `1px solid ${T.border}`, paddingTop: 12 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                {["Version", "By", "Date", "Note", ""].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.faint }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {versions.map(v => (
+                <tr key={v.versionNumber} style={{ borderBottom: `1px solid ${T.border}22` }}>
+                  <td style={{ padding: "6px 8px", color: T.accent }}>
+                    v{v.versionNumber}
+                    {v.versionNumber === data?.currentVersion && (
+                      <Tag color={T.green} small style={{ marginLeft: 4 }}>current</Tag>
+                    )}
+                  </td>
+                  <td style={{ padding: "6px 8px", color: T.text }}>{v.createdBy}</td>
+                  <td style={{ padding: "6px 8px", color: T.muted }}>{new Date(v.createdAt || v.updatedAt).toLocaleString()}</td>
+                  <td style={{ padding: "6px 8px", color: T.muted }}>{v.changeNote}</td>
+                  <td style={{ padding: "6px 8px" }}>
+                    {canEdit && v.versionNumber !== data?.currentVersion && (
+                      <SmBtn onClick={async () => {
+                        await doRollback(data.id, v.versionNumber);
+                        await refetch();
+                        const updated = await getPromptVersions(data.id);
+                        setVersions(updated);
+                      }}>Rollback</SmBtn>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </Card>
