@@ -207,38 +207,57 @@ export default function Validator({ initialMsg = "" }) {
               </div>
             </Card>
 
-    {/* AI */}
-    {result.ai?.enabled && (
-      result.ai?.skipped
-        ? <Card title="AI Explanation" badge={<span style={{ color:T.yellow }}>Skipped</span>}>
-            <div style={{ textAlign:"center", padding:"12px 0", fontSize:11, color:T.muted }}>
-              {result.ai.skipReason === "AI_UNAVAILABLE" && "⚠ AI service is currently unavailable"}
-              {result.ai.skipReason === "NO_ERRORS"      && "✓ No errors found — AI explanation skipped"}
-              {result.ai.skipReason === "PARSE_ERROR"    && "✗ Message could not be parsed — AI skipped"}
-            </div>
-          </Card>
-        : result.errors?.some(e=>e.aiExplanation) && (
-            <Card title="AI Explanation" badge={<span style={{ color:T.accent }}>{result.ai.modelUsed} · {result.ai.durationMs}ms · Local</span>}>
-              {/* existing AI explanation content unchanged */}
-              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                {result.errors.filter(e=>e.aiExplanation).map((e,i) => (
-                  <div key={i} style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:6, overflow:"hidden" }}>
-                    <button onClick={()=>setExpanded(x=>({...x,[i]:!x[i]}))} style={{ width:"100%", background:"none", border:"none", padding:"10px 12px", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between", fontFamily:"inherit" }}>
-                      <span style={{ fontSize:11, fontWeight:700, color:T.accent }}>{e.deNumber} — {e.fieldName}</span>
-                      <span style={{ color:T.faint }}>{expanded[i]?"▲":"▼"}</span>
-                    </button>
-                    {expanded[i]!==false && (
-                      <div style={{ padding:"0 12px 12px", fontSize:11, lineHeight:1.8 }}>
-                        <p style={{ color:T.muted, margin:"0 0 8px" }}>{e.aiExplanation}</p>
-                        {e.aiFixSuggestion && <div style={{ background:T.green+"12", border:`1px solid ${T.green}33`, borderRadius:4, padding:"6px 10px", color:T.green }}>→ <strong>Fix:</strong> {e.aiFixSuggestion}</div>}
-                      </div>
-                    )}
+            {/* AI */}
+            {result.ai?.enabled && (
+              result.ai?.skipped
+                ? <Card title="AI Explanation" badge={<span style={{ color:T.yellow }}>Skipped</span>}>
+                    <div style={{ textAlign:"center", padding:"12px 0", fontSize:11, color:T.muted }}>
+                      {result.ai.skipReason === "AI_UNAVAILABLE" && "⚠ AI service is currently unavailable"}
+                      {result.ai.skipReason === "NO_ERRORS"      && "✓ No errors found — AI explanation skipped"}
+                      {result.ai.skipReason === "PARSE_ERROR"    && "✗ Message could not be parsed — AI skipped"}
+                    </div>
+                  </Card>
+                : result.ai?.explanation && (
+                <Card title="AI Explanation" badge={<span style={{ color:T.purple }}>{result.ai.durationMs}ms</span>}>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {result.errors?.map((err, i) => {
+                      const sc = SEV[err.severity] || SEV.INFO;
+                      const expLines = result.ai.explanation.split(/\r?\n/).filter(Boolean);
+                      const deLineIdx = expLines.findIndex(l => l.includes(err.deNumber));
+                      const nextDeIdx = expLines.findIndex((l, idx) => idx > deLineIdx && /DE\d+/i.test(l) && !l.includes(err.deNumber));
+                      const deChunk = deLineIdx >= 0
+                        ? expLines.slice(deLineIdx, nextDeIdx > deLineIdx ? nextDeIdx : deLineIdx + 4)
+                            .join(" ")
+                            .replace(/^[-*\d.]\s*/, "")
+                            .replace(/\*\*(.*?)\*\*/g, "$1")
+                            .trim()
+                        : err.issueDescription;
+
+                      return (
+                        <div key={i} style={{ background:sc.bg, border:`1px solid ${sc.border}`, borderRadius:6, overflow:"hidden" }}>
+                          <button onClick={() => setExpanded(x => ({...x, [i]: !x[i]}))}
+                            style={{ width:"100%", background:"none", border:"none", padding:"10px 12px", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between", alignItems:"center", fontFamily:"inherit" }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:sc.text }}>{err.deNumber} — {err.fieldName}</span>
+                            <span style={{ color:T.faint, fontSize:10 }}>{expanded[i] === false ? "▼" : "▲"}</span>
+                          </button>
+                          {expanded[i] !== false && (
+                            <div style={{ padding:"0 12px 12px" }}>
+                              <div style={{ fontSize:11, lineHeight:1.8, color:T.muted, marginBottom:6 }}>
+                                {deChunk}
+                              </div>
+                              <div style={{ background:T.green+"10", borderLeft:`2px solid ${T.green}`, borderRadius:4, padding:"6px 10px", fontSize:11, color:T.green }}>
+                                ⚠ {err.issueDescription}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            </Card>
-          )
-    )}
+                </Card>
+              )
+            )}
+
 
             {/* Actions */}
             <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>

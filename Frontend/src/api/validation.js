@@ -2,7 +2,10 @@ import apiClient, { unwrap } from "./apiClient";
 
 // POST /validate — Parse + validate + AI explain
 export const validateMessage = async (profileId, rawMessage, enableAi = false) => {
-  const res = await apiClient.post("/validate", { profileId, rawMessage, enableAi });
+  const res = await apiClient.post("/validate",
+    { profileId, rawMessage, enableAi },
+    { timeout: enableAi ? 120000 : 30000 }  // AI on → 2min, normal → 30sec
+  );
   return unwrap(res);
   // returns: { runReference, status, mti, mtiDescription, profile,
   //   timing: { parseDurationMs, validationDurationMs, aiDurationMs, totalDurationMs },
