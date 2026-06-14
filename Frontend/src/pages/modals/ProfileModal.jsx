@@ -7,34 +7,35 @@ import { Btn, SmBtn, Label, Tag } from "../../components/shared";
 
 const TIMEZONES = ["Asia/Kolkata", "UTC", "Asia/Singapore", "Asia/Dubai", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo", "Australia/Sydney"];
 const ENVS = ["PROD", "UAT", "DEV"];
-const inputStyle = (err) => ({
-  width: "100%", boxSizing: "border-box", background: "#070a0f",
-  border: `1px solid ${err ? T.red : T.border}`, color: T.text,
+const inputStyle = (err, disabled) => ({
+  width: "100%", boxSizing: "border-box", background: disabled ? "#0d1117" : "#070a0f",
+  border: `1px solid ${err ? T.red : T.border}`, color: disabled ? T.muted : T.text,
   padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none",
+  cursor: disabled ? "not-allowed" : "text", opacity: disabled ? 0.6 : 1,
 });
 const SL = { width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" };
 
-export default function ProfileModal({ profile, formats, onClose, onSaved }) {
+export default function ProfileModal({ profile, onClose, onSaved }) {
   const isEdit = !!profile;
   const { user } = useAuth();
   const username = user?.username ?? "system";
 
   const [form, setForm] = useState({
     profileName: profile?.profileName || "",
-    formatId: profile?.formatId || "",
+    description: profile?.description || "",
     environment: profile?.environment || "UAT",
-    host: profile?.host || "",
-    port: profile?.port || "8583",
+    host: profile?.host || "127.0.0.1",
+    port: profile?.port || 8583,
     timezone: profile?.timezone || "Asia/Kolkata",
     connectionTimeoutMs: profile?.connectionTimeoutMs || 30000,
     tpduEnabled: profile?.tpduEnabled || false,
     tpduValue: profile?.tpduValue || "",
-    active: profile?.active ?? true,   // ✅ was isActive
+    isActive: profile?.isActive ?? profile?.active ?? true,
     isDefault: profile?.isDefault ?? false,
   });
   const [errors, setErrors] = useState({});
   const { mutate: doCreate, loading: creating } = useMutation(createProfile);
-  const { mutate: doUpdate, loading: updating } = useMutation((d) => updateProfile(profile.id, d)); // ✅ was profile.profileId
+  const { mutate: doUpdate, loading: updating } = useMutation((d) => updateProfile(profile.id, d));
   const loading = creating || updating;
 
   const set = (key, val) => { setForm(f => ({ ...f, [key]: val })); setErrors(e => ({ ...e, [key]: "" })); };
@@ -42,7 +43,6 @@ export default function ProfileModal({ profile, formats, onClose, onSaved }) {
   const validate = () => {
     const e = {};
     if (!form.profileName.trim()) e.profileName = "Required";
-    if (!form.formatId) e.formatId = "Required";
     if (!form.host.trim()) e.host = "Required";
     if (!form.port) e.port = "Required";
     if (form.tpduEnabled && !form.tpduValue.trim()) e.tpduValue = "Required when TPDU enabled";
@@ -50,16 +50,21 @@ export default function ProfileModal({ profile, formats, onClose, onSaved }) {
     return Object.keys(e).length === 0;
   };
 
-
-
   const handleSave = async () => {
     if (!validate()) return;
     try {
       const payload = {
-        ...form,
-        tpduValue: form.tpduEnabled
-          ? form.tpduValue
-          : null,
+        profileName: form.profileName,
+        description: form.description,
+        environment: form.environment,
+        host: form.host,
+        port: Number(form.port),
+        timezone: form.timezone,
+        connectionTimeoutMs: form.connectionTimeoutMs,
+        tpduEnabled: form.tpduEnabled,
+        tpduValue: form.tpduEnabled ? form.tpduValue : null,
+        isActive: form.isActive,
+        isDefault: form.isDefault,
       };
       console.log("Profile Payload:", payload);
       isEdit ? await doUpdate(payload) : await doCreate(payload);
@@ -69,32 +74,15 @@ export default function ProfileModal({ profile, formats, onClose, onSaved }) {
     }
   };
 
-
-
   return (
     <Modal title={isEdit ? `Edit — ${profile.profileName}` : "New Switch Profile"} onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field label="Profile Name" required error={errors.profileName}>
-          <input value={form.profileName} onChange={e => set("profileName", e.target.value)} placeholder="e.g. Visa Switch" style={inputStyle(errors.profileName)} />
+          <input value={form.profileName} onChange={e => set("profileName", e.target.value)} placeholder="e.g. Visa Switch" style={inputStyle(errors.profileName, false)} />
         </Field>
 
-        <Field label="Message Format" required error={errors.formatId}>
-          <select
-            value={form.formatId}
-            onChange={(e) => set("formatId", Number(e.target.value))}
-            style={SL}
-          >
-            <option value="">Select Format</option>
-
-            {formats?.map((fmt) => (
-              <option
-                key={fmt.id || fmt.formatId}
-                value={fmt.id || fmt.formatId}
-              >
-                {fmt.formatName}
-              </option>
-            ))}
-          </select>
+        <Field label="Description">
+          <input value={form.description} onChange={e => set("description", e.target.value)} placeholder="Optional description" style={inputStyle(false, false)} />
         </Field>
 
         <Field label="Environment" required>
@@ -115,31 +103,43 @@ export default function ProfileModal({ profile, formats, onClose, onSaved }) {
         </Field>
 
         <Field label="Host / IP" required error={errors.host}>
-          <input value={form.host} onChange={e => set("host", e.target.value)} placeholder="10.0.1.10" style={inputStyle(errors.host)} />
-        </Field>
+            <div style={{ position: "relative" }}>
+              <input
+                value={form.host}
+                placeholder="127.0.0.1"
+                disabled
+                style={{ ...inputStyle(errors.host, true), cursor: "not-allowed" }}
+              />
+              <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 9, color: T.faint }}>locked</span>
+            </div>
+          </Field>
 
-        <Field label="Port" required error={errors.port}>
-          <input value={form.port} onChange={e => set("port", e.target.value)} placeholder="8583" style={inputStyle(errors.port)} />
-        </Field>
+          <Field label="Port" required error={errors.port}>
+            <div style={{ position: "relative" }}>
+              <input
+                value={form.port}
+                placeholder="8583"
+                disabled
+                style={{ ...inputStyle(errors.port, true), cursor: "not-allowed" }}
+              />
+              <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 9, color: T.faint }}>locked</span>
+            </div>
+          </Field>
 
         <Field label="Connection Timeout (ms)">
           <input type="number" value={form.connectionTimeoutMs} onChange={e => set("connectionTimeoutMs", +e.target.value)} min={1000} step={1000} style={inputStyle()} />
         </Field>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
-          <ToggleRow label="Active" active={form.active} onClick={() => set("active", !form.active)} />
+          <ToggleRow label="Active" active={form.isActive} onClick={() => set("isActive", !form.isActive)} />
           <ToggleRow label="Default" active={form.isDefault} onClick={() => set("isDefault", !form.isDefault)} />
           <ToggleRow
             label="TPDU / Header"
             active={form.tpduEnabled}
             onClick={() => {
               const enabled = !form.tpduEnabled;
-
               set("tpduEnabled", enabled);
-
-              if (!enabled) {
-                set("tpduValue", "");
-              }
+              if (!enabled) set("tpduValue", "");
             }}
           />
         </div>

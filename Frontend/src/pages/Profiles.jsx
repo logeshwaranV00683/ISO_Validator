@@ -63,7 +63,6 @@ export default function Profiles() {
         {(Array.isArray(data) ? data : data?.content ?? []).map(p => {
           // ✅ Backend returns: p.id, p.active, p.isDefault (not profileId/isActive)
           const conn = testResults[p.id];
-          const fmt = formats?.find(f => (f.id || f.formatId) === p.formatId);
           return (
             <div key={p.id} style={{ background: T.surface, borderRadius: 8, border: `1px solid ${p.isDefault ? T.accent : T.border}`, borderTop: `2px solid ${p.active ? ENV_COLORS[p.environment] : T.faint}`, padding: 16, opacity: p.active ? 1 : 0.65 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
@@ -88,7 +87,6 @@ export default function Profiles() {
               </div>
 
               <div style={{ fontSize: 11, color: T.muted, display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
-                <Row><span>Format:</span><span style={{ color: T.accent }}>{fmt?.formatName ?? "—"}</span></Row>
                 <Row><span>Host:</span><span style={{ color: T.text }}>{p.host}:{p.port}</span></Row>
                 <Row><span>Timezone:</span><span style={{ color: T.text }}>{p.timezone}</span></Row>
                 <Row><span>Timeout:</span><span style={{ color: T.text }}>{p.connectionTimeoutMs / 1000}s</span></Row>
@@ -113,7 +111,7 @@ export default function Profiles() {
         })}
       </div>
 
-      {showModal && <ProfileModal profile={editProfile} formats={Array.isArray(formats) ? formats : formats?.content || []} onClose={() => setShowModal(false)} onSaved={refetch} />}
+     {showModal && <ProfileModal profile={editProfile} onClose={() => setShowModal(false)} onSaved={refetch} />}
     </div>
   );
 }
