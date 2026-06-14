@@ -48,7 +48,7 @@ export default function Users() {
           <StatCard label="Total Users" value={data.totalElements}                                    color={T.accent} />
           <StatCard label="Admins"      value={users.filter(u=>u.role==="ADMIN").length}              color={T.red}    />
           <StatCard label="Analysts"    value={users.filter(u=>u.role==="ANALYST").length}            color={T.yellow} />
-          <StatCard label="Active"      value={users.filter(u=>u.isActive).length}                    color={T.green}  />
+          <StatCard label="Active"      value={users.filter(u=>u.active).length}                    color={T.green}  />
         </div>
       )}
 
@@ -80,7 +80,7 @@ export default function Users() {
             {users.map(u => {
               const r = ROLES[u.role] || ROLES.VIEWER;
               return (
-                <tr key={u.userId} style={{ borderBottom:`1px solid ${T.border}22`, opacity:u.isActive?1:0.5 }}>
+                <tr key={u.id} style={{ borderBottom:`1px solid ${T.border}22`, opacity:u.active?1:0.5 }}>
                   <td style={{ padding:"8px 8px" }}>
                     <div style={{ width:28, height:28, borderRadius:7, background:r.color+"22", border:`1px solid ${r.color}44`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700, color:r.color }}>
                       {u.avatarInitials||u.username?.slice(0,2).toUpperCase()}
@@ -90,13 +90,13 @@ export default function Users() {
                   <td style={{ padding:"8px 8px", color:T.text }}>{u.fullName}</td>
                   <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>{u.email}</td>
                   <td style={{ padding:"8px 8px" }}>
-                    <select value={u.role} onChange={e=>handleRoleChange(u.userId,e.target.value)}
+                    <select value={u.role} onChange={e=>handleRoleChange(u.id,e.target.value)}
                       style={{ background:"transparent", border:`1px solid ${r.color}44`, color:r.color, padding:"3px 6px", borderRadius:4, fontFamily:"inherit", fontSize:9, cursor:"pointer" }}>
                       {["ADMIN","ANALYST","VIEWER"].map(role => <option key={role} value={role} style={{ background:"#0d1117", color:"#e6edf3" }}>{role}</option>)}
                     </select>
                   </td>
                   <td style={{ padding:"8px 8px" }}>
-                    <Tag color={u.isActive?T.green:T.faint} small>{u.isActive?"ACTIVE":"INACTIVE"}</Tag>
+                    <Tag color={u.active?T.green:T.faint} small>{u.active?"ACTIVE":"INACTIVE"}</Tag>
                   </td>
                   <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
@@ -104,9 +104,9 @@ export default function Users() {
                   <td style={{ padding:"8px 8px" }}>
                     <div style={{ display:"flex", gap:4 }}>
                       <SmBtn onClick={()=>{ setEditUser(u); setShowModal(true); }}>Edit</SmBtn>
-                      <SmBtn onClick={()=>handleToggle(u.userId,u.isActive)}>{u.isActive?"Disable":"Enable"}</SmBtn>
-                      <SmBtn onClick={()=>doRevoke(u.userId)}>Revoke Sessions</SmBtn>
-                      <SmBtn danger onClick={()=>handleDelete(u.userId)}>Del</SmBtn>
+                      <SmBtn onClick={()=>handleToggle(u.id,u.active)}>{u.active?"Disable":"Enable"}</SmBtn>
+                      <SmBtn onClick={()=>doRevoke(u.id)}>Revoke Sessions</SmBtn>
+                      <SmBtn danger onClick={()=>handleDelete(u.id)}>Del</SmBtn>
                     </div>
                   </td>
                 </tr>
@@ -117,7 +117,7 @@ export default function Users() {
             )}
           </tbody>
         </table>
-        <Pagination page={data?.page||0} totalPages={data?.totalPages||1} onPageChange={setPage} />
+        <Pagination page={data?.number||0} totalPages={data?.totalPages||1} onPageChange={setPage} />
       </Card>
 
       {showModal && <UserModal user={editUser} onClose={()=>setShowModal(false)} onSaved={refetch} />}

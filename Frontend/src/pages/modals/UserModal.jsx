@@ -23,8 +23,8 @@ export default function UserModal({ user, onClose, onSaved }) {
   const [showPass, setShowPass]   = useState(false);
 
   const { mutate: doCreate, loading:creating } = useMutation(createUser);
-  const { mutate: doUpdate, loading:updating } = useMutation(d => updateUser(user.userId, d));
-  const { mutate: doReset,  loading:resetting } = useMutation(p => adminResetPassword(user.userId, p));
+  const { mutate: doUpdate, loading:updating } = useMutation(d => updateUser(user.id, d));
+  const { mutate: doReset,  loading:resetting } = useMutation(p => adminResetPassword(user.id, p));
   const loading = creating || updating || resetting;
 
   const set = (k, v) => { setForm(f=>({...f,[k]:v})); setErrors(e=>({...e,[k]:""})); };
@@ -48,7 +48,11 @@ export default function UserModal({ user, onClose, onSaved }) {
     if (!validate()) return;
     try {
       if (isEdit) {
-        await doUpdate({ fullName: form.fullName, email: form.email });
+          await doUpdate({
+            fullName: form.fullName,
+            email: form.email,
+            role: form.role
+          });
       } else {
         await doCreate({ username: form.username, password: form.password, fullName: form.fullName, email: form.email, role: form.role });
       }
