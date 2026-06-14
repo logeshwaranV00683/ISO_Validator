@@ -24,13 +24,13 @@ export default function Validator({ initialMsg = "" }) {
 
   // Set default profile on load
   useEffect(() => {
-    if (profiles?.content?.length && !profileId) {
-      const def = profiles.content.find(p => p.isDefault) || profiles.content[0];
-      setProfileId(def.profileId);
+    if (profiles?.length && !profileId) {
+      const def = profiles.find(p => p.isDefault) || profiles[0];
+      setProfileId(def.id);
     }
   }, [profiles, profileId]);
 
-  const profile = profiles?.content?.find(p => p.id === profileId);
+  const profile = profiles?.find(p => p.id === profileId);
 
   const validate = async () => {
     if (!profileId || !rawMsg.trim()) return;
@@ -76,7 +76,7 @@ export default function Validator({ initialMsg = "" }) {
               <select value={profileId||""} onChange={e => setProfileId(+e.target.value)}
                 style={{ width:"100%", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" }}>
                 {!profiles && <option>Loading…</option>}
-                {profiles?.content?.map(p => (
+                {profiles?.map(p => (
                   <option key={p.id} value={p.id}>{p.profileName}{p.isDefault?" (default)":""}</option>
                 ))}
               </select>
@@ -131,7 +131,7 @@ export default function Validator({ initialMsg = "" }) {
           {/* Left */}
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
             {/* Parsed Fields */}
-            <Card title="Parsed Fields" badge={`${result.parsedFields?.filter(f=>f.isPresent).length}/${result.parsedFields?.length} present`}>
+            <Card title="Parsed Fields" badge={`${result.parsedFields?.filter(f=>f.present).length}/${result.parsedFields?.length} present`}>
               <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
                 <thead><tr style={{ borderBottom:`1px solid ${T.border}` }}>{["DE","Field Name","Value","Status","Display"].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
                 <tbody>
@@ -139,10 +139,10 @@ export default function Validator({ initialMsg = "" }) {
                     <tr key={f.deNumber} style={{ borderBottom:`1px solid ${T.border}22` }}>
                       <td style={{ padding:"6px 8px", color:T.accent, fontWeight:700 }}>{f.deNumber}</td>
                       <td style={{ padding:"6px 8px", color:T.muted, fontSize:10 }}>{f.fieldName}</td>
-                      <td style={{ padding:"6px 8px", color:f.isPresent?T.text:T.faint }}>{f.rawValue||"—"}</td>
+                      <td style={{ padding:"6px 8px", color:f.present?T.text:T.faint}}>{f.rawValue||"—"}</td>
                       <td style={{ padding:"6px 8px" }}>
-                        <span style={{ fontSize:9, padding:"2px 6px", borderRadius:3, background:f.isPresent?T.green+"22":T.red+"22", color:f.isPresent?T.green:T.red }}>
-                          {f.isPresent?"PRESENT":"ABSENT"}
+                        <span style={{ fontSize:9, padding:"2px 6px", borderRadius:3, background:f.present?T.green+"22":T.red+"22", color:f.present?T.green:T.red }}>
+                          {f.present?"PRESENT":"ABSENT"}
                         </span>
                       </td>
                       <td style={{ padding:"6px 8px", color:T.muted, fontSize:10 }}>{f.displayValue}</td>
@@ -196,31 +196,49 @@ export default function Validator({ initialMsg = "" }) {
                     </div>
                   );
                 })}
-                {filtered.length===0 && <div style={{ textAlign:"center", color:T.muted, fontSize:12, padding:"12px 0" }}>No issues{sevFilter!=="ALL"?` for ${sevFilter}`:""}</div>}
+                {filtered.length===0 && (
+                    result.message
+                      ? <div style={{ background:T.red+"12", border:`1px solid ${T.red}33`, borderRadius:6, padding:"10px 12px", fontSize:11 }}>
+                          <span style={{ color:T.red, fontWeight:700 }}>⚠ Parse Error: </span>
+                          <span style={{ color:T.text, fontFamily:"monospace" }}>{result.message}</span>
+                        </div>
+                      : <div style={{ textAlign:"center", color:T.muted, fontSize:12, padding:"12px 0" }}>No issues{sevFilter!=="ALL"?` for ${sevFilter}`:""}</div>
+                  )}
               </div>
             </Card>
 
-            {/* AI */}
-            {result.ai?.enabled && result.errors?.some(e=>e.aiExplanation) && (
-              <Card title="AI Explanation" badge={<span style={{ color:T.accent }}>{result.ai.modelUsed} · {result.ai.durationMs}ms · Local</span>}>
-                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                  {result.errors.filter(e=>e.aiExplanation).map((e,i) => (
-                    <div key={i} style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:6, overflow:"hidden" }}>
-                      <button onClick={()=>setExpanded(x=>({...x,[i]:!x[i]}))} style={{ width:"100%", background:"none", border:"none", padding:"10px 12px", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between", fontFamily:"inherit" }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:T.accent }}>{e.deNumber} — {e.fieldName}</span>
-                        <span style={{ color:T.faint }}>{expanded[i]?"▲":"▼"}</span>
-                      </button>
-                      {expanded[i]!==false && (
-                        <div style={{ padding:"0 12px 12px", fontSize:11, lineHeight:1.8 }}>
-                          <p style={{ color:T.muted, margin:"0 0 8px" }}>{e.aiExplanation}</p>
-                          {e.aiFixSuggestion && <div style={{ background:T.green+"12", border:`1px solid ${T.green}33`, borderRadius:4, padding:"6px 10px", color:T.green }}>→ <strong>Fix:</strong> {e.aiFixSuggestion}</div>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+    {/* AI */}
+    {result.ai?.enabled && (
+      result.ai?.skipped
+        ? <Card title="AI Explanation" badge={<span style={{ color:T.yellow }}>Skipped</span>}>
+            <div style={{ textAlign:"center", padding:"12px 0", fontSize:11, color:T.muted }}>
+              {result.ai.skipReason === "AI_UNAVAILABLE" && "⚠ AI service is currently unavailable"}
+              {result.ai.skipReason === "NO_ERRORS"      && "✓ No errors found — AI explanation skipped"}
+              {result.ai.skipReason === "PARSE_ERROR"    && "✗ Message could not be parsed — AI skipped"}
+            </div>
+          </Card>
+        : result.errors?.some(e=>e.aiExplanation) && (
+            <Card title="AI Explanation" badge={<span style={{ color:T.accent }}>{result.ai.modelUsed} · {result.ai.durationMs}ms · Local</span>}>
+              {/* existing AI explanation content unchanged */}
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {result.errors.filter(e=>e.aiExplanation).map((e,i) => (
+                  <div key={i} style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:6, overflow:"hidden" }}>
+                    <button onClick={()=>setExpanded(x=>({...x,[i]:!x[i]}))} style={{ width:"100%", background:"none", border:"none", padding:"10px 12px", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between", fontFamily:"inherit" }}>
+                      <span style={{ fontSize:11, fontWeight:700, color:T.accent }}>{e.deNumber} — {e.fieldName}</span>
+                      <span style={{ color:T.faint }}>{expanded[i]?"▲":"▼"}</span>
+                    </button>
+                    {expanded[i]!==false && (
+                      <div style={{ padding:"0 12px 12px", fontSize:11, lineHeight:1.8 }}>
+                        <p style={{ color:T.muted, margin:"0 0 8px" }}>{e.aiExplanation}</p>
+                        {e.aiFixSuggestion && <div style={{ background:T.green+"12", border:`1px solid ${T.green}33`, borderRadius:4, padding:"6px 10px", color:T.green }}>→ <strong>Fix:</strong> {e.aiFixSuggestion}</div>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )
+    )}
 
             {/* Actions */}
             <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
