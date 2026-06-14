@@ -2,17 +2,37 @@ import { useState } from "react";
 import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
-import {
-  getAiConfig, updateAiConfig, getAvailableModels,
-  getGlobalPrompt, updateGlobalPrompt, testPrompt,
-  getPromptVersions, rollbackPrompt, getAiLogs
-} from "../api/ai";
 import { getProfiles } from "../api/profiles";
-import { getProfilePrompt, upsertProfilePrompt, deleteProfilePrompt } from "../api/ai";
+import {
+  getAiConfig, updateAiConfig, updateAiConfigBulk, getAvailableModels,
+  getGlobalPrompt, updateGlobalPrompt, testPrompt,
+  getPromptVersions, rollbackPrompt, getAiLogs,
+  getProfilePrompt, upsertProfilePrompt, deleteProfilePrompt
+} from "../api/ai";
 import {
   PageHeader, Card, Tag, SmBtn, Btn, RoleBanner,
   LoadingBar, ErrorBanner, Label, Th
 } from "../components/shared";
+
+const CONFIG_KEY_MAP = {
+  "ollama.host":    "ollamaHost",
+  "ollama.model":       "activeModel",
+  "ollama.temperature": "temperature",
+  "ollama.max.tokens":  "maxTokens",
+  "ollama.timeout.ms":  "timeoutMs",
+  "ollama.retry.count": "retryCount",
+  "ollama.fallback":    "fallbackBehavior",
+};
+
+const REVERSE_CONFIG_KEY_MAP = {
+  ollamaHost:   "ollama.host",
+  activeModel:      "ollama.model",
+  temperature:      "ollama.temperature",
+  maxTokens:        "ollama.max.tokens",
+  timeoutMs:        "ollama.timeout.ms",
+  retryCount:       "ollama.retry.count",
+  fallbackBehavior: "ollama.fallback",
+};
 
 export default function AI() {
   const { can } = useAuth();
@@ -30,41 +50,68 @@ export default function AI() {
     ? models
     : models?.content || models?.models || [];
 
-
   const { data: prompt, loading: pLoad, refetch: pRefetch } = useApi(getGlobalPrompt);
   const { data: profiles } = useApi(getProfiles);
   const { data: logs, loading: logLoad } = useApi(() => getAiLogs({ page: 0, size: 20 }));
 
-  const { mutate: doUpdateConfig } = useMutation(updateAiConfig);
   const { mutate: doUpdatePrompt } = useMutation((c, n) => updateGlobalPrompt(c, n));
   const { mutate: doTestPrompt } = useMutation(testPrompt);
   const { mutate: doRollback } = useMutation((id, v) => rollbackPrompt(id, v));
 
-  // Initialize config form when data loads
-  if (cfg && !configForm) setConfigForm({ ...cfg });
+  if (cfg && !configForm && Array.isArray(cfg)) {
+    const flat = {};
+    cfg.forEach(item => {
+      const formKey = CONFIG_KEY_MAP[item.key];
+      if (formKey) flat[formKey] = item.value;
+    });
+    setConfigForm(flat);
+  }
 
   const handleSaveConfig = async () => {
-    await doUpdateConfig(configForm); cfgRefetch();
-    alert("Config saved!");
+    try {
+      const payload = Object.entries(REVERSE_CONFIG_KEY_MAP)
+        .filter(([formKey]) => configForm[formKey] !== undefined)
+        .map(([formKey, configKey]) => ({ key: configKey, value: String(configForm[formKey]) }));
+
+      await updateAiConfigBulk(payload);
+      cfgRefetch();
+      alert("Config saved!");
+    } catch (e) {
+      alert("Failed to save config: " + (e?.response?.data?.message || e.message));
+    }
   };
 
+  function formatBytes(bytes) {
+  if (!bytes) return "—";
+  const gb = bytes / (1024 ** 3);
+  if (gb >= 1) return gb.toFixed(2) + " GB";
+  const mb = bytes / (1024 ** 2);
+  return mb.toFixed(1) + " MB";
+}
+
   const handleSavePrompt = async () => {
-    const content = globalContent || prompt?.templateContent || "";
-    await doUpdatePrompt(content, "Updated via UI"); pRefetch();
+    const content = globalContent || prompt?.promptTemplate || "";
+    await doUpdatePrompt(content, "Updated via UI");
+    await pRefetch();
+    setGlobalContent("");
+    if (versions) {
+      const v = await getPromptVersions(prompt.id);
+      setVersions(v);
+    }
     alert("Prompt saved!");
   };
 
   const handleTestPrompt = async () => {
     setTesting(true); setTestOutput(null);
     try {
-      const res = await doTestPrompt({ templateContent: globalContent || prompt?.templateContent, sampleMti: "0200", sampleProfileName: "Visa Switch", sampleErrors: ["DE7 missing", "DE4 length error"] });
+      const res = await doTestPrompt({ templateContent: globalContent || prompt?.promptTemplate, sampleMti: "0200", sampleProfileName: "Visa Switch", sampleErrors: ["DE7 missing", "DE4 length error"] });
       setTestOutput(res);
     } finally { setTesting(false); }
   };
 
   const loadVersions = async () => {
-    if (!prompt?.templateId) return;
-    const v = await getPromptVersions(prompt.templateId);
+    if (!prompt?.id) return;
+    const v = await getPromptVersions(prompt.id);
     setVersions(v);
   };
 
@@ -92,7 +139,7 @@ export default function AI() {
             <Card title="Model Configuration">
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { key: "ollamaEndpoint", label: "Ollama Endpoint", type: "text" },
+                  { key: "ollamaHost", label: "Ollama Host", type: "text" },
                   { key: "activeModel", label: "Active Model", type: "text" },
                   { key: "temperature", label: "Temperature", type: "number" },
                   { key: "maxTokens", label: "Max Tokens", type: "number" },
@@ -123,17 +170,17 @@ export default function AI() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <Card title="Available Models" badge="Ollama local">
                 {modLoad && <LoadingBar text="Fetching models…" />}
-                {modelList.map((m, i) => (
-                  <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < modelList.length - 1 ? `1px solid ${T.border}22` : "none" }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: m.isActive ? T.accent : T.text }}>{m.name}</div>
-                      <div style={{ fontSize: 10, color: T.faint }}>{m.size}</div>
+                  {modelList.map((m, i) => (
+                    <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < modelList.length - 1 ? `1px solid ${T.border}22` : "none" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, color: m.name === configForm?.activeModel ? T.accent : T.text }}>{m.name}</div>
+                        <div style={{ fontSize: 10, color: T.faint }}>{formatBytes(m.size)}</div>
+                      </div>
+                      {m.name === configForm?.activeModel
+                        ? <span style={{ fontSize: 10, color: T.green }}>● Active</span>
+                        : can.edit && <SmBtn>To Active change in the config</SmBtn>}
                     </div>
-                    {m.isActive
-                      ? <span style={{ fontSize: 10, color: T.green }}>● Active</span>
-                      : can.edit && <SmBtn>Set Active</SmBtn>}
-                  </div>
-                ))}
+                  ))}
               </Card>
 
               <Card title="Global Prompt Template" badge="Stored in DB">
@@ -143,7 +190,7 @@ export default function AI() {
                     Variables: {["{mti}", "{profile}", "{fields}", "{errors}"].map(v => <Tag key={v} color={T.accent} small style={{ marginLeft: 4 }}>{v}</Tag>)}
                   </div>
                   <textarea rows={8} disabled={!can.edit}
-                    value={globalContent || prompt.templateContent || ""}
+                    value={globalContent || prompt.promptTemplate || ""}
                     onChange={e => setGlobalContent(e.target.value)}
                     style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none", opacity: can.edit ? 1 : 0.6 }} />
                   <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
@@ -170,7 +217,7 @@ export default function AI() {
                               <td style={{ padding: "6px 8px", color: T.muted }}>{v.changeNote}</td>
                               <td style={{ padding: "6px 8px" }}>
                                 {can.edit && v.version !== prompt.currentVersion && (
-                                  <SmBtn onClick={() => { doRollback(prompt.templateId, v.version); pRefetch(); }}>Rollback</SmBtn>
+                                  <SmBtn onClick={() => { doRollback(prompt.id, v.version); pRefetch(); }}>Rollback</SmBtn>
                                 )}
                               </td>
                             </tr>
@@ -230,7 +277,7 @@ function ProfilePromptCard({ profile, canEdit }) {
   return (
     <Card title={profile.profileName} badge={<Tag color={{ PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" }[profile.environment] || "#888"} small>{profile.environment}</Tag>}>
       <textarea rows={3} disabled={!canEdit} placeholder="Leave blank to use global template…"
-        value={content || (data?.templateContent || "")}
+        value={content || (data?.promptTemplate || "")}
         onChange={e => setContent(e.target.value)}
         style={{ width: "100%", boxSizing: "border-box", background: "#070a0f", border: "1px solid #1e2d3d", color: "#e6edf3", padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
       {canEdit && (
