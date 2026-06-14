@@ -38,7 +38,13 @@ export default function Validator({ initialMsg = "" }) {
     try {
       setResult(await validateMessage(profileId, rawMsg.trim(), enableAi));
     } catch (err) {
-      setError(err?.response?.data?.error?.message || err.message || "Validation failed");
+      const raw = err?.response?.data?.message
+              || err?.response?.data?.error?.message
+              || err.message
+              || "Validation failed";
+      // Extract inner message from Feign error: [...][{"message":"..."}]
+      const innerMatch = raw.match(/\[\{"success":false,"message":"([^"]+)"/);
+      setError(innerMatch ? innerMatch[1] : raw);
     } finally { setLoading(false); }
   };
 
@@ -46,7 +52,13 @@ export default function Validator({ initialMsg = "" }) {
     if (!result?.runReference) return;
     setLoading(true); setError(null);
     try { setResult(await rerunValidation(result.runReference)); }
-    catch (err) { setError(err.message); }
+    catch (err) {
+      const raw = err?.response?.data?.message
+              || err?.response?.data?.error?.message
+              || err.message;
+      const innerMatch = raw?.match(/\[\{"success":false,"message":"([^"]+)"/);
+      setError(innerMatch ? innerMatch[1] : raw);
+    }
     finally { setLoading(false); }
   };
 

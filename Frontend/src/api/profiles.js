@@ -19,7 +19,7 @@ export const createFormat       = async (data) => unwrap(await apiClient.post("/
 export const updateFormat       = async (id,d) => unwrap(await apiClient.put(`/formats/${id}`, d));
 // d: { xmlContent, changeNote }
 export const deleteFormat       = async (id)   => apiClient.delete(`/formats/${id}`);
-export const validateXml        = async (xml)  => unwrap(await apiClient.post("/formats/validate-xml", { xmlContent: xml }));
+export const validateXml = async (xml) => unwrap(await apiClient.post("/formats/validate-xml", xml, { headers: { "Content-Type": "text/plain" } }));
 // returns: { valid, fieldCount, fieldsFound[], parseError }
 export const getFormatVersions  = async (id)   => unwrap(await apiClient.get(`/formats/${id}/versions`));
 export const rollbackFormat     = async (id,v) => unwrap(await apiClient.put(`/formats/${id}/rollback/${v}`));

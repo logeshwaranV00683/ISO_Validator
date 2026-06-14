@@ -38,7 +38,10 @@ export function useMutation(apiFn) {
     try {
       return await apiFn(...args);
     } catch (err) {
-      const msg = err?.response?.data?.error?.message || err.message || "Failed";
+      const msg = err?.response?.data?.message
+               || err?.response?.data?.error?.message
+               || err.message
+               || "Failed";
       setError(msg);
       throw new Error(msg);
     } finally {

@@ -1,149 +1,139 @@
 import { useState } from "react";
 import { createFormat } from "../../api/profiles";
 import { T } from "../../constants/theme";
+import { Btn } from "../../components/shared";
+import { Modal, ModalFooter } from "./ProfileModal";
 
-export default function FormatModal({ onClose, onSaved }) {
-    const [form, setForm] = useState({
-        formatName: "",
-        isoVersion: "ISO 8583-1:1987",
-        encoding: "ASCII",
-        totalFields: 128,
-        description: "",
-        xmlContent: "",
-    });
+const ENCODINGS = ["ASCII", "EBCDIC", "BCD"];
+const inputStyle = (err) => ({
+  width: "100%", boxSizing: "border-box", background: "#070a0f",
+  border: `1px solid ${err ? T.red : T.border}`, color: T.text,
+  padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none",
+});
+const SL = { width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" };
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+function Field({ label, required, error, children }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>
+        {label}{required && <span style={{ color: T.red }}> *</span>}
+      </div>
+      {children}
+      {error && <div style={{ fontSize: 10, color: T.red, marginTop: 3 }}>{error}</div>}
+    </div>
+  );
+}
 
-    const set = (k, v) =>
-        setForm((p) => ({
-            ...p,
-            [k]: v,
-        }));
+export default function FormatModal({ profiles = [], onClose, onSaved }) {
+  const [form, setForm] = useState({
+    profileId: "",
+    formatName: "",
+    isoVersion: "ISO 8583-1:1987",
+    encoding: "ASCII",
+    mti: "0800",
+    totalFields: 128,
+    description: "",
+    xmlContent: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [xmlFileName, setXmlFileName] = useState("");
 
-    const handleFile = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+  const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErrors(e => ({ ...e, [k]: "" })); };
 
-        const text = await file.text();
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    set("xmlContent", text);
+    setXmlFileName(file.name);
+  };
 
-        set("xmlContent", text);
-    };
+  const validate = () => {
+    const e = {};
+    if (!form.profileId) e.profileId = "Required";
+    if (!form.formatName.trim()) e.formatName = "Required";
+    if (!form.xmlContent.trim()) e.xmlContent = "Required — upload an XML file";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
-    const handleSave = async () => {
-        try {
-            console.log("FORMAT PAYLOAD", form);
-            console.log("createFormat function", createFormat);
-            setLoading(true);
-            setError("");
+  const handleSave = async () => {
+    if (!validate()) return;
+    try {
+      setLoading(true);
+      await createFormat({ ...form, profileId: Number(form.profileId), totalFields: Number(form.totalFields) });
+      onSaved?.();
+      onClose?.();
+    } catch (err) {
+      setErrors({ _form: err?.message || "Failed to create format" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            await createFormat(form);
+  return (
+    <Modal title="New Message Format" onClose={onClose}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
-            onSaved?.();
-            onClose?.();
-        } catch (err) {
-            console.error(err);
-            setError(err?.message || "Failed to create format");
-        } finally {
-            setLoading(false);
-        }
-    };
+        <Field label="Switch Profile" required error={errors.profileId}>
+          <select value={form.profileId} onChange={e => set("profileId", e.target.value)} style={SL}>
+            <option value="">Select Profile</option>
+            {profiles.map(p => (
+              <option key={p.id} value={p.id}>{p.profileName}</option>
+            ))}
+          </select>
+        </Field>
 
-    return (
-        <div
-            style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(0,0,0,.7)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                zIndex: 9999,
-            }}
-        >
-            <div
-                style={{
-                    width: 700,
-                    background: T.surface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 8,
-                    padding: 20,
-                }}
-            >
-                <h2>Create Format</h2>
+        <Field label="Format Name" required error={errors.formatName}>
+          <input value={form.formatName} onChange={e => set("formatName", e.target.value)} placeholder="e.g. Visa ISO 8583" style={inputStyle(errors.formatName)} />
+        </Field>
 
-                <input
-                    placeholder="Format Name"
-                    value={form.formatName}
-                    onChange={(e) => set("formatName", e.target.value)}
-                    style={{ width: "100%", marginBottom: 10 }}
-                />
+        <Field label="ISO Version">
+          <input value={form.isoVersion} onChange={e => set("isoVersion", e.target.value)} placeholder="ISO 8583-1:1987" style={inputStyle()} />
+        </Field>
 
-                <input
-                    placeholder="ISO Version"
-                    value={form.isoVersion}
-                    onChange={(e) => set("isoVersion", e.target.value)}
-                    style={{ width: "100%", marginBottom: 10 }}
-                />
+        <Field label="Encoding">
+          <select value={form.encoding} onChange={e => set("encoding", e.target.value)} style={SL}>
+            {ENCODINGS.map(enc => <option key={enc}>{enc}</option>)}
+          </select>
+        </Field>
 
-                <input
-                    placeholder="Encoding"
-                    value={form.encoding}
-                    onChange={(e) => set("encoding", e.target.value)}
-                    style={{ width: "100%", marginBottom: 10 }}
-                />
+        <Field label="MTI">
+          <input value={form.mti} onChange={e => set("mti", e.target.value)} placeholder="0800" maxLength={4} style={inputStyle()} />
+        </Field>
 
-                <input
-                    type="number"
-                    value={form.totalFields}
-                    onChange={(e) => set("totalFields", Number(e.target.value))}
-                    style={{ width: "100%", marginBottom: 10 }}
-                />
+        <Field label="Total Fields">
+          <input type="number" value={form.totalFields} onChange={e => set("totalFields", e.target.value)} min={64} max={192} style={inputStyle()} />
+        </Field>
 
-                <textarea
-                    rows={3}
-                    placeholder="Description"
-                    value={form.description}
-                    onChange={(e) => set("description", e.target.value)}
-                    style={{ width: "100%", marginBottom: 10 }}
-                />
+        <Field label="Description" style={{ gridColumn: "1/-1" }}>
+          <input value={form.description} onChange={e => set("description", e.target.value)} placeholder="Optional description" style={inputStyle()} />
+        </Field>
 
-                <input
-                    type="file"
-                    accept=".xml"
-                    onChange={handleFile}
-                />
+        <Field label="XML Config File" required error={errors.xmlContent} style={{ gridColumn: "1/-1" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 12px", border: `1px dashed ${errors.xmlContent ? T.red : T.border}`, borderRadius: 6, fontSize: 11, color: T.muted }}>
+            <span style={{ color: T.accent }}>📎 Choose XML</span>
+            <span>{xmlFileName || "No file selected"}</span>
+            <input type="file" accept=".xml" onChange={handleFile} style={{ display: "none" }} />
+          </label>
+          {form.xmlContent && (
+            <div style={{ marginTop: 6, fontSize: 10, color: T.green }}>✓ XML loaded — {form.xmlContent.length} chars</div>
+          )}
+        </Field>
 
-                <div style={{ marginTop: 8, color: T.muted }}>
-                    {form.xmlContent
-                        ? "XML loaded successfully"
-                        : "Select XML file"}
-                </div>
+      </div>
 
-                {error && (
-                    <div style={{ color: "red", marginTop: 10 }}>
-                        {error}
-                    </div>
-                )}
-
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: 10,
-                        marginTop: 20,
-                    }}
-                >
-                    <button onClick={onClose}>Cancel</button>
-
-                    <button
-                        onClick={handleSave}
-                        disabled={loading}
-                    >
-                        {loading ? "Saving..." : "Save"}
-                    </button>
-                </div>
-            </div>
+      {errors._form && (
+        <div style={{ marginTop: 10, background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 5, padding: "8px 12px", fontSize: 11, color: T.red }}>
+          ✕ {errors._form}
         </div>
-    );
+      )}
+
+      <ModalFooter>
+        <Btn onClick={onClose}>Cancel</Btn>
+        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "💾 Save Format"}</Btn>
+      </ModalFooter>
+    </Modal>
+  );
 }
