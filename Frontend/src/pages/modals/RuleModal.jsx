@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { T, SEV } from "../../constants/theme";
+import { T, SEV, MTIS } from "../../constants/theme";
 import { useMutation } from "../../hooks/useApi";
 import { createRule, updateRule } from "../../api/rules";
 import { Btn } from "../../components/shared";
@@ -68,6 +68,7 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
           effectiveFrom: form.effectiveFrom || null,
           effectiveTo: form.effectiveTo || null,
           description: form.description || null,
+          allowedValues: form.allowedValues,
         };
         await doUpdate(updatePayload);
       } else {
@@ -108,7 +109,6 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
     }
   };
 
-  const MTIS = ["0200", "0210", "0420", "0800", "0810"];
   const TYPES = ["numeric", "alpha", "alphanumeric", "binary", "special"];
 
   return (
@@ -127,11 +127,11 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
         </Field>
 
         <Field label="MTI" required>
-          <div style={{ display: "flex", gap: 4 }}>
+          <select value={form.mti} onChange={e => set("mti", e.target.value)} style={{ ...SL, maxHeight: 120, overflowY: "auto" }} size={1}>
             {MTIS.map(m => (
-              <button key={m} onClick={() => set("mti", m)} style={{ flex: 1, padding: "6px 0", borderRadius: 5, fontFamily: "inherit", fontSize: 10, cursor: "pointer", border: `1px solid ${form.mti === m ? T.accent : T.border}`, background: form.mti === m ? T.accent + "22" : "transparent", color: form.mti === m ? T.accent : T.muted }}>{m}</button>
+              <option key={m} value={m}>{m}</option>
             ))}
-          </div>
+          </select>
         </Field>
 
         <Field label="DE Number (e.g. DE7)" required error={errors.deNumber}>

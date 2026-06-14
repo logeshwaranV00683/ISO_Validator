@@ -53,6 +53,8 @@ export const MTI_SHORT_LABELS = {
   "0810":"Net Mgmt Resp",       "0820":"Net Mgmt Advice",
 };
 
+export const MTIS = Object.keys(MTI_DESCRIPTIONS);
+
 export const selectStyle = {
   width:"100%", background:T.surface2, border:`1px solid ${T.border}`,
   color:T.text, padding:"8px 10px", borderRadius:6,

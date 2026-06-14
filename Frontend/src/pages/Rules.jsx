@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { T, SEV } from "../constants/theme";
+import { T, SEV, MTIS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getRules, deleteRule, toggleRule, exportRules } from "../api/rules";
@@ -10,45 +10,38 @@ import {
 } from "../components/shared";
 import RuleModal from "./modals/RuleModal";
 
-const MTIS = ["0200", "0210", "0420", "0800", "0810"];
-
 export default function Rules() {
   const { can } = useAuth();
-  const [profileId, setProfileId] = useState(null); // null = not selected yet
-  const [mti, setMti] = useState("0200");
+  const [profileId, setProfileId] = useState(null);
+  const [mti, setMti] = useState(MTIS[0]);
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [editRule, setEditRule] = useState(null);
 
   const { data: profiles } = useApi(getProfiles);
 
-  // FIX: auto-select first profile once profiles load
-  // Backend requires profileId — "All Profiles" (no profileId) returns 400
   useEffect(() => {
     if (profileId === null && profiles) {
       const list = Array.isArray(profiles) ? profiles : (profiles?.content || []);
-      if (list.length > 0) {
-        setProfileId(String(list[0].id));
-      }
+      if (list.length > 0) setProfileId(String(list[0].id));
     }
   }, [profiles, profileId]);
 
-  // Only call API once profileId is selected
   const { data, loading, error, refetch } = useApi(
     () => profileId ? getRules({ profileId, mti }) : Promise.resolve(null),
     [profileId, mti, page]
   );
 
   const { mutate: doDelete } = useMutation(deleteRule);
-  const { mutate: doToggle } = useMutation((id, v) => toggleRule(id, v));
+  const { mutate: doToggle } = useMutation((id) => toggleRule(id));
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this rule?")) return;
     await doDelete(id); refetch();
   };
 
-  const handleToggle = async (id, current) => {
-    await doToggle(id, !current); refetch();
+  const handleToggle = async (id) => {
+    await doToggle(id); refetch();
   };
 
   const handleExport = async () => {
@@ -73,27 +66,42 @@ export default function Rules() {
 
       {/* Filters */}
       <Card>
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16, alignItems: "end" }}>
-          <div>
-            <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>Switch Profile</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Profile dropdown */}
+          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "center" }}>
+            <div style={{ fontSize: 10.5, color: T.muted, fontWeight: 600 }}>Switch Profile</div>
             <select
               value={profileId || ""}
               onChange={e => { setProfileId(e.target.value); setPage(0); }}
               style={SL}
             >
               {profileList.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.profileName}
-                </option>
+                <option key={p.id} value={p.id}>{p.profileName}</option>
               ))}
             </select>
           </div>
-          <div>
-            <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
-            <div style={{ display: "flex", gap: 8 }}>
+
+          {/* MTI pills — wrap */}
+          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
+            <div style={{ fontSize: 10.5, color: T.muted, fontWeight: 600, paddingTop: 6 }}>MTI</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MTIS.map(m => (
-                <button key={m} onClick={() => { setMti(m); setPage(0); }}
-                  style={{ background: mti === m ? T.accent + "22" : T.surface2, border: `1px solid ${mti === m ? T.accent : T.border}`, color: mti === m ? T.accent : T.muted, padding: "7px 16px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, cursor: "pointer" }}>
+                <button
+                  key={m}
+                  onClick={() => { setMti(m); setPage(0); }}
+                  style={{
+                    background: mti === m ? T.accent + "22" : T.surface2,
+                    border: `1px solid ${mti === m ? T.accent : T.border}`,
+                    color: mti === m ? T.accent : T.muted,
+                    padding: "5px 12px",
+                    borderRadius: 20,
+                    fontFamily: "inherit",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    fontWeight: mti === m ? 700 : 400,
+                    transition: "all 0.15s",
+                  }}
+                >
                   {m}
                 </button>
               ))}
@@ -153,9 +161,9 @@ export default function Rules() {
                   </td>
                   <td style={{ padding: "8px 8px", textAlign: "center" }}>
                     {can.edit
-                      ? <div onClick={() => handleToggle(r.id, r.active)} style={{ width: 28, height: 15, borderRadius: 8, background: r.active ? T.green + "44" : T.faint + "44", border: `1px solid ${r.active ? T.green : T.faint}`, display: "inline-flex", alignItems: "center", padding: "0 2px", cursor: "pointer" }}>
-                        <div style={{ width: 11, height: 11, borderRadius: "50%", background: r.active ? T.green : T.faint, marginLeft: r.active ? 12 : 0, transition: "margin 0.15s" }} />
-                      </div>
+                      ? <div onClick={() => handleToggle(r.id)} style={{ width: 28, height: 15, borderRadius: 8, background: r.active ? T.green + "44" : T.faint + "44", border: `1px solid ${r.active ? T.green : T.faint}`, display: "inline-flex", alignItems: "center", padding: "0 2px", cursor: "pointer" }}>
+                          <div style={{ width: 11, height: 11, borderRadius: "50%", background: r.active ? T.green : T.faint, marginLeft: r.active ? 12 : 0, transition: "margin 0.15s" }} />
+                        </div>
                       : <span style={{ color: r.active ? T.green : T.faint }}>{r.active ? "✓" : "✗"}</span>}
                   </td>
                   <td style={{ padding: "8px 8px", color: T.muted, fontSize: 10 }}>{r.effectiveFrom || "—"}</td>

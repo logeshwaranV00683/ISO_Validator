@@ -28,7 +28,6 @@ export default function FieldDefinitions() {
     }
   }, [profiles, profileId]);
 
-
   const { data: defs, loading, error, refetch } = useApi(
     () =>
       profileId
@@ -36,6 +35,7 @@ export default function FieldDefinitions() {
         : Promise.resolve([]),
     [profileId, mti]
   );
+
   const { mutate: doDelete } = useMutation(deleteFieldDef);
   const { mutate: doUpdate } = useMutation((id, d) => updateFieldDef(id, d));
 
@@ -45,7 +45,7 @@ export default function FieldDefinitions() {
   };
 
   const handleToggleVisible = async (d) => {
-    await doUpdate(d.definitionId, { ...d, isBuilderVisible: !d.isBuilderVisible });
+    await doUpdate(d.id, { isBuilderVisible: !d.isBuilderVisible });
     refetch();
   };
 
@@ -99,7 +99,7 @@ export default function FieldDefinitions() {
           </thead>
           <tbody>
             {(defs || []).map(d => (
-              <tr key={d.definitionId} style={{ borderBottom: `1px solid ${T.border}22`, opacity: d.isActive ? 1 : 0.5 }}>
+              <tr key={d.id} style={{ borderBottom: `1px solid ${T.border}22`, opacity: d.isActive ? 1 : 0.5 }}>
                 <td style={{ padding: "8px 8px", color: T.faint, textAlign: "center" }}>{d.displayOrder}</td>
                 <td style={{ padding: "8px 8px", color: T.accent, fontWeight: 700 }}>{d.deNumber}</td>
                 <td style={{ padding: "8px 8px", color: T.text }}>{d.fieldName}</td>
@@ -118,7 +118,7 @@ export default function FieldDefinitions() {
                   <td style={{ padding: "8px 8px" }}>
                     <div style={{ display: "flex", gap: 4 }}>
                       <SmBtn onClick={() => { setEditDef(d); setShowModal(true); }}>Edit</SmBtn>
-                      <SmBtn danger onClick={() => handleDelete(d.definitionId)}>Del</SmBtn>
+                      <SmBtn danger onClick={() => handleDelete(d.id)}>Del</SmBtn>
                     </div>
                   </td>
                 )}
