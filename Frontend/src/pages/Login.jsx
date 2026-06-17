@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { T, ROLES } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { Tag } from "../components/shared";
 
 export default function Login() {
@@ -9,6 +10,7 @@ export default function Login() {
   const navigate   = useNavigate();
   const location   = useLocation();
   const from       = location.state?.from?.pathname || "/";
+  const { isDark, toggle } = useTheme();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -34,6 +36,38 @@ export default function Login() {
 
   return (
     <div style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'JetBrains Mono','Fira Code',monospace", position:"relative", overflow:"hidden" }}>
+
+      {/* Theme toggle — top right */}
+      <button
+        onClick={toggle}
+        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        style={{
+          position: "fixed", top: 16, right: 20, zIndex: 100,
+          display: "flex", alignItems: "center", gap: 6,
+          background: T.surface, border: `1px solid ${T.border}`,
+          borderRadius: 20, padding: "4px 10px 4px 6px",
+          cursor: "pointer", fontFamily: "inherit", fontSize: 10,
+          color: T.muted,
+        }}
+      >
+        <div style={{
+          width: 30, height: 16, borderRadius: 8,
+          background: isDark ? T.faint : T.accent,
+          border: `1px solid ${T.border}`,
+          display: "flex", alignItems: "center",
+          padding: "0 2px", position: "relative", flexShrink: 0,
+        }}>
+          <div style={{
+            width: 12, height: 12, borderRadius: "50%",
+            background: "#fff",
+            marginLeft: isDark ? 0 : 14,
+            transition: "margin 0.2s",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+          }} />
+        </div>
+        <span style={{ fontSize: 13 }}>{isDark ? "🌙" : "☀️"}</span>
+      </button>
+
       <div style={{ position:"absolute", inset:0, backgroundImage:`linear-gradient(${T.border}33 1px,transparent 1px),linear-gradient(90deg,${T.border}33 1px,transparent 1px)`, backgroundSize:"40px 40px", opacity:0.4 }} />
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:500, height:500, borderRadius:"50%", background:`radial-gradient(circle,${T.accent2}15,transparent 70%)`, pointerEvents:"none" }} />
 
@@ -41,7 +75,7 @@ export default function Login() {
         {/* Logo */}
         <div style={{ textAlign:"center", marginBottom:32 }}>
           <div style={{ width:52, height:52, borderRadius:14, background:`linear-gradient(135deg,${T.accent2},${T.accent})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, margin:"0 auto 12px" }}>⬡</div>
-          <div style={{ fontSize:20, fontWeight:700, color:T.text }}>ISO<span style={{ color:T.accent }}>8583</span> Validator</div>
+          <div style={{ fontSize:16, fontWeight:700, color:T.text }}>Veri<span style={{ color:T.accent }}>Q</span>Forge<span style={{ color:T.accent }}> AI</span></div>
           <div style={{ fontSize:11, color:T.faint, marginTop:4 }}>Enterprise Payment Message Platform</div>
         </div>
 

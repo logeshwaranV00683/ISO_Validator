@@ -207,7 +207,7 @@ export default function AI() {
                   {versions && (
                     <div style={{ marginTop: 12, borderTop: `1px solid ${T.border}`, paddingTop: 12 }}>
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
-                        <thead><tr style={{ borderBottom: `1px solid ${T.border}` }}>{["Version", "By", "Date", "Note", ""].map(h => <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.faint }}>{h}</th>)}</tr></thead>
+                        <thead><tr style={{ borderBottom: `1px solid ${T.border}` }}>{["Version", "By", "Date", "Note", ""].map(h => <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.text, fontWeight: 800, fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}>{h}</th>)}</tr></thead>
                         <tbody>
                           {versions.map(v => (
                             <tr key={v.version} style={{ borderBottom: `1px solid ${T.border}22` }}>
@@ -288,20 +288,17 @@ function ProfilePromptCard({ profile, canEdit }) {
     <Card
       title={profile.profileName}
       badge={
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {data?.currentVersion && (
-            <Tag color={T.purple} small>v{data.currentVersion}</Tag>
-          )}
-          <Tag color={envColor} small>{profile.environment}</Tag>
-        </div>
+        data?.currentVersion
+          ? <Tag color={T.purple} small>v{data.currentVersion}</Tag>
+          : null
       }
     >
       <textarea rows={3} disabled={!canEdit} placeholder="Leave blank to use global template…"
         value={content || (data?.promptTemplate || "")}
         onChange={e => setContent(e.target.value)}
-        style={{ width: "100%", boxSizing: "border-box", background: "#070a0f", border: "1px solid #1e2d3d", color: "#e6edf3", padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+        style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
       {canEdit && (
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
           <Btn primary onClick={async () => {
             await doUpsert(content, "Updated via UI");
             await refetch();
@@ -312,7 +309,12 @@ function ProfilePromptCard({ profile, canEdit }) {
             }
           }}>💾 Save Override</Btn>
           {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(""); setVersions(null); }}>↺ Clear</Btn>}
-          {data?.id && <SmBtn onClick={loadVersions}>Version History</SmBtn>}
+          <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
+        </div>
+      )}
+      {!canEdit && (
+        <div style={{ marginTop: 8 }}>
+          <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
         </div>
       )}
 
@@ -323,7 +325,7 @@ function ProfilePromptCard({ profile, canEdit }) {
             <thead>
               <tr style={{ borderBottom: `1px solid ${T.border}` }}>
                 {["Version", "By", "Date", "Note", ""].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.faint }}>{h}</th>
+                  <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.text, fontWeight: 800, fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}>{h}</th>
                 ))}
               </tr>
             </thead>

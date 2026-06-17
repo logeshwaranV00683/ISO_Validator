@@ -1,23 +1,34 @@
+// T — all values are CSS variables so dark/light theme swap works via :root.light-theme
 export const T = {
-  bg: "#070a0f", surface: "#0d1117", surface2: "#111720",
-  border: "#1e2d3d", border2: "#243447", text: "#e6edf3",
-  muted: "#8b949e", faint: "#3d4f61", accent: "#00d2ff",
-  accent2: "#0057ff", green: "#3fb950", red: "#ff2d55",
-  yellow: "#ff9f0a", blue: "#0a84ff", purple: "#bf5af2",
+  bg:       "var(--bg)",
+  surface:  "var(--surface)",
+  surface2: "var(--surface2)",
+  border:   "var(--border)",
+  border2:  "var(--border2)",
+  text:     "var(--text)",
+  muted:    "var(--muted)",
+  faint:    "var(--faint)",
+  accent:   "var(--accent)",
+  accent2:  "var(--accent2)",
+  green:    "var(--green)",
+  red:      "var(--red)",
+  yellow:   "var(--yellow)",
+  blue:     "var(--blue)",
+  purple:   "var(--purple)",
 };
 
 export const SEV = {
-  CRITICAL: { bg: T.red    + "18", border: T.red    + "55", text: T.red    },
-  WARNING:  { bg: T.yellow + "18", border: T.yellow + "55", text: T.yellow },
-  INFO:     { bg: T.blue   + "18", border: T.blue   + "55", text: T.blue   },
+  CRITICAL: { bg: "color-mix(in srgb, var(--red) 12%, transparent)",    border: "color-mix(in srgb, var(--red) 35%, transparent)",    text: "var(--red)"    },
+  WARNING:  { bg: "color-mix(in srgb, var(--yellow) 12%, transparent)", border: "color-mix(in srgb, var(--yellow) 35%, transparent)", text: "var(--yellow)" },
+  INFO:     { bg: "color-mix(in srgb, var(--blue) 12%, transparent)",   border: "color-mix(in srgb, var(--blue) 35%, transparent)",   text: "var(--blue)"   },
 };
 
 export const ENV_COLORS = { PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" };
 
 export const ROLES = {
-  ADMIN:   { label: "Admin",   color: T.red,    can: { edit:true,  delete:true,  add:true,  validate:true,  build:true  } },
-  ANALYST: { label: "Analyst", color: T.yellow, can: { edit:false, delete:false, add:false, validate:true,  build:true  } },
-  VIEWER:  { label: "Viewer",  color: T.blue,   can: { edit:false, delete:false, add:false, validate:false, build:false } },
+  ADMIN:   { label: "Admin",   color: "var(--red)",    can: { edit:true,  delete:true,  add:true,  validate:true,  build:true  } },
+  ANALYST: { label: "Analyst", color: "var(--yellow)", can: { edit:false, delete:false, add:false, validate:true,  build:true  } },
+  VIEWER:  { label: "Viewer",  color: "var(--blue)",   can: { edit:false, delete:false, add:false, validate:false, build:false } },
 };
 
 export const MTI_DESCRIPTIONS = {
@@ -56,13 +67,13 @@ export const MTI_SHORT_LABELS = {
 export const MTIS = Object.keys(MTI_DESCRIPTIONS);
 
 export const selectStyle = {
-  width:"100%", background:T.surface2, border:`1px solid ${T.border}`,
-  color:T.text, padding:"8px 10px", borderRadius:6,
+  width:"100%", background:"var(--surface2)", border:"1px solid var(--border)",
+  color:"var(--text)", padding:"8px 10px", borderRadius:6,
   fontFamily:"inherit", fontSize:11, outline:"none", cursor:"pointer",
 };
 
 export const inputStyle = {
-  width:"100%", boxSizing:"border-box", background:T.surface2,
-  border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px",
+  width:"100%", boxSizing:"border-box", background:"var(--surface2)",
+  border:"1px solid var(--border)", color:"var(--text)", padding:"8px 10px",
   borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none",
 };

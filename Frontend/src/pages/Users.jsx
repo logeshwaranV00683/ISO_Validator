@@ -92,7 +92,7 @@ export default function Users() {
                   <td style={{ padding:"8px 8px" }}>
                     <select value={u.role} onChange={e=>handleRoleChange(u.id,e.target.value)}
                       style={{ background:"transparent", border:`1px solid ${r.color}44`, color:r.color, padding:"3px 6px", borderRadius:4, fontFamily:"inherit", fontSize:9, cursor:"pointer" }}>
-                      {["ADMIN","ANALYST","VIEWER"].map(role => <option key={role} value={role} style={{ background:"#0d1117", color:"#e6edf3" }}>{role}</option>)}
+                      {["ADMIN","ANALYST","VIEWER"].map(role => <option key={role} value={role} style={{ background:T.surface, color:T.text }}>{role}</option>)}
                     </select>
                   </td>
                   <td style={{ padding:"8px 8px" }}>

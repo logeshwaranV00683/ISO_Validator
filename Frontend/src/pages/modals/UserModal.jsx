@@ -5,7 +5,7 @@ import { createUser, updateUser, adminResetPassword } from "../../api/users";
 import { Btn } from "../../components/shared";
 import { Modal, ModalFooter } from "./ProfileModal";
 
-const inp = (err) => ({ width:"100%", boxSizing:"border-box", background:"#070a0f", border:`1px solid ${err?T.red:T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" });
+const inp = (err) => ({ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${err?T.red:T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" });
 
 export default function UserModal({ user, onClose, onSaved }) {
   const isEdit = !!user;

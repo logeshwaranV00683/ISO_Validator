@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { T, ENV_COLORS } from "../../constants/theme";
+import { T } from "../../constants/theme";
 import { useMutation } from "../../hooks/useApi";
 import { useAuth } from "../../context/AuthContext";
 import { createProfile, updateProfile } from "../../api/profiles";
 import { Btn, SmBtn, Label, Tag } from "../../components/shared";
 
 const TIMEZONES = ["Asia/Kolkata", "UTC", "Asia/Singapore", "Asia/Dubai", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo", "Australia/Sydney"];
-const ENVS = ["PROD", "UAT", "DEV"];
 const inputStyle = (err, disabled) => ({
-  width: "100%", boxSizing: "border-box", background: disabled ? "#0d1117" : "#070a0f",
+  width: "100%", boxSizing: "border-box", background: disabled ? T.surface : T.bg,
   border: `1px solid ${err ? T.red : T.border}`, color: disabled ? T.muted : T.text,
   padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none",
   cursor: disabled ? "not-allowed" : "text", opacity: disabled ? 0.6 : 1,
@@ -23,7 +22,6 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
   const [form, setForm] = useState({
     profileName: profile?.profileName || "",
     description: profile?.description || "",
-    environment: profile?.environment || "UAT",
     host: profile?.host || "127.0.0.1",
     port: profile?.port || 8583,
     timezone: profile?.timezone || "Asia/Kolkata",
@@ -56,7 +54,7 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
       const payload = {
         profileName: form.profileName,
         description: form.description,
-        environment: form.environment,
+        environment: "PROD",
         host: form.host,
         port: Number(form.port),
         timezone: form.timezone,
@@ -75,25 +73,14 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
   };
 
   return (
-    <Modal title={isEdit ? `Edit — ${profile.profileName}` : "New Switch Profile"} onClose={onClose}>
+    <Modal title={isEdit ? `Edit — ${profile.profileName}` : "New Message Profile"} onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field label="Profile Name" required error={errors.profileName}>
-          <input value={form.profileName} onChange={e => set("profileName", e.target.value)} placeholder="e.g. Visa Switch" style={inputStyle(errors.profileName, false)} />
+          <input value={form.profileName} onChange={e => set("profileName", e.target.value)} placeholder="e.g. Visa Production" style={inputStyle(errors.profileName, false)} />
         </Field>
 
         <Field label="Description">
           <input value={form.description} onChange={e => set("description", e.target.value)} placeholder="Optional description" style={inputStyle(false, false)} />
-        </Field>
-
-        <Field label="Environment" required>
-          <div style={{ display: "flex", gap: 6 }}>
-            {ENVS.map(env => (
-              <button key={env} onClick={() => set("environment", env)}
-                style={{ flex: 1, padding: "7px 0", borderRadius: 5, fontFamily: "inherit", fontSize: 11, cursor: "pointer", border: `1px solid ${form.environment === env ? ENV_COLORS[env] : T.border}`, background: form.environment === env ? ENV_COLORS[env] + "22" : "transparent", color: form.environment === env ? ENV_COLORS[env] : T.muted }}>
-                {env}
-              </button>
-            ))}
-          </div>
         </Field>
 
         <Field label="Timezone">

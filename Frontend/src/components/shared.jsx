@@ -1,10 +1,10 @@
 import { T, selectStyle } from "../constants/theme";
 
-export const Label   = ({ children }) => <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>{children}</div>;
+export const Label   = ({ children }) => <div style={{ fontSize:11, color:T.muted, marginBottom:5, fontWeight:600 }}>{children}</div>;
 export const Required = () => <span style={{ color:T.red }}>*</span>;
 export const Row     = ({ children, style:s }) => <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, ...s }}>{children}</div>;
 export const Dot     = ({ color }) => <span style={{ width:6, height:6, borderRadius:"50%", background:color, display:"inline-block" }} />;
-export const Th      = ({ children }) => <th style={{ textAlign:"left", padding:"7px 8px", color:T.muted, fontWeight:600, fontSize:10, whiteSpace:"nowrap" }}>{children}</th>;
+export const Th      = ({ children }) => <th style={{ textAlign:"left", padding:"8px 8px", color:T.muted, fontWeight:700, fontSize:10.5, whiteSpace:"nowrap", letterSpacing:"0.03em", textTransform:"uppercase" }}>{children}</th>;
 
 export function Tag({ color, small, children, style:s }) {
   return <span style={{ fontSize:small?9:10, padding:small?"2px 6px":"3px 8px", borderRadius:4, background:color+"22", color, border:`1px solid ${color}44`, whiteSpace:"nowrap", ...s }}>{children}</span>;
@@ -37,8 +37,8 @@ export function Card({ title, badge, extra, children, style:s }) {
     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden", ...s }}>
       {(title||badge||extra) && (
         <div style={{ padding:"9px 14px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:8 }}>
-          {title && <span style={{ fontSize:12, fontWeight:700, color:T.text, flex:1 }}>{title}</span>}
-          {badge && <span style={{ fontSize:10, color:T.muted }}>{badge}</span>}
+          {title && <span style={{ fontSize:13, fontWeight:700, color:T.text, flex:1 }}>{title}</span>}
+          {badge && <span style={{ fontSize:11, color:T.muted }}>{badge}</span>}
           {extra}
         </div>
       )}
@@ -50,8 +50,8 @@ export function Card({ title, badge, extra, children, style:s }) {
 export function PageHeader({ title, sub }) {
   return (
     <div style={{ borderBottom:`1px solid ${T.border}`, paddingBottom:14 }}>
-      <h1 style={{ margin:0, fontSize:18, fontWeight:700, color:T.text }}>{title}</h1>
-      {sub && <p style={{ margin:"4px 0 0", fontSize:11.5, color:T.muted }}>{sub}</p>}
+      <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:T.text }}>{title}</h1>
+      {sub && <p style={{ margin:"5px 0 0", fontSize:12.5, color:T.muted }}>{sub}</p>}
     </div>
   );
 }
@@ -68,7 +68,7 @@ export function LoadingBar({ text="Loading…" }) {
   return (
     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"14px 20px", display:"flex", alignItems:"center", gap:10 }}>
       <div style={{ width:14, height:14, border:`2px solid ${T.accent}44`, borderTop:`2px solid ${T.accent}`, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-      <span style={{ fontSize:12, color:T.muted }}>{text}</span>
+      <span style={{ fontSize:13, color:T.muted }}>{text}</span>
     </div>
   );
 }
@@ -94,8 +94,8 @@ export function EmptyState({ icon="⬡", text }) {
 export function StatCard({ label, value, color }) {
   return (
     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"12px 14px" }}>
-      <div style={{ fontSize:10, color:T.muted, marginBottom:4 }}>{label}</div>
-      <div style={{ fontSize:20, fontWeight:700, color }}>{value ?? "—"}</div>
+      <div style={{ fontSize:11, color:T.muted, marginBottom:4 }}>{label}</div>
+      <div style={{ fontSize:22, fontWeight:700, color }}>{value ?? "—"}</div>
     </div>
   );
 }

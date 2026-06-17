@@ -1,11 +1,49 @@
+/* ── CSS Theme Variables ───────────────────────────────────────────────── */
+:root {
+  --bg:       #070a0f;
+  --surface:  #0d1117;
+  --surface2: #111720;
+  --border:   #1e2d3d;
+  --border2:  #243447;
+  --text:     #e6edf3;
+  --muted:    #8b949e;
+  --faint:    #3d4f61;
+  --accent:   #00d2ff;
+  --accent2:  #0057ff;
+  --green:    #3fb950;
+  --red:      #ff2d55;
+  --yellow:   #ff9f0a;
+  --blue:     #0a84ff;
+  --purple:   #bf5af2;
+}
+
+:root.light-theme {
+  --bg:       #f0f4f8;
+  --surface:  #ffffff;
+  --surface2: #e8edf2;
+  --border:   #c8d6e0;
+  --border2:  #b0c4d4;
+  --text:     #0d1117;
+  --muted:    #4a5568;
+  --faint:    #a0b0be;
+  --accent:   #0057cc;
+  --accent2:  #003fa0;
+  --green:    #1a7f37;
+  --red:      #d1002e;
+  --yellow:   #b35f00;
+  --blue:     #0057cc;
+  --purple:   #7c3aed;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-  background: #070a0f;
-  color: #e6edf3;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
 }
 
 /* Remove default select arrow in some browsers */
@@ -13,9 +51,9 @@ select { appearance: none; -webkit-appearance: none; }
 
 /* Scrollbar */
 ::-webkit-scrollbar       { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0d1117; }
-::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #243447; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
 
 /* Spin animation used by LoadingBar */
 @keyframes spin {
@@ -26,35 +64,30 @@ select { appearance: none; -webkit-appearance: none; }
 /* Focus outline */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: #00d2ff !important;
-  box-shadow: 0 0 0 2px #00d2ff18;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* Transition for interactive elements */
 button { transition: opacity 0.12s, background 0.12s, border-color 0.12s; }
 
 /* ── Bitmap Visualizer animations ─────────────────────────────────────── */
-
-/* Soft pulsing glow for bits that have a value set */
 @keyframes bitGlow {
   0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
   50%      { box-shadow: 0 0 8px 1px currentColor; opacity: 0.85; }
 }
 
-/* Flash highlight on the target field when its bit is clicked */
 @keyframes flashHighlight {
   0%   { box-shadow: 0 0 0 0 #00d2ff66; background: #00d2ff14; }
   60%  { box-shadow: 0 0 0 6px #00d2ff00; background: #00d2ff0a; }
   100% { box-shadow: 0 0 0 0 #00d2ff00; background: transparent; }
 }
 
-/* Slide+fade in for newly added custom DE fields */
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Pop-in for the bit itself when toggled */
 @keyframes bitPop {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.25); }

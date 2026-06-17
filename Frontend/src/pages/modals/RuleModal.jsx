@@ -6,7 +6,7 @@ import { Btn } from "../../components/shared";
 import { Modal, ModalFooter } from "./ProfileModal";
 
 const SL = { width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" };
-const inp = (err) => ({ width: "100%", boxSizing: "border-box", background: "#070a0f", border: `1px solid ${err ? T.red : T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" });
+const inp = (err) => ({ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${err ? T.red : T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" });
 
 export default function RuleModal({ rule, profileId, mti, profiles, onClose, onSaved }) {
   const isEdit = !!rule;
@@ -115,7 +115,7 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
     <Modal title={isEdit ? `Edit Rule — ${rule.deNumber}` : "Add Validation Rule"} onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
-        <Field label="Switch Profile" required error={errors.profileId}>
+        <Field label="Message Profile" required error={errors.profileId}>
           <select value={form.profileId} onChange={e => set("profileId", +e.target.value)} style={SL}>
             <option value="">Select profile…</option>
             {profiles.map(p => (
@@ -186,11 +186,11 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
         <Field label="Allowed Values (enum)" style={{ gridColumn: "1/-1" }}>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
             <input value={newVal} onChange={e => setNewVal(e.target.value)} onKeyDown={e => e.key === "Enter" && addAllowed()} placeholder="e.g. 000000"
-              style={{ flex: 1, background: "#070a0f", border: `1px solid ${T.border}`, color: T.text, padding: "7px 10px", borderRadius: 5, fontFamily: "inherit", fontSize: 11, outline: "none" }} />
+              style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "7px 10px", borderRadius: 5, fontFamily: "inherit", fontSize: 11, outline: "none" }} />
             <button onClick={addAllowed} style={{ background: T.surface2, border: `1px solid ${T.border}`, color: T.muted, padding: "7px 14px", borderRadius: 5, fontFamily: "inherit", fontSize: 11, cursor: "pointer" }}>+ Add</button>
           </div>
           {form.allowedValues.length > 0
-            ? <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "8px 10px", background: "#070a0f", border: `1px solid ${T.border}`, borderRadius: 5 }}>
+            ? <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "8px 10px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 5 }}>
               {form.allowedValues.map(v => (
                 <span key={v} style={{ display: "flex", alignItems: "center", gap: 5, background: T.accent + "15", color: T.accent, padding: "3px 8px", borderRadius: 4, fontSize: 11 }}>
                   {v}
@@ -203,7 +203,7 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
 
         <Field label="Description" style={{ gridColumn: "1/-1" }}>
           <textarea rows={2} value={form.description} onChange={e => set("description", e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box", background: "#070a0f", border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 5, fontFamily: "inherit", fontSize: 11, outline: "none", resize: "vertical" }} />
+            style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 5, fontFamily: "inherit", fontSize: 11, outline: "none", resize: "vertical" }} />
         </Field>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

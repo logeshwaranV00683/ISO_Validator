@@ -69,7 +69,7 @@ export default function Rules() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Profile dropdown */}
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "center" }}>
-            <div style={{ fontSize: 10.5, color: T.muted, fontWeight: 600 }}>Switch Profile</div>
+            <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>Message Profile</div>
             <select
               value={profileId || ""}
               onChange={e => { setProfileId(e.target.value); setPage(0); }}
@@ -83,7 +83,7 @@ export default function Rules() {
 
           {/* MTI pills — wrap */}
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
-            <div style={{ fontSize: 10.5, color: T.muted, fontWeight: 600, paddingTop: 6 }}>MTI</div>
+            <div style={{ fontSize: 11, color: T.muted, fontWeight: 600, paddingTop: 6 }}>MTI</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MTIS.map(m => (
                 <button
@@ -112,7 +112,7 @@ export default function Rules() {
 
       {/* Actions */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: T.muted }}>
+        <span style={{ fontSize: 13, color: T.muted }}>
           <span style={{ color: T.text, fontWeight: 700 }}>{totalElements}</span> rules
         </span>
         <div style={{ flex: 1 }} />
@@ -136,7 +136,7 @@ export default function Rules() {
 
       <Card>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${T.border}` }}>
                 {["#", "DE", "Field Name", "Mandatory", "Min", "Max", "Type", "Severity", "Pattern", "Allowed Values", "Active", "Eff. From", "Eff. To", "Updated", ...(can.edit ? ["Actions"] : [])].map(h => <Th key={h}>{h}</Th>)}

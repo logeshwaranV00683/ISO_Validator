@@ -58,7 +58,7 @@ export default function FieldDefinitions() {
       <Card>
         <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16, alignItems: "end" }}>
           <div>
-            <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>Switch Profile</div>
+            <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>Message Profile</div>
             <select value={profileId} onChange={e => setProfileId(e.target.value)} style={{ ...SL, width: "100%" }}>
               {(Array.isArray(profiles)
                 ? profiles
@@ -71,7 +71,7 @@ export default function FieldDefinitions() {
             </select>
           </div>
           <div>
-            <div style={{ fontSize: 10.5, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
+            <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
             <div style={{ display: "flex", gap: 8 }}>
               {MTIS.map(m => (
                 <button key={m} onClick={() => setMti(m)}
@@ -91,7 +91,7 @@ export default function FieldDefinitions() {
       {error && <ErrorBanner message={error} onRetry={refetch} />}
 
       <Card title={`Field Definitions`} badge={`${defs?.length || 0} fields`}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border}` }}>
               {["Order", "DE", "Field Name", "Type", "Max Len", "LLVAR", "Mandatory", "Placeholder", "Builder Visible", "Active", ...(can.edit ? ["Actions"] : [])].map(h => <Th key={h}>{h}</Th>)}

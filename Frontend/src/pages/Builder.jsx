@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { T, ENV_COLORS, MTI_DESCRIPTIONS, MTI_SHORT_LABELS } from "../constants/theme";
+import { T, MTI_DESCRIPTIONS, MTI_SHORT_LABELS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { getProfiles } from "../api/profiles";
@@ -267,7 +267,7 @@ export default function Builder() {
       <Card>
         <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16, alignItems: "start" }}>
           <div>
-            <Label>Switch Profile</Label>
+            <Label>Message Profile</Label>
             <select value={profileId || ""} onChange={e => { setProfileId(+e.target.value); resetAll(); }}
               style={{ width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" }}>
               {!profiles && <option>Loading…</option>}
@@ -276,7 +276,6 @@ export default function Builder() {
             {profile && (
               <div style={{ fontSize: 10, color: T.muted, marginTop: 4, display: "flex", gap: 6, alignItems: "center" }}>
                 <span>Format: <span style={{ color: T.accent }}>{profile.formatName}</span></span>
-                <Tag color={ENV_COLORS[profile.environment] || T.muted} small>{profile.environment}</Tag>
                 {profile.tpduEnabled && <Tag color={T.yellow} small>TPDU</Tag>}
               </div>
             )}

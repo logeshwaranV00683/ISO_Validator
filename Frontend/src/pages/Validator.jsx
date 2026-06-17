@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { T, SEV, ENV_COLORS } from "../constants/theme";
+import { T, SEV } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { getProfiles } from "../api/profiles";
@@ -84,7 +84,7 @@ export default function Validator({ initialMsg = "" }) {
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             <div>
-              <Label>Switch Profile</Label>
+              <Label>Message Profile</Label>
               <select value={profileId||""} onChange={e => setProfileId(+e.target.value)}
                 style={{ width:"100%", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" }}>
                 {!profiles && <option>Loading…</option>}
@@ -95,7 +95,6 @@ export default function Validator({ initialMsg = "" }) {
               {profile && (
                 <div style={{ fontSize:10, color:T.muted, marginTop:4, display:"flex", gap:6, alignItems:"center" }}>
                   <span>{profile.formatName}</span>
-                  <Tag color={ENV_COLORS[profile.environment]||T.muted} small>{profile.environment}</Tag>
                 </div>
               )}
             </div>

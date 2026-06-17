@@ -6,7 +6,7 @@ import { Modal, ModalFooter } from "./ProfileModal";
 
 const ENCODINGS = ["ASCII", "EBCDIC", "BCD"];
 const inputStyle = (err) => ({
-  width: "100%", boxSizing: "border-box", background: "#070a0f",
+  width: "100%", boxSizing: "border-box", background: T.bg,
   border: `1px solid ${err ? T.red : T.border}`, color: T.text,
   padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none",
 });
@@ -76,7 +76,7 @@ export default function FormatModal({ profiles = [], onClose, onSaved }) {
     <Modal title="New Message Format" onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
-        <Field label="Switch Profile" required error={errors.profileId}>
+        <Field label="Message Profile" required error={errors.profileId}>
           <select value={form.profileId} onChange={e => set("profileId", e.target.value)} style={SL}>
             <option value="">Select Profile</option>
             {profiles.map(p => (

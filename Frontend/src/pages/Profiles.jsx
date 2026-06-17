@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { T, ENV_COLORS } from "../constants/theme";
+import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { useMutation } from "../hooks/useApi";
@@ -50,10 +50,10 @@ export default function Profiles() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <PageHeader title="Switch Profiles" sub="Each profile binds a message format + validation rules + switch host" />
+      <PageHeader title="Message Profiles" sub="Each profile binds a message format + validation rules + connection host" />
       {!can.edit && <RoleBanner roleNeeded="ADMIN" action="edit profiles" />}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-        {can.add && <Btn primary onClick={() => { setEditProfile(null); setShowModal(true); }}>+ New Profile</Btn>}
+        {can.add && <Btn primary onClick={() => { setEditProfile(null); setShowModal(true); }}>+ New Message Profile</Btn>}
       </div>
 
       {loading && <LoadingBar text="Loading profiles…" />}
@@ -64,7 +64,7 @@ export default function Profiles() {
           // ✅ Backend returns: p.id, p.active, p.isDefault (not profileId/isActive)
           const conn = testResults[p.id];
           return (
-            <div key={p.id} style={{ background: T.surface, borderRadius: 8, border: `1px solid ${p.isDefault ? T.accent : T.border}`, borderTop: `2px solid ${p.active ? ENV_COLORS[p.environment] : T.faint}`, padding: 16, opacity: p.active ? 1 : 0.65 }}>
+            <div key={p.id} style={{ background: T.surface, borderRadius: 8, border: `1px solid ${p.isDefault ? T.accent : T.border}`, borderTop: `2px solid ${p.active ? T.accent : T.faint}`, padding: 16, opacity: p.active ? 1 : 0.65 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -72,7 +72,6 @@ export default function Profiles() {
                     {p.isDefault && <Tag color={T.accent} small>DEFAULT</Tag>}
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
-                    <Tag color={ENV_COLORS[p.environment] || T.muted} small>{p.environment}</Tag>
                     <Tag color={p.active ? T.green : T.faint} small>{p.active ? "ACTIVE" : "INACTIVE"}</Tag>
                   </div>
                 </div>

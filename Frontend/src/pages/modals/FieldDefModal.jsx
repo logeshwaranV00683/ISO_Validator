@@ -7,7 +7,7 @@ import { Modal, ModalFooter } from "./ProfileModal";
 
 const TYPES = ["numeric", "alpha", "alphanumeric", "binary", "special"];
 const MTIS  = ["0200", "0210", "0420", "0800", "0810"];
-const inp = (err) => ({ width: "100%", boxSizing: "border-box", background: "#070a0f", border: `1px solid ${err ? T.red : T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" });
+const inp = (err) => ({ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${err ? T.red : T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" });
 const SL = { width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" };
 
 function Field({ label, required, error, children, style: s }) {
@@ -117,7 +117,7 @@ export default function FieldDefModal({ def, profileId, mti, profiles = [], onCl
     <Modal title={isEdit ? `Edit Field — ${def.deNumber}` : "Add Field Definition"} onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
-        <Field label="Switch Profile" required error={errors.profileId}>
+        <Field label="Message Profile" required error={errors.profileId}>
           <select value={form.profileId} onChange={e => set("profileId", e.target.value)} style={SL} disabled={isEdit}>
             <option value="">Select profile…</option>
             {profiles.map(p => <option key={p.id} value={p.id}>{p.profileName}</option>)}

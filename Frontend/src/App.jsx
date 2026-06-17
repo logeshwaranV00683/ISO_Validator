@@ -37,7 +37,7 @@ function RequireAdmin() {
 // ── Main layout (TopBar + Sidebar + Content) ─────────────────────────────────
 function AppLayout() {
   return (
-    <div style={{ fontFamily:"'JetBrains Mono','Fira Code',monospace", background:T.bg, color:T.text, minHeight:"100vh", display:"flex", flexDirection:"column" }}>
+    <div style={{ fontFamily:"'JetBrains Mono','Fira Code',monospace", background:T.bg, color:T.text, height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden" }}>
       <TopBar />
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
         <Sidebar />
