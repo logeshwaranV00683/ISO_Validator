@@ -1,0 +1,156 @@
+/* ── LoginBackground.css ── */
+
+.lb-root {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden;
+  transition: background 1s ease;
+}
+
+/* Canvas for particles */
+.lb-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  transition: opacity 1.2s ease;
+}
+
+/* ── Scene crossfade wrapper ── */
+.lb-scene {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+.lb-scene.lb-visible { opacity: 1; }
+
+/* ══ SCENE A — POS data streams ══ */
+.lb-data-stream {
+  position: absolute;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: lbStreamFloat linear infinite;
+}
+@keyframes lbStreamFloat {
+  0%   { transform: translateY(0);    opacity: 0;   }
+  10%  { opacity: 1; }
+  85%  { opacity: 0.7; }
+  100% { transform: translateY(-80px); opacity: 0; }
+}
+
+/* Grid overlay for POS scene */
+.lb-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,210,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,210,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Light theme grid */
+.lb-light .lb-grid {
+  background-image:
+    linear-gradient(rgba(0,87,204,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,87,204,0.04) 1px, transparent 1px);
+}
+
+/* ══ SCENE B — Network switch ══ */
+.lb-scene {
+  perspective: 1200px;
+}
+.lb-network-svg {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: min(700px, 90vw);
+  height: min(500px, 80vh);
+  opacity: 0.55;
+  transform-style: preserve-3d;
+  animation: lbNetworkDrift 16s ease-in-out infinite alternate;
+}
+@keyframes lbNetworkDrift {
+  from { transform: translate(-50%, -50%) rotateX(10deg) rotateY(-5deg) rotateZ(-1deg); }
+  to   { transform: translate(-50%, -50%) rotateX(15deg) rotateY(5deg)  rotateZ(1deg); }
+}
+
+/* Light theme dimmer network */
+.lb-light .lb-network-svg { opacity: 0.3; }
+
+/* ══ Central orb glow ══ */
+.lb-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.lb-orb-a {
+  width: 600px; height: 600px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(0,87,255,0.12) 0%, transparent 65%);
+  animation: lbOrbPulse 4s ease-in-out infinite alternate;
+}
+.lb-orb-b {
+  width: 400px; height: 400px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(0,210,255,0.08) 0%, transparent 60%);
+  animation: lbOrbPulse 3s ease-in-out infinite alternate-reverse;
+}
+
+/* Light theme orbs — subtler */
+.lb-light .lb-orb-a {
+  background: radial-gradient(circle, rgba(0,87,204,0.06) 0%, transparent 65%);
+}
+.lb-light .lb-orb-b {
+  background: radial-gradient(circle, rgba(0,150,255,0.05) 0%, transparent 60%);
+}
+
+@keyframes lbOrbPulse {
+  from { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
+  to   { transform: translate(-50%,-50%) scale(1.15); opacity: 1;   }
+}
+
+/* ══ Corner HUD labels ══ */
+.lb-hud {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s ease;
+  animation: lbHudBlink 3s ease-in-out infinite alternate;
+}
+.lb-visible .lb-hud { opacity: 1; }
+.lb-hud-label {
+  font-size: 9px; letter-spacing: 0.12em;
+  color: rgba(0,210,255,0.4);
+  text-transform: uppercase;
+}
+.lb-hud-value {
+  font-size: 13px; font-weight: 700;
+  color: rgba(0,210,255,0.7);
+  margin-top: 2px;
+}
+
+/* Light theme HUD */
+.lb-light .lb-hud-label { color: rgba(0,87,204,0.35); }
+.lb-light .lb-hud-value  { color: rgba(0,87,204,0.55); }
+
+@keyframes lbHudBlink {
+  from { opacity: 0.6; } to { opacity: 1; }
+}
+
+/* ══ Scene indicator dots ══ */
+.lb-dots {
+  position: absolute; bottom: 16px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 6px; z-index: 2;
+}
+.lb-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(0,210,255,0.25);
+  transition: background 0.4s, transform 0.4s;
+}
+.lb-dot.lb-dot-active {
+  background: rgba(0,210,255,0.7);
+  transform: scale(1.4);
+}
+.lb-light .lb-dot { background: rgba(0,87,204,0.2); }
+.lb-light .lb-dot.lb-dot-active { background: rgba(0,87,204,0.6); }

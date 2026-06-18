@@ -49,7 +49,7 @@ export default function TopBar() {
               boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
             }} />
           </div>
-          <span style={{ fontSize: 13 }}>{isDark ? "🌙" : "☀️"}</span>
+          <span style={{ fontSize: 13 }}>{isDark ? "Light" : "Dark"}</span>
         </button>
 
         <span style={{ color:T.faint }}>|</span>

@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
+
+/* ── Root ── */
+.intro-root {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #020810;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Skip button ── */
+.intro-skip {
+  position: absolute; top: 20px; right: 24px; z-index: 100;
+  background: rgba(0,210,255,0.08); border: 1px solid rgba(0,210,255,0.25);
+  color: rgba(0,210,255,0.7); padding: 6px 16px; border-radius: 20px;
+  font-family: inherit; font-size: 10px; cursor: pointer; letter-spacing: 0.1em;
+  transition: all 0.2s;
+}
+.intro-skip:hover { background: rgba(0,210,255,0.15); color: #00d2ff; }
+
+/* ── Progress bar ── */
+.intro-progress {
+  position: absolute; bottom: 0; left: 0; height: 2px;
+  background: linear-gradient(90deg, #0057ff, #00d2ff);
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px #00d2ff88;
+}
+
+/* ── Canvas (particles/tunnel) ── */
+.intro-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+
+/* ── Scene wrapper ── */
+.scene {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.scene.active { opacity: 1; pointer-events: auto; }
+.scene.exit   { opacity: 0; }
+
+/* ══════════════════════════════════════════
+   SCENE 1 — POS Terminal
+══════════════════════════════════════════ */
+.pos-scene { perspective: 900px; }
+
+.pos-terminal {
+  width: 200px; height: 280px;
+  background: linear-gradient(160deg, #1a2535, #0d1520);
+  border-radius: 18px;
+  border: 1px solid rgba(0,210,255,0.3);
+  box-shadow: 0 0 60px rgba(0,87,255,0.4), 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px; gap: 10px;
+  position: relative;
+  transform: rotateY(-26deg) rotateX(8deg);
+  transform-style: preserve-3d;
+  animation: posFloat 2s ease-in-out infinite alternate, posEntry 0.6s ease-out forwards;
+}
+.pos-terminal::before {
+  content: "";
+  position: absolute; top: 0; right: -16px;
+  width: 16px; height: 100%;
+  background: linear-gradient(180deg, #131e2c, #070d16);
+  border-radius: 0 14px 14px 0;
+  transform: rotateY(90deg) translateZ(8px);
+  transform-origin: left center;
+  box-shadow: inset -3px 0 6px rgba(0,0,0,0.5);
+}
+.pos-terminal::after {
+  content: "";
+  position: absolute; top: -14px; left: 0;
+  width: 100%; height: 14px;
+  background: linear-gradient(90deg, #202f42, #141f2c);
+  border-radius: 14px 14px 0 0;
+  transform: rotateX(90deg) translateZ(7px);
+  transform-origin: bottom center;
+}
+
+@keyframes posEntry {
+  from { transform: rotateY(-26deg) rotateX(8deg) translateY(40px); opacity: 0; }
+  to   { transform: rotateY(-26deg) rotateX(8deg) translateY(0); opacity: 1; }
+}
+@keyframes posFloat {
+  from { transform: rotateY(-26deg) rotateX(8deg)  translateY(0px); }
+  to   { transform: rotateY(-21deg) rotateX(11deg) translateY(-6px); }
+}
+
+/* ── Dive-into-screen transition (last 650ms of scene 1) ── */
+.pos-scene.zoom-in .data-stream,
+.pos-scene.zoom-in .card-wrapper {
+  animation: fadeOutQuick 0.3s ease-out forwards;
+}
+.pos-scene.zoom-in .pos-terminal > *:not(.pos-screen) {
+  animation: fadeOutQuick 0.3s ease-out forwards;
+}
+.pos-scene.zoom-in .pos-screen {
+  z-index: 5;
+  animation: screenDive 0.65s cubic-bezier(0.6,0,0.4,1) forwards;
+}
+@keyframes screenDive {
+  from { transform: translateZ(0)     scale(1) rotateY(0deg)  rotateX(0deg);   }
+  to   { transform: translateZ(600px) scale(5) rotateY(26deg) rotateX(-8deg); }
+}
+@keyframes fadeOutQuick {
+  to { opacity: 0; }
+}
+
+.pos-screen {
+  width: 100%; height: 110px; border-radius: 10px;
+  background: #000d1a;
+  border: 1px solid rgba(0,210,255,0.4);
+  overflow: hidden; position: relative;
+  box-shadow: inset 0 0 20px rgba(0,87,255,0.3);
+}
+
+.pos-screen-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(0,210,255,0.15), transparent 70%);
+  animation: screenPulse 1s ease-in-out infinite alternate;
+}
+@keyframes screenPulse {
+  from { opacity: 0.6; } to { opacity: 1; }
+}
+
+.pos-screen-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+}
+.pos-amount {
+  font-size: 22px; font-weight: 700; color: #00d2ff;
+  text-shadow: 0 0 12px #00d2ff;
+  animation: amountIn 0.4s 0.8s ease-out both;
+}
+@keyframes amountIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.pos-status {
+  font-size: 9px; color: #3fb950; letter-spacing: 0.15em;
+  animation: statusIn 0.4s 1.1s ease-out both;
+  text-shadow: 0 0 8px #3fb950;
+}
+@keyframes statusIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.pos-chip-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.pos-chip {
+  width: 36px; height: 26px; border-radius: 5px;
+  background: linear-gradient(135deg, #c8a84b, #8b6914);
+  border: 1px solid #d4a843;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.pos-swipe-slot {
+  width: 6px; height: 60px; border-radius: 3px;
+  background: #060e1a; border: 1px solid rgba(0,210,255,0.3);
+  position: relative; overflow: hidden;
+}
+.pos-swipe-line {
+  position: absolute; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, #00d2ff, transparent);
+  animation: swipe 0.8s 0.5s ease-in-out forwards;
+  top: -4px;
+}
+@keyframes swipe {
+  from { top: -4px; opacity: 0; }
+  30%  { opacity: 1; }
+  to   { top: 64px; opacity: 0; }
+}
+
+.pos-keypad {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 100%;
+}
+.pos-key {
+  height: 20px; border-radius: 4px;
+  background: rgba(0,210,255,0.07); border: 1px solid rgba(0,210,255,0.15);
+  animation: keyGlow 2s ease-in-out infinite alternate;
+}
+.pos-key:nth-child(odd) { animation-delay: 0.3s; }
+@keyframes keyGlow {
+  from { border-color: rgba(0,210,255,0.1); }
+  to   { border-color: rgba(0,210,255,0.35); box-shadow: 0 0 6px rgba(0,210,255,0.2); }
+}
+
+/* Card */
+.card-wrapper {
+  position: absolute; left: -120px; top: 50%; transform: translateY(-50%);
+  animation: cardSwipe 0.9s 0.3s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+}
+@keyframes cardSwipe {
+  from { left: -160px; opacity: 0; }
+  40%  { opacity: 1; }
+  to   { left: 60px; opacity: 0; }
+}
+.credit-card {
+  width: 120px; height: 75px; border-radius: 8px;
+  background: linear-gradient(135deg, #0057ff, #00d2ff, #0057ff);
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 8px 24px rgba(0,87,255,0.6);
+  display: flex; flex-direction: column; justify-content: space-between; padding: 8px;
+  transform: rotateZ(-5deg) rotateY(-22deg) rotateX(6deg);
+  transform-style: preserve-3d;
+}
+.card-logo { font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.9); letter-spacing: 0.1em; }
+.card-num  { font-size: 7px; color: rgba(255,255,255,0.7); letter-spacing: 0.08em; }
+
+/* Data streams around POS */
+.data-stream {
+  position: absolute; pointer-events: none;
+  font-size: 13px; color: rgba(0,210,255,0.55);
+  letter-spacing: 0.05em; white-space: nowrap;
+  animation: streamFloat 2s linear infinite;
+}
+@keyframes streamFloat {
+  from { transform: translateY(0); opacity: 0.4; }
+  to   { transform: translateY(-60px); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════
+   SCENE 2 — Portal / Tunnel Entry
+══════════════════════════════════════════ */
+.portal-ring {
+  border-radius: 50%;
+  border: 2px solid rgba(0,210,255,0.6);
+  box-shadow: 0 0 30px rgba(0,210,255,0.4), inset 0 0 30px rgba(0,87,255,0.2);
+  position: absolute;
+  animation: ringExpand 1.5s ease-in-out forwards;
+}
+@keyframes ringExpand {
+  from { width: 80px; height: 80px; opacity: 1; }
+  to   { width: 120vw; height: 120vw; opacity: 0; }
+}
+
+/* ══════════════════════════════════════════
+   SCENE 3 — Switch Network
+══════════════════════════════════════════ */
+.network-scene { perspective: 800px; }
+
+.network-svg {
+  width: min(600px, 90vw); height: min(400px, 60vh);
+  animation: networkIn 0.5s ease-out forwards;
+}
+@keyframes networkIn {
+  from { opacity: 0; transform: scale(0.85) rotateX(10deg); }
+  to   { opacity: 1; transform: scale(1) rotateX(0deg); }
+}
+
+/* ══════════════════════════════════════════
+   SCENE 4 — Speed / Tunnel
+══════════════════════════════════════════ */
+.speed-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, #00d2ff, transparent);
+  height: 1px; border-radius: 1px;
+  animation: speedRush linear forwards;
+}
+@keyframes speedRush {
+  from { opacity: 0; transform: scaleX(0); }
+  20%  { opacity: 1; }
+  to   { opacity: 0; transform: scaleX(1); }
+}
+
+/* ── Redirecting overlay ── */
+.redirect-overlay {
+  position: absolute; inset: 0; z-index: 10;
+  background: #020810;
+  opacity: 0;
+  animation: redirectFade 0.6s ease-in forwards;
+}
+@keyframes redirectFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

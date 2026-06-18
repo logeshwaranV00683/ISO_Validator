@@ -3,7 +3,7 @@ import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 
 const NAV = [
-  { to: "/", icon: "⬡", label: "Dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { to: "/dashboard", icon: "⬡", label: "Dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/validator", icon: "◎", label: "Message Validator", roles: ["ADMIN", "ANALYST"] },
   { to: "/builder", icon: "⊞", label: "Message Builder", roles: ["ADMIN", "ANALYST"] },
   { to: "/history", icon: "◷", label: "Validation History", roles: ["ADMIN", "ANALYST", "VIEWER"] },

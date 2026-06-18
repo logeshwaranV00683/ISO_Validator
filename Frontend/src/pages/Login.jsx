@@ -4,12 +4,13 @@ import { T, ROLES } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Tag } from "../components/shared";
+import LoginBackground from "./animated/LoginBackground";
 
 export default function Login() {
   const { login }  = useAuth();
   const navigate   = useNavigate();
   const location   = useLocation();
-  const from       = location.state?.from?.pathname || "/";
+  const from       = location.state?.from?.pathname || "/dashboard";
   const { isDark, toggle } = useTheme();
 
   const [username, setUsername] = useState("");
@@ -36,7 +37,7 @@ export default function Login() {
 
   return (
     <div style={{ minHeight:"100vh", background:T.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'JetBrains Mono','Fira Code',monospace", position:"relative", overflow:"hidden" }}>
-
+      <LoginBackground />
       {/* Theme toggle — top right */}
       <button
         onClick={toggle}
@@ -65,24 +66,24 @@ export default function Login() {
             boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
           }} />
         </div>
-        <span style={{ fontSize: 13 }}>{isDark ? "🌙" : "☀️"}</span>
+        <span style={{ fontSize: 13 }}>{isDark ? "Light" : "Dark"}</span>
       </button>
 
       <div style={{ position:"absolute", inset:0, backgroundImage:`linear-gradient(${T.border}33 1px,transparent 1px),linear-gradient(90deg,${T.border}33 1px,transparent 1px)`, backgroundSize:"40px 40px", opacity:0.4 }} />
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:500, height:500, borderRadius:"50%", background:`radial-gradient(circle,${T.accent2}15,transparent 70%)`, pointerEvents:"none" }} />
 
-      <div style={{ position:"relative", zIndex:1, width:420 }}>
+      <div style={{ position:"relative", zIndex:1, width:340 }}>
         {/* Logo */}
-        <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ width:52, height:52, borderRadius:14, background:`linear-gradient(135deg,${T.accent2},${T.accent})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, margin:"0 auto 12px" }}>⬡</div>
-          <div style={{ fontSize:16, fontWeight:700, color:T.text }}>Veri<span style={{ color:T.accent }}>Q</span>Forge<span style={{ color:T.accent }}> AI</span></div>
-          <div style={{ fontSize:11, color:T.faint, marginTop:4 }}>Enterprise Payment Message Platform</div>
+        <div style={{ textAlign:"center", marginBottom:20 }}>
+          <div style={{ width:42, height:42, borderRadius:11, background:`linear-gradient(135deg,${T.accent2},${T.accent})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, margin:"0 auto 10px" }}>⬡</div>
+          <div style={{ fontSize:25, fontWeight:700, color:T.text }}>Veri<span style={{ color:T.accent }}>Q</span>Forge<span style={{ color:T.accent }}> AI</span></div>
+          <div style={{ fontSize:11, color:T.faint, marginTop:4, fontWeight:200 }}>Enterprise Payment Message Platform</div>
         </div>
 
         {/* Form */}
-        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:28 }}>
-          <div style={{ fontSize:13, fontWeight:700, color:T.text, marginBottom:20 }}>Sign In</div>
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:20 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:T.text, marginBottom:14 }}>Sign In</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             <div>
               <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>Username</div>
               <input value={username} onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key==="Enter" && handleLogin()} placeholder="Enter username"
@@ -109,7 +110,7 @@ export default function Login() {
         </div>
 
         {/* Role reference card */}
-        <div style={{ marginTop:14, background:T.surface+"88", border:`1px solid ${T.border}`, borderRadius:8, padding:"10px 14px" }}>
+        <div style={{ marginTop:10, background:T.surface+"88", border:`1px solid ${T.border}`, borderRadius:8, padding:"8px 12px" }}>
           <div style={{ fontSize:10, color:T.faint, marginBottom:8 }}>Role Permissions</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6 }}>
             {Object.entries(ROLES).map(([key, r]) => (

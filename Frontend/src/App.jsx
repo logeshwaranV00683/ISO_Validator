@@ -18,6 +18,7 @@ import AI                from "./pages/AI";
 import Users             from "./pages/Users";
 import AuditLog          from "./pages/AuditLog";
 import SystemConfig      from "./pages/SystemConfig";
+import IntroAnimation    from "./pages/animated/IntroAnimation";
 
 // ── Protected route wrapper ──────────────────────────────────────────────────
 function RequireAuth() {
@@ -54,12 +55,13 @@ export default function App() {
   return (
     <Routes>
       {/* Public */}
+      <Route path="/" element={<IntroAnimation />} />
       <Route path="/login" element={<Login />} />
 
       {/* Protected */}
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route path="/"                  element={<Dashboard />} />
+          <Route path="/dashboard"         element={<Dashboard />} />
           <Route path="/validator"         element={<Validator />} />
           <Route path="/builder"           element={<Builder />} />
           <Route path="/history"           element={<History />} />
@@ -77,7 +79,7 @@ export default function App() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>
     </Routes>
