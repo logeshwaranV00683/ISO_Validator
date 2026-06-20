@@ -163,7 +163,7 @@ export default function AI() {
                     <option value="RETRY">RETRY — retry N times then skip</option>
                   </select>
                 </div>
-                {can.edit && <Btn primary onClick={handleSaveConfig}>💾 Save Config</Btn>}
+                {can.edit && <Btn primary onClick={handleSaveConfig}>Save Config</Btn>}
               </div>
             </Card>
 
@@ -194,7 +194,7 @@ export default function AI() {
                     onChange={e => setGlobalContent(e.target.value)}
                     style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none", opacity: can.edit ? 1 : 0.6 }} />
                   <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                    {can.edit && <Btn primary onClick={handleSavePrompt}>💾 Save</Btn>}
+                    {can.edit && <Btn primary onClick={handleSavePrompt}>Save</Btn>}
                     <Btn onClick={handleTestPrompt}>{testing ? "Testing…" : "▶ Test Prompt"}</Btn>
                     <SmBtn onClick={loadVersions}>Version History</SmBtn>
                   </div>
@@ -307,7 +307,7 @@ function ProfilePromptCard({ profile, canEdit }) {
               const v = await getPromptVersions(data.id);
               setVersions(v);
             }
-          }}>💾 Save Override</Btn>
+          }}>Save Override</Btn>
           {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(""); setVersions(null); }}>↺ Clear</Btn>}
           <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
         </div>

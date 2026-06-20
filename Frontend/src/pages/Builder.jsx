@@ -260,7 +260,7 @@ export default function Builder() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <PageHeader title="Message Builder" sub="Construct well-formed ISO8583 messages — fields driven dynamically from Field Definitions DB" />
+      <PageHeader title="Message Builder" sub="Construct well-formed Raw messages — fields driven dynamically from Field Definitions DB" />
       {!can.build && <RoleBanner roleNeeded="ANALYST or ADMIN" action="build messages" />}
 
       {/* Profile + MTI selector */}
@@ -333,6 +333,7 @@ export default function Builder() {
       {defsLoading && <LoadingBar text="Loading field definitions from DB…" />}
 
       {!defsLoading && catalog.length > 0 && (
+        <>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 14 }}>
           {/* Fields column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -395,40 +396,47 @@ export default function Builder() {
               </Card>
             )}
 
-            {/* Bitmap — compact, placed below fields */}
-            <BitmapVisualizer
-              catalogByDe={catalogByDe}
-              fieldValues={fieldValues}
-              extraFields={extraFields}
-              onSelectCatalog={handleSelectCatalogBit}
-              onToggleCustom={handleToggleCustomBit}
-            />
           </div>
 
           {/* Summary + actions column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Card title="Live Field Summary">
-              <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 320, overflowY: "auto", alignContent: "start" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignSelf: "stretch" }}>
+            <Card title="Live Field Summary" style={{ flex: 1 }}>
+              {/* Table header */}
+              <div style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, padding: "0 0 5px 0", borderBottom: `1px solid ${T.border}55`, marginBottom: 4 }}>
+                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>DE</span>
+                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>Field Name</span>
+                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>Value</span>
+                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700, textAlign: "center" }}>Length</span>
+                <span />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", overflowY: "auto" }}>
                 {catalog.map(f => {
                   const val = fieldValues[f.deNumber]?.trim();
+                  const len = val ? val.length : null;
+                  const lenOver = len && f.maxLength && len > f.maxLength;
                   return (
-                    <div key={f.deNumber} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: `1px solid ${T.border}22` }}>
-                      <span style={{ color: T.accent, fontSize: 10, fontWeight: 700, width: 40 }}>{f.deNumber}</span>
-                      <span style={{ color: T.muted, fontSize: 9.5, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.fieldName}</span>
-                      {f.isMandatory && <span style={{ fontSize: 8, color: T.red }}>*</span>}
-                      <span style={{ fontSize: 10, color: val ? T.text : T.faint, maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.green : f.isMandatory ? T.red : T.faint, flexShrink: 0 }} />
+                    <div key={f.deNumber} style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, alignItems: "center", padding: "4px 0", borderBottom: `1px solid ${T.border}22` }}>
+                      <span style={{ color: T.accent, fontSize: 10, fontWeight: 700 }}>{f.deNumber}</span>
+                      <span style={{ color: T.muted, fontSize: 9.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {f.fieldName}{f.isMandatory && <span style={{ color: T.red }}> *</span>}
+                      </span>
+                      <span style={{ fontSize: 10, color: val ? T.text : T.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
+                      <span style={{ fontSize: 9, color: lenOver ? T.red : len ? T.green : T.faint, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+                        {len !== null ? `${len}/${f.maxLength}` : `—/${f.maxLength || "?"}`}
+                      </span>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.green : f.isMandatory ? T.red : T.faint, flexShrink: 0, display: "inline-block" }} />
                     </div>
                   );
                 })}
                 {Object.entries(extraFields).map(([de, value]) => {
                   const val = value?.trim();
                   return (
-                    <div key={`extra-${de}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: `1px solid ${T.border}22`, animation: "slideIn 0.25s ease" }}>
-                      <span style={{ color: T.purple, fontSize: 10, fontWeight: 700, width: 40 }}>DE{de}</span>
-                      <span style={{ color: T.muted, fontSize: 9.5, flex: 1 }}>Custom field</span>
-                      <span style={{ fontSize: 10, color: val ? T.text : T.faint, maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.purple : T.faint, flexShrink: 0 }} />
+                    <div key={`extra-${de}`} style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, alignItems: "center", padding: "4px 0", borderBottom: `1px solid ${T.border}22`, animation: "slideIn 0.25s ease" }}>
+                      <span style={{ color: T.purple, fontSize: 10, fontWeight: 700 }}>DE{de}</span>
+                      <span style={{ color: T.muted, fontSize: 9.5 }}>Custom field</span>
+                      <span style={{ fontSize: 10, color: val ? T.text : T.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
+                      <span style={{ fontSize: 9, color: T.faint, textAlign: "center" }}>{val ? val.length : "—"}</span>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.purple : T.faint, flexShrink: 0, display: "inline-block" }} />
                     </div>
                   );
                 })}
@@ -436,12 +444,24 @@ export default function Builder() {
             </Card>
 
             {buildError && <div style={{ background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 5, padding: "8px 12px", fontSize: 11, color: T.red }}>✕ {buildError}</div>}
-            <Btn primary onClick={handleBuild} disabled={building || !can.build} style={{ width: "100%", textAlign: "center" }}>
-              {building ? "Building…" : "⊞ Build Raw Message"}
-            </Btn>
-            <Btn onClick={resetAll} style={{ width: "100%", textAlign: "center" }}>↺ Reset All Fields</Btn>
+            <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+              <Btn primary onClick={handleBuild} disabled={building || !can.build} style={{ width: "100%", textAlign: "center" }}>
+                {building ? "Building…" : "⊞ Build Raw Message"}
+              </Btn>
+              <Btn onClick={resetAll} style={{ width: "100%", textAlign: "center" }}>↺ Reset All Fields</Btn>
+            </div>
           </div>
         </div>
+
+        {/* Bitmap Visualizer — full width below both columns */}
+        <BitmapVisualizer
+          catalogByDe={catalogByDe}
+          fieldValues={fieldValues}
+          extraFields={extraFields}
+          onSelectCatalog={handleSelectCatalogBit}
+          onToggleCustom={handleToggleCustomBit}
+        />
+        </>
       )}
 
       {/* Result */}

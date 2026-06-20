@@ -69,7 +69,7 @@ export default function Rules() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Profile dropdown */}
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "center" }}>
-            <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>Message Profile</div>
+            <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>Message Profile</div>
             <select
               value={profileId || ""}
               onChange={e => { setProfileId(e.target.value); setPage(0); }}
@@ -83,7 +83,7 @@ export default function Rules() {
 
           {/* MTI pills — wrap */}
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
-            <div style={{ fontSize: 11, color: T.muted, fontWeight: 600, paddingTop: 6 }}>MTI</div>
+            <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MTIS.map(m => (
                 <button
@@ -117,7 +117,7 @@ export default function Rules() {
         </span>
         <div style={{ flex: 1 }} />
         {can.add && <Btn primary onClick={() => { setEditRule(null); setShowModal(true); }}>+ Add Rule</Btn>}
-        {can.edit && <SmBtn>⬆ Import JSON</SmBtn>}
+        {/* {can.edit && <SmBtn>⬆ Import JSON</SmBtn>} */}
         <SmBtn onClick={handleExport}>⬇ Export JSON</SmBtn>
       </div>
 

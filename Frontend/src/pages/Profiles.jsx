@@ -50,7 +50,7 @@ export default function Profiles() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <PageHeader title="Message Profiles" sub="Each profile binds a message format + validation rules + connection host" />
+      <PageHeader title="Message Profiles" sub="Each profile binds a Message format + validation rules " />
       {!can.edit && <RoleBanner roleNeeded="ADMIN" action="edit profiles" />}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         {can.add && <Btn primary onClick={() => { setEditProfile(null); setShowModal(true); }}>+ New Message Profile</Btn>}
@@ -86,10 +86,10 @@ export default function Profiles() {
               </div>
 
               <div style={{ fontSize: 11, color: T.muted, display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
-                <Row><span>Host:</span><span style={{ color: T.text }}>{p.host}:{p.port}</span></Row>
+                {/* <Row><span>Host:</span><span style={{ color: T.text }}>{p.host}:{p.port}</span></Row> */}
                 <Row><span>Timezone:</span><span style={{ color: T.text }}>{p.timezone}</span></Row>
-                <Row><span>Timeout:</span><span style={{ color: T.text }}>{p.connectionTimeoutMs / 1000}s</span></Row>
-                <Row><span>TPDU:</span><span style={{ color: p.tpduEnabled ? T.yellow : T.faint }}>{p.tpduEnabled ? `Enabled · ${p.tpduValue}` : "Disabled"}</span></Row>
+                {/* <Row><span>Timeout:</span><span style={{ color: T.text }}>{p.connectionTimeoutMs / 1000}s</span></Row> */}
+                {/* <Row><span>TPDU:</span><span style={{ color: p.tpduEnabled ? T.yellow : T.faint }}>{p.tpduEnabled ? `Enabled · ${p.tpduValue}` : "Disabled"}</span></Row> */}
               </div>
 
               {conn && (
@@ -99,9 +99,9 @@ export default function Profiles() {
               )}
 
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <SmBtn onClick={() => handleTest(p.id)}>{testing === p.id ? "Testing…" : "⚡ Test Conn"}</SmBtn>
+                {/* <SmBtn onClick={() => handleTest(p.id)}>{testing === p.id ? "Testing…" : "⚡ Test Conn"}</SmBtn> */}
                 {can.edit && <SmBtn onClick={() => { setEditProfile(p); setShowModal(true); }}>✎ Edit</SmBtn>}
-                {can.add  && <SmBtn onClick={() => handleClone(p.id, p.profileName)}>⎘ Clone</SmBtn>}
+                {/* {can.add  && <SmBtn onClick={() => handleClone(p.id, p.profileName)}>⎘ Clone</SmBtn>} */}
                 {can.edit && !p.isDefault && <SmBtn onClick={() => handleSetDefault(p.id)}>★ Set Default</SmBtn>}
                 {can.delete && !p.isDefault && <SmBtn danger onClick={() => handleDelete(p.id)}>Delete</SmBtn>}
               </div>

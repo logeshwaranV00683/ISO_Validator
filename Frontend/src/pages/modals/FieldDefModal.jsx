@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { T } from "../../constants/theme";
+import { T,MTIS } from "../../constants/theme";
 import { useMutation } from "../../hooks/useApi";
 import { createFieldDef, updateFieldDef } from "../../api/rules";
 import { Btn } from "../../components/shared";
 import { Modal, ModalFooter } from "./ProfileModal";
 
 const TYPES = ["numeric", "alpha", "alphanumeric", "binary", "special"];
-const MTIS  = ["0200", "0210", "0420", "0800", "0810"];
 const inp = (err) => ({ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${err ? T.red : T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" });
 const SL = { width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, outline: "none" };
 
@@ -125,15 +124,12 @@ export default function FieldDefModal({ def, profileId, mti, profiles = [], onCl
         </Field>
 
         <Field label="MTI" required>
-          <div style={{ display: "flex", gap: 4 }}>
-            {MTIS.map(m => (
-              <button key={m} onClick={() => !isEdit && set("mti", m)}
-                style={{ flex: 1, padding: "6px 0", borderRadius: 5, fontFamily: "inherit", fontSize: 10, cursor: isEdit ? "default" : "pointer", border: `1px solid ${form.mti === m ? T.accent : T.border}`, background: form.mti === m ? T.accent + "22" : "transparent", color: form.mti === m ? T.accent : T.muted, opacity: isEdit ? 0.6 : 1 }}>
-                {m}
-              </button>
-            ))}
-          </div>
-        </Field>
+                  <select value={form.mti} onChange={e => set("mti", e.target.value)} style={{ ...SL, maxHeight: 120, overflowY: "auto" }} size={1}>
+                    {MTIS.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </Field>
 
         <Field label="DE Number (e.g. DE7)" required error={errors.deNumber}>
           <input value={form.deNumber} onChange={e => set("deNumber", e.target.value)} placeholder="DE7"
@@ -184,7 +180,7 @@ export default function FieldDefModal({ def, profileId, mti, profiles = [], onCl
 
       <ModalFooter>
         <Btn onClick={onClose}>Cancel</Btn>
-        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "💾 Save Field"}</Btn>
+        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "Save Field"}</Btn>
       </ModalFooter>
     </Modal>
   );

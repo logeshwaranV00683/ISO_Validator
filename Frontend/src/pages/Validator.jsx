@@ -70,14 +70,14 @@ export default function Validator({ initialMsg = "" }) {
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <PageHeader title="Message Validator" sub="Parse · Validate · AI-explain ISO8583 messages in one click" />
+      <PageHeader title="Message Validator" sub="Parse · Validate · AI-explain Raw messages in one click" />
       {!can.validate && <RoleBanner roleNeeded="ANALYST or ADMIN" action="validate messages" />}
 
       {/* Input */}
       <Card>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 240px", gap:16 }}>
           <div>
-            <Label>Raw ISO8583 Message</Label>
+            <Label>Raw Message</Label>
             <textarea value={rawMsg} onChange={e => setRawMsg(e.target.value)} rows={3}
               style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"10px 12px", borderRadius:6, fontSize:11, fontFamily:"inherit", resize:"vertical", outline:"none" }}
               placeholder="Paste raw ISO8583 hex message here…" />
@@ -138,7 +138,7 @@ export default function Validator({ initialMsg = "" }) {
           </SmBtn>
         </div>
 
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, alignItems:"start" }}>
           {/* Left */}
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
             {/* Parsed Fields */}
@@ -163,17 +163,18 @@ export default function Validator({ initialMsg = "" }) {
               </table>
             </Card>
 
-            {/* Bitmap */}
+            {/* Bitmap — expands to fill remaining left column space */}
             <Card title={bitmapExt?"Bitmap — Extended (128-bit)":"Bitmap — Primary (64-bit)"}
               badge={`${result.bitmap?.bitsSet?.length||0} bits ON`}
-              extra={<Toggle label="Extended" active={bitmapExt} onClick={()=>setBitmapExt(x=>!x)} />}>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:3 }}>
+              extra={<Toggle label="Extended" active={bitmapExt} onClick={()=>setBitmapExt(x=>!x)} />}
+              style={{ flex:1 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:4 }}>
                 {Array.from({length:bitmapExt?128:64},(_,i) => {
                   const on = result.bitmap?.bitsSet?.includes(i+1);
-                  return <div key={i} title={`DE${i+1}`} style={{ padding:"4px 0", textAlign:"center", borderRadius:3, background:on?T.accent+"22":T.surface2, border:`1px solid ${on?T.accent+"55":T.border}`, color:on?T.accent:T.faint, fontSize:8.5 }}>{i+1}</div>;
+                  return <div key={i} title={`DE${i+1}`} style={{ padding:"7px 0", textAlign:"center", borderRadius:4, background:on?T.accent+"22":T.surface2, border:`1px solid ${on?T.accent+"55":T.border}`, color:on?T.accent:T.faint, fontSize:9, fontWeight: on?700:400 }}>{i+1}</div>;
                 })}
               </div>
-              <div style={{ marginTop:8, fontSize:10, color:T.muted }}>
+              <div style={{ marginTop:10, fontSize:10, color:T.muted }}>
                 Primary: <span style={{ color:T.accent }}>{result.bitmap?.primary}</span>
                 {result.bitmap?.extended && <> · Extended: <span style={{ color:T.purple }}>{result.bitmap.extended}</span></>}
               </div>
@@ -277,7 +278,7 @@ export default function Validator({ initialMsg = "" }) {
               <Tag color={T.blue}>{result.summary?.infoCount} INFO</Tag>
               <div style={{ flex:1 }} />
               {can.validate && <SmBtn onClick={rerun}>↺ Re-run</SmBtn>}
-              <SmBtn>⬇ Export JSON</SmBtn>
+              {/* <SmBtn>⬇ Export JSON</SmBtn> */}
             </div>
           </div>
         </div>

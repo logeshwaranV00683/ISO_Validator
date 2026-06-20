@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 
@@ -21,8 +21,10 @@ export default function Sidebar() {
   const { user, role } = useAuth();
   if (!user) return null;
   const visible = NAV.filter(n => n.roles.includes(user.role));
-
+  const navigate = useNavigate();
+  const location = useLocation();
   return (
+
     <aside style={{ width: 215, height: "calc(100vh - 60px)", background: T.surface, borderRight: `1px solid ${T.border}`, overflowY: "auto", overflowX: "hidden" }}>
       {/* Scrollable Menu */}
       <div
@@ -32,17 +34,31 @@ export default function Sidebar() {
           padding: "12px 0",
         }}
       >
-        {visible.map(n => (
-          <NavLink key={n.to} to={n.to} end={n.to === "/"} style={({ isActive }) => ({
-            display: "flex", alignItems: "center", gap: 10, padding: "10px 20px", textDecoration: "none", cursor: "pointer",
-            background: isActive ? T.accent + "12" : "transparent",
-            borderLeft: `2px solid ${isActive ? T.accent : "transparent"}`,
-            color: isActive ? T.accent : T.muted, fontSize: 11.5, transition: "all 0.12s",
-          })}>
-            <span style={{ fontSize: 20 }}>{n.icon}</span>
-            {n.label}
-          </NavLink>
-        ))}
+        {visible.map(n => {
+          const isActive = location.pathname === n.to;
+
+          return (
+            <div
+              key={n.to}
+              onClick={() => navigate(n.to)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 20px",
+                cursor: "pointer",
+                background: isActive ? T.accent + "12" : "transparent",
+                borderLeft: `2px solid ${isActive ? T.accent : "transparent"}`,
+                color: isActive ? T.accent : T.muted,
+                fontSize: 11.5,
+                transition: "all 0.12s",
+              }}
+            >
+              <span style={{ fontSize: 20 }}>{n.icon}</span>
+              {n.label}
+            </div>
+          );
+        })}
       </div>
 
       {/* <div style={{ marginTop: "auto", padding: "12px 20px", borderTop: `1px solid ${T.border}`, flexShrink:0 }}>

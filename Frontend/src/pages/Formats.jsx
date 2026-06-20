@@ -89,7 +89,7 @@ export default function Formats() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <PageHeader title="Message Formats" sub="ISO format XML definitions — stored in DB, hot-reloadable without restart" />
+      <PageHeader title="Message Formats" sub="Raw Message format XML definitions — stored in DB, hot-reloadable without restart" />
       {!can.edit && <RoleBanner roleNeeded="ADMIN" action="edit formats" />}
 
       {/* Toolbar */}
@@ -147,11 +147,11 @@ export default function Formats() {
                   }}>{isEditing ? "▲ Close" : "▼ Edit XML"}</SmBtn>
                 )}
                 {can.edit && <SmBtn onClick={() => handleReload(f.id)}>🔄 Reload</SmBtn>}
-                {can.edit && (
+                {/* {can.edit && (
                   <SmBtn onClick={() => handleToggle(f.id, f.status)}>
                     {f.status === "active" ? "Disable" : "Enable"}
                   </SmBtn>
-                )}
+                )} */}
                 <SmBtn onClick={() => loadVersions(f.id)}>Versions</SmBtn>
                 {can.delete && <SmBtn danger onClick={() => handleDelete(f.id)}>Delete</SmBtn>}
               </div>
@@ -174,7 +174,7 @@ export default function Formats() {
                 />
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                   <Btn primary onClick={() => handleValidate(f.id)}>✓ Validate XML</Btn>
-                  <Btn primary onClick={() => handleSave(f.id)}>💾 Save to DB</Btn>
+                  <Btn primary onClick={() => handleSave(f.id)}>Save to DB</Btn>
                   <Btn onClick={() => handleReload(f.id)}>🔄 Hot Reload</Btn>
                   <Btn onClick={() => setXmlContent(x => ({ ...x, [f.id]: f.xmlContent || "" }))}>↺ Reset</Btn>
                 </div>

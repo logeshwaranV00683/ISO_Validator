@@ -93,11 +93,11 @@ export default function FormatModal({ profiles = [], onClose, onSaved }) {
           <input value={form.isoVersion} onChange={e => set("isoVersion", e.target.value)} placeholder="ISO 8583-1:1987" style={inputStyle()} />
         </Field>
 
-        <Field label="Encoding">
+        {/* <Field label="Encoding">
           <select value={form.encoding} onChange={e => set("encoding", e.target.value)} style={SL}>
             {ENCODINGS.map(enc => <option key={enc}>{enc}</option>)}
           </select>
-        </Field>
+        </Field> */}
 
         <Field label="MTI">
           <input value={form.mti} onChange={e => set("mti", e.target.value)} placeholder="0800" maxLength={4} style={inputStyle()} />
@@ -132,7 +132,7 @@ export default function FormatModal({ profiles = [], onClose, onSaved }) {
 
       <ModalFooter>
         <Btn onClick={onClose}>Cancel</Btn>
-        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "💾 Save Format"}</Btn>
+        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "Save Format"}</Btn>
       </ModalFooter>
     </Modal>
   );

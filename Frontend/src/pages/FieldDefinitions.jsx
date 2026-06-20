@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { T } from "../constants/theme";
+import { T, MTIS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getFieldDefinitions, deleteFieldDef, updateFieldDef } from "../api/rules";
@@ -7,7 +7,6 @@ import { getProfiles } from "../api/profiles";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner, Th, Toggle } from "../components/shared";
 import FieldDefModal from "./modals/FieldDefModal";
 
-const MTIS = ["0200", "0210", "0420", "0800", "0810"];
 
 export default function FieldDefinitions() {
   const { can } = useAuth();
@@ -56,10 +55,11 @@ export default function FieldDefinitions() {
       <PageHeader title="Field Definitions" sub="DE catalog per profile + MTI — drives the Message Builder form dynamically. Replaces hardcoded PROFILE_DE_CATALOG." />
 
       <Card>
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16, alignItems: "end" }}>
-          <div>
-            <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>Message Profile</div>
-            <select value={profileId} onChange={e => setProfileId(e.target.value)} style={{ ...SL, width: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Profile dropdown */}
+          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "center" }}>
+            <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>Message Profile</div>
+            <select value={profileId} onChange={e => setProfileId(e.target.value)} style={{ ...SL }}>
               {(Array.isArray(profiles)
                 ? profiles
                 : profiles?.content || []
@@ -70,12 +70,26 @@ export default function FieldDefinitions() {
               ))}
             </select>
           </div>
-          <div>
-            <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
-            <div style={{ display: "flex", gap: 8 }}>
+
+          {/* MTI pills */}
+          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
+            <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>MTI</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MTIS.map(m => (
                 <button key={m} onClick={() => setMti(m)}
-                  style={{ background: mti === m ? T.accent + "22" : T.surface2, border: `1px solid ${mti === m ? T.accent : T.border}`, color: mti === m ? T.accent : T.muted, padding: "7px 16px", borderRadius: 6, fontFamily: "inherit", fontSize: 11, cursor: "pointer" }}>{m}</button>
+                  style={{
+                    background: mti === m ? T.accent + "22" : T.surface2,
+                    border: `1px solid ${mti === m ? T.accent : T.border}`,
+                    color: mti === m ? T.accent : T.muted,
+                    padding: "5px 12px",
+                    borderRadius: 20,
+                    fontFamily: "inherit",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    fontWeight: mti === m ? 700 : 400,
+                    transition: "all 0.15s",
+                  }}
+                >{m}</button>
               ))}
             </div>
           </div>
@@ -84,7 +98,7 @@ export default function FieldDefinitions() {
 
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         {can.add && <Btn primary onClick={() => { setEditDef(null); setShowModal(true); }}>+ Add Field</Btn>}
-        {can.add && <SmBtn>⬆ Bulk Import</SmBtn>}
+        {/* {can.add && <SmBtn>⬆ Bulk Import</SmBtn>} */}
       </div>
 
       {loading && <LoadingBar text="Loading field definitions…" />}

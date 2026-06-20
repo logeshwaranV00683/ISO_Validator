@@ -41,7 +41,7 @@ export default function History() {
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-      <PageHeader title="Validation History" sub="Full audit log of every parsed and validated ISO8583 message" />
+      <PageHeader title="Validation History" sub="Full audit log of every parsed and validated Raw message" />
 
       {/* Stats */}
       {stats && (
@@ -91,7 +91,7 @@ export default function History() {
         </div>
         <div style={{ display:"flex", gap:8, marginTop:10, justifyContent:"flex-end" }}>
           <SmBtn onClick={()=>handleExport("csv")}>⬇ CSV</SmBtn>
-          <SmBtn onClick={()=>handleExport("json")}>⬇ JSON</SmBtn>
+          {/* <SmBtn onClick={()=>handleExport("json")}>⬇ JSON</SmBtn> */}
           <SmBtn onClick={()=>setFilters({ page:0, size:20, sortBy:"createdAt", sortDir:"desc" })}>↺ Reset</SmBtn>
         </div>
       </Card>

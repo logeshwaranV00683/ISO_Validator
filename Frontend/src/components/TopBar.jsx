@@ -16,7 +16,7 @@ export default function TopBar() {
       </div>
 
       <div style={{ display:"flex", gap:16, fontSize:11, color:T.muted, alignItems:"center" }}>
-        <span style={{ display:"flex", alignItems:"center", gap:5 }}><Dot color={T.green} /> API Gateway · localhost:8080</span>
+        {/* <span style={{ display:"flex", alignItems:"center", gap:5 }}><Dot color={T.green} /> API Gateway · localhost:8080</span> */}
         <span style={{ color:T.faint }}>|</span>
 
         {/* Theme toggle */}

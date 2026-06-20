@@ -143,7 +143,7 @@ export default function UserModal({ user, onClose, onSaved }) {
 
       <ModalFooter>
         <Btn onClick={onClose}>Cancel</Btn>
-        <Btn primary onClick={handleSave} disabled={loading}>{loading?"Saving…":`💾 ${isEdit?"Save Changes":"Create User"}`}</Btn>
+        <Btn primary onClick={handleSave} disabled={loading}>{loading?"Saving…":`${isEdit?"Save Changes":"Create User"}`}</Btn>
       </ModalFooter>
     </Modal>
   );

@@ -216,7 +216,7 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
 
       <ModalFooter>
         <Btn onClick={onClose}>Cancel</Btn>
-        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "💾 Save Rule"}</Btn>
+        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "Save Rule"}</Btn>
       </ModalFooter>
     </Modal>
   );

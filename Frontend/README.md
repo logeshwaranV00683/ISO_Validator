@@ -1,4 +1,4 @@
-# ISO8583 Validator — Frontend
+# Raw Message Validator — Frontend
 
 React 19 + Vite + React Router v6 + Axios
 

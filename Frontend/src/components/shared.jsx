@@ -33,16 +33,17 @@ export function Toggle({ label, active, onClick }) {
 }
 
 export function Card({ title, badge, extra, children, style:s }) {
+  const isFlex = s?.flex !== undefined;
   return (
-    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden", ...s }}>
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden", ...(isFlex ? { display:"flex", flexDirection:"column" } : {}), ...s }}>
       {(title||badge||extra) && (
-        <div style={{ padding:"9px 14px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:8 }}>
+        <div style={{ padding:"9px 14px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
           {title && <span style={{ fontSize:13, fontWeight:700, color:T.text, flex:1 }}>{title}</span>}
           {badge && <span style={{ fontSize:11, color:T.muted }}>{badge}</span>}
           {extra}
         </div>
       )}
-      <div style={{ padding:14 }}>{children}</div>
+      <div style={{ padding:14, ...(isFlex ? { flex:1, overflowY:"auto" } : {}) }}>{children}</div>
     </div>
   );
 }

@@ -22,12 +22,12 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
   const [form, setForm] = useState({
     profileName: profile?.profileName || "",
     description: profile?.description || "",
-    host: profile?.host || "127.0.0.1",
-    port: profile?.port || 8583,
+    host: "127.0.0.1",
+    port: 8583,
     timezone: profile?.timezone || "Asia/Kolkata",
-    connectionTimeoutMs: profile?.connectionTimeoutMs || 30000,
-    tpduEnabled: profile?.tpduEnabled || false,
-    tpduValue: profile?.tpduValue || "",
+    connectionTimeoutMs: 30000,
+    tpduEnabled:  false,
+    tpduValue: "",
     isActive: profile?.isActive ?? profile?.active ?? true,
     isDefault: profile?.isDefault ?? false,
   });
@@ -89,7 +89,7 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
           </select>
         </Field>
 
-        <Field label="Host / IP" required error={errors.host}>
+        {/* <Field label="Host / IP" required error={errors.host}>
             <div style={{ position: "relative" }}>
               <input
                 value={form.host}
@@ -99,9 +99,9 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
               />
               <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 9, color: T.faint }}>locked</span>
             </div>
-          </Field>
+          </Field> */}
 
-          <Field label="Port" required error={errors.port}>
+          {/* <Field label="Port" required error={errors.port}>
             <div style={{ position: "relative" }}>
               <input
                 value={form.port}
@@ -111,13 +111,13 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
               />
               <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 9, color: T.faint }}>locked</span>
             </div>
-          </Field>
+          </Field> */}
 
-        <Field label="Connection Timeout (ms)">
+        {/* <Field label="Connection Timeout (ms)">
           <input type="number" value={form.connectionTimeoutMs} onChange={e => set("connectionTimeoutMs", +e.target.value)} min={1000} step={1000} style={inputStyle()} />
-        </Field>
+        </Field> */}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
+        {/* <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
           <ToggleRow label="Active" active={form.isActive} onClick={() => set("isActive", !form.isActive)} />
           <ToggleRow label="Default" active={form.isDefault} onClick={() => set("isDefault", !form.isDefault)} />
           <ToggleRow
@@ -129,21 +129,21 @@ export default function ProfileModal({ profile, onClose, onSaved }) {
               if (!enabled) set("tpduValue", "");
             }}
           />
-        </div>
+        </div> */}
 
-        {form.tpduEnabled && (
+        {/* {form.tpduEnabled && (
           <Field label="TPDU Value (10 digits)" error={errors.tpduValue} style={{ gridColumn: "1/-1" }}>
             <input value={form.tpduValue} onChange={e => set("tpduValue", e.target.value)} placeholder="6000000000" maxLength={10} style={inputStyle(errors.tpduValue)} />
             <div style={{ fontSize: 9, color: T.faint, marginTop: 3 }}>10-digit header prefixed to every message on this connection</div>
           </Field>
-        )}
+        )} */}
       </div>
 
       {errors._form && <div style={{ marginTop: 10, background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 5, padding: "8px 12px", fontSize: 11, color: T.red }}>✕ {errors._form}</div>}
 
       <ModalFooter>
         <Btn onClick={onClose}>Cancel</Btn>
-        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "💾 Save Profile"}</Btn>
+        <Btn primary onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "Save Profile"}</Btn>
       </ModalFooter>
     </Modal>
   );
