@@ -4,15 +4,15 @@ import { useAuth } from "../context/AuthContext";
 
 const NAV = [
   { to: "/dashboard", icon: "⬡", label: "Dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { to: "/validator", icon: "◎", label: "Message Validator", roles: ["ADMIN", "ANALYST"] },
-  { to: "/builder", icon: "⊞", label: "Message Builder", roles: ["ADMIN", "ANALYST"] },
-  { to: "/history", icon: "◷", label: "Validation History", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/profiles", icon: "⇄", label: "Message Profiles", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/formats", icon: "⬢", label: "Message Formats", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/rules", icon: "⚙", label: "Rules Manager", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/field-definitions", icon: "≡", label: "Field Definitions", roles: ["ADMIN"] },
   { to: "/ai", icon: "◈", label: "AI Settings", roles: ["ADMIN"] },
+  { to: "/builder", icon: "⊞", label: "Message Builder", roles: ["ADMIN", "ANALYST"] },
+  { to: "/validator", icon: "◎", label: "Message Validator", roles: ["ADMIN", "ANALYST"] },
   { to: "/users", icon: "◉", label: "Users", roles: ["ADMIN"] },
+  { to: "/history", icon: "◷", label: "Validation History", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/audit", icon: "☰", label: "Audit Log", roles: ["ADMIN"] },
   { to: "/config", icon: "⊛", label: "System Config", roles: ["ADMIN"] },
 ];
