@@ -8,6 +8,7 @@ const NAV = [
   { to: "/formats", icon: "⬢", label: "Message Formats", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/rules", icon: "⚙", label: "Rules Manager", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { to: "/field-definitions", icon: "≡", label: "Field Definitions", roles: ["ADMIN"] },
+  { to: "/brd-import", icon: "⬆", label: "BRD Import", roles: ["ADMIN"] },
   { to: "/ai", icon: "◈", label: "AI Settings", roles: ["ADMIN"] },
   { to: "/builder", icon: "⊞", label: "Message Builder", roles: ["ADMIN", "ANALYST"] },
   { to: "/validator", icon: "◎", label: "Message Validator", roles: ["ADMIN", "ANALYST"] },

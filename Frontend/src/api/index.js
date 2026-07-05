@@ -16,6 +16,9 @@ export * from "./history";
 // AI Service
 export * from "./ai";
 
+// BRD AI Feature
+export * from "./brd";
+
 // Users
 export * from "./users";
 

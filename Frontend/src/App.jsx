@@ -18,6 +18,7 @@ import AI                from "./pages/AI";
 import Users             from "./pages/Users";
 import AuditLog          from "./pages/AuditLog";
 import SystemConfig      from "./pages/SystemConfig";
+import BrdImport         from "./pages/BrdImport";
 import IntroAnimation    from "./pages/animated/IntroAnimation";
 
 // ── Protected route wrapper ──────────────────────────────────────────────────
@@ -72,6 +73,7 @@ export default function App() {
           {/* Admin only */}
           <Route element={<RequireAdmin />}>
             <Route path="/field-definitions" element={<FieldDefinitions />} />
+            <Route path="/brd-import"        element={<BrdImport />} />
             <Route path="/ai"                element={<AI />} />
             <Route path="/users"             element={<Users />} />
             <Route path="/audit"             element={<AuditLog />} />

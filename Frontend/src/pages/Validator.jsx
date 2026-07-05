@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { getProfiles } from "../api/profiles";
 import { validateMessage, rerunValidation } from "../api/validation";
+import { suggestSwitch } from "../api/brd";
 import { PageHeader, Card, RoleBanner, LoadingBar, ErrorBanner,
          Btn, SmBtn, Tag, Toggle, Label, Row, Th } from "../components/shared";
 
@@ -22,6 +23,10 @@ export default function Validator({ initialMsg = "" }) {
   const [expanded, setExpanded]   = useState({});
   const [copied, setCopied]       = useState(false);
 
+  // BRD AI Feature: switch-profile suggestions based on raw message content
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggesting, setSuggesting]   = useState(false);
+
   // Set default profile on load
   useEffect(() => {
     if (profiles?.length && !profileId) {
@@ -29,6 +34,27 @@ export default function Validator({ initialMsg = "" }) {
       setProfileId(def.id);
     }
   }, [profiles, profileId]);
+
+  // BRD AI Feature: debounced switch suggestion as the user types the raw message
+  useEffect(() => {
+    if (!rawMsg || rawMsg.trim().length <= 8) {
+      setSuggestions([]);
+      return;
+    }
+    const handle = setTimeout(async () => {
+      setSuggesting(true);
+      try {
+        const res = await suggestSwitch(rawMsg.trim());
+        setSuggestions(res?.suggestions || []);
+      } catch (err) {
+        // Suggestion failure must never affect the validate button or UX.
+        setSuggestions([]);
+      } finally {
+        setSuggesting(false);
+      }
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [rawMsg]);
 
   const profile = profiles?.find(p => p.id === profileId);
 
@@ -108,6 +134,21 @@ export default function Validator({ initialMsg = "" }) {
           </div>
         </div>
       </Card>
+
+      {/* BRD AI Feature: switch suggestion banner */}
+      {suggestions.length > 0 && (
+        <div style={{ display:"flex", alignItems:"center", gap:10, background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"8px 14px", flexWrap:"wrap" }}>
+          <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>◈ AI suggests:</span>
+          {suggestions.slice(0, 3).map((s, i) => (
+            <button key={i} onClick={() => setProfileId(s.profileId)}
+              style={{ background:T.accent+"18", border:`1px solid ${T.accent}44`, color:T.accent, padding:"4px 10px", borderRadius:20, fontFamily:"inherit", fontSize:10.5, cursor:"pointer", fontWeight:600 }}>
+              {s.profileName} ({Math.round((s.confidence||0)*100)}%)
+            </button>
+          ))}
+          <div style={{ flex:1 }} />
+          <SmBtn onClick={() => setSuggestions([])}>✕</SmBtn>
+        </div>
+      )}
 
       {loading && (
         <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"16px 20px", textAlign:"center" }}>
