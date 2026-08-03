@@ -27,6 +27,24 @@ export const getPromptVersions = async (templateId) =>
 export const rollbackPrompt = async (templateId, version) =>
   unwrap(await apiClient.put(`/ai/prompts/${templateId}/rollback/${version}`));
 
+// ── Generic Templates (used for scopes with no dedicated endpoint, e.g. BRD_PARSE) ─────────
+// Backend: AiTemplateController — GET/POST /ai/templates, GET/PUT/DELETE /ai/templates/{id},
+// PUT /ai/templates/{id}/rollback, GET /ai/templates/{id}/versions
+export const getTemplatesByScope = async (scope) =>
+  unwrap(await apiClient.get("/ai/templates", { params: { scope } }));
+export const getTemplateById = async (id) =>
+  unwrap(await apiClient.get(`/ai/templates/${id}`));
+export const createTemplate = async (template) =>
+  unwrap(await apiClient.post("/ai/templates", template));
+export const updateTemplate = async (id, template) =>
+  unwrap(await apiClient.put(`/ai/templates/${id}`, template));
+export const deleteTemplate = async (id) =>
+  unwrap(await apiClient.delete(`/ai/templates/${id}`));
+export const getTemplateVersions = async (id) =>
+  unwrap(await apiClient.get(`/ai/templates/${id}/versions`));
+export const rollbackTemplate = async (id) =>
+  unwrap(await apiClient.put(`/ai/templates/${id}/rollback`));
+
 // ── AI Logs ───────────────────────────────────────────────────────────────────
 // filters: { runReference, status, page, size }
 export const getAiLogs = async (f = {}) =>

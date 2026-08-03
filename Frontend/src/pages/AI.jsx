@@ -7,7 +7,9 @@ import {
   getAiConfig, updateAiConfig, updateAiConfigBulk, getAvailableModels,
   getGlobalPrompt, updateGlobalPrompt, testPrompt,
   getPromptVersions, rollbackPrompt, getAiLogs,
-  getProfilePrompt, upsertProfilePrompt, deleteProfilePrompt
+  getProfilePrompt, upsertProfilePrompt, deleteProfilePrompt,
+  getTemplatesByScope, createTemplate, updateTemplate,
+  getTemplateVersions, rollbackTemplate
 } from "../api/ai";
 import {
   PageHeader, Card, Tag, SmBtn, Btn, RoleBanner,
@@ -115,7 +117,7 @@ export default function AI() {
     setVersions(v);
   };
 
-  const TABS = [["config", "Global Config"], ["profiles", "Per-Profile Prompts"], ["logs", "AI Logs"]];
+  const TABS = [["config", "Global Config"], ["profiles", "Per-Profile Prompts"], ["brd", "BRD Parser"], ["logs", "AI Logs"]];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -210,14 +212,14 @@ export default function AI() {
                         <thead><tr style={{ borderBottom: `1px solid ${T.border}` }}>{["Version", "By", "Date", "Note", ""].map(h => <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.text, fontWeight: 800, fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}>{h}</th>)}</tr></thead>
                         <tbody>
                           {versions.map(v => (
-                            <tr key={v.version} style={{ borderBottom: `1px solid ${T.border}22` }}>
-                              <td style={{ padding: "6px 8px", color: T.accent }}>v{v.version}</td>
-                              <td style={{ padding: "6px 8px", color: T.text }}>{v.updatedBy}</td>
-                              <td style={{ padding: "6px 8px", color: T.muted }}>{new Date(v.updatedAt).toLocaleString()}</td>
+                            <tr key={v.versionNumber} style={{ borderBottom: `1px solid ${T.border}22` }}>
+                              <td style={{ padding: "6px 8px", color: T.accent }}>v{v.versionNumber}</td>
+                              <td style={{ padding: "6px 8px", color: T.text }}>{v.createdBy}</td>
+                              <td style={{ padding: "6px 8px", color: T.muted }}>{new Date(v.createdAt).toLocaleString()}</td>
                               <td style={{ padding: "6px 8px", color: T.muted }}>{v.changeNote}</td>
                               <td style={{ padding: "6px 8px" }}>
-                                {can.edit && v.version !== prompt.currentVersion && (
-                                  <SmBtn onClick={() => { doRollback(prompt.id, v.version); pRefetch(); }}>Rollback</SmBtn>
+                                {can.edit && v.versionNumber !== prompt.currentVersion && (
+                                  <SmBtn onClick={() => { doRollback(prompt.id, v.versionNumber); pRefetch(); }}>Rollback</SmBtn>
                                 )}
                               </td>
                             </tr>
@@ -244,6 +246,16 @@ export default function AI() {
         </div>
       )}
 
+      {/* BRD Parser prompt */}
+      {tab === "brd" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontSize: 12, color: T.muted }}>
+            Prompt used by the BRD Import feature to extract switch profiles, field definitions, and rules from uploaded BRD documents.
+          </div>
+          <BrdPromptCard canEdit={can.edit} />
+        </div>
+      )}
+
       {/* Logs */}
       {tab === "logs" && (
         <Card title="AI Run Logs">
@@ -265,6 +277,112 @@ export default function AI() {
         </Card>
       )}
     </div>
+  );
+}
+
+function BrdPromptCard({ canEdit }) {
+  const [content, setContent] = useState("");
+  const [versions, setVersions] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const { data: templates, loading, error, refetch } = useApi(() => getTemplatesByScope("BRD_PARSE"));
+
+  const template = Array.isArray(templates) ? templates[0] : templates;
+
+  const { mutate: doCreate } = useMutation((body) => createTemplate(body));
+  const { mutate: doUpdate } = useMutation((id, body) => updateTemplate(id, body));
+  const { mutate: doRollback } = useMutation((id) => rollbackTemplate(id));
+
+  const loadVersions = async () => {
+    if (!template?.id) return;
+    const v = await getTemplateVersions(template.id);
+    setVersions(v);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const promptTemplate = content || template?.promptTemplate || "";
+      if (template?.id) {
+        await doUpdate(template.id, { ...template, promptTemplate });
+      } else {
+        await doCreate({
+          templateName: "brd-parse-default",
+          scope: "BRD_PARSE",
+          promptTemplate,
+        });
+      }
+      await refetch();
+      setContent("");
+      if (versions) {
+        const v = await getTemplateVersions(template.id);
+        setVersions(v);
+      }
+    } catch (e) {
+      alert("Failed to save BRD prompt: " + (e?.response?.data?.message || e.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card
+      title="BRD Parser Prompt"
+      badge={template?.currentVersion ? <Tag color={T.purple} small>v{template.currentVersion}</Tag> : <Tag color={T.muted} small>not set</Tag>}
+    >
+      {loading && <LoadingBar text="Loading BRD parser prompt…" />}
+      {error && <ErrorBanner message={error} onRetry={refetch} />}
+      <div style={{ fontSize: 11, color: T.muted, marginBottom: 8 }}>
+        Variables: <Tag color={T.accent} small style={{ marginLeft: 4 }}>{"{brd_text}"}</Tag>
+      </div>
+      <textarea rows={16} disabled={!canEdit}
+        placeholder="No BRD_PARSE template exists yet — paste the extraction prompt here and Save to create one…"
+        value={content || (template?.promptTemplate || "")}
+        onChange={e => setContent(e.target.value)}
+        style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none", opacity: canEdit ? 1 : 0.6 }} />
+      <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+        {canEdit && <Btn primary onClick={handleSave}>{saving ? "Saving…" : "Save"}</Btn>}
+        <SmBtn onClick={loadVersions} style={{ opacity: template?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
+      </div>
+
+      {versions && (
+        <div style={{ marginTop: 12, borderTop: `1px solid ${T.border}`, paddingTop: 12 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                {["Version", "By", "Date", "Note", ""].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "5px 8px", color: T.text, fontWeight: 800, fontSize: 11, letterSpacing: "0.04em", textTransform: "uppercase" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {versions.map(v => (
+                <tr key={v.versionNumber} style={{ borderBottom: `1px solid ${T.border}22` }}>
+                  <td style={{ padding: "6px 8px", color: T.accent }}>
+                    v{v.versionNumber}
+                    {v.versionNumber === template?.currentVersion && (
+                      <Tag color={T.green} small style={{ marginLeft: 4 }}>current</Tag>
+                    )}
+                  </td>
+                  <td style={{ padding: "6px 8px", color: T.text }}>{v.createdBy}</td>
+                  <td style={{ padding: "6px 8px", color: T.muted }}>{new Date(v.createdAt).toLocaleString()}</td>
+                  <td style={{ padding: "6px 8px", color: T.muted }}>{v.changeNote}</td>
+                  <td style={{ padding: "6px 8px" }}>
+                    {canEdit && v.versionNumber !== template?.currentVersion && (
+                      <SmBtn onClick={async () => {
+                        await doRollback(template.id);
+                        await refetch();
+                        const updated = await getTemplateVersions(template.id);
+                        setVersions(updated);
+                      }}>Rollback</SmBtn>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }
 
