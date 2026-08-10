@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { T, SEV } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
@@ -9,11 +10,14 @@ import { PageHeader, Card, RoleBanner, LoadingBar, ErrorBanner,
          Btn, SmBtn, Tag, Toggle, Label, Row, Th } from "../components/shared";
 
 export default function Validator({ initialMsg = "" }) {
+  const location = useLocation();
   const { can } = useAuth();
   const { data: profiles } = useApi(getProfiles);
 
   const [profileId, setProfileId] = useState(null);
-  const [rawMsg, setRawMsg]       = useState(initialMsg || "0200723A00010AC080123456789012345600000000000001000005141430221234567890TERM0001");
+  const [rawMsg, setRawMsg] = useState(
+  location.state?.rawMsg || initialMsg || ""
+);
   const [enableAi, setEnableAi]   = useState(false);
   const [sevFilter, setSevFilter] = useState("ALL");
   const [result, setResult]       = useState(null);
@@ -26,6 +30,14 @@ export default function Validator({ initialMsg = "" }) {
   // BRD AI Feature: switch-profile suggestions based on raw message content
   const [suggestions, setSuggestions] = useState([]);
   const [suggesting, setSuggesting]   = useState(false);
+
+  useEffect(() => {
+  if (location.state?.rawMsg) {
+    setRawMsg(location.state.rawMsg);
+    setResult(null);
+    setError(null);
+  }
+}, [location.state]);
 
   // Set default profile on load
   useEffect(() => {
