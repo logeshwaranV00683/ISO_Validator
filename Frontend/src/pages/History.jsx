@@ -10,17 +10,71 @@ import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner,
 
 const STATUS_COLOR = { PASSED:T.green, FAILED:T.red, WARNED:T.yellow, PARSE_ERROR:T.red };
 
+// export default function History() {
+//   const { can } = useAuth();
+//   const [filters, setFilters] = useState({ page:0, size:20, sortBy:"createdAt", sortDir:"desc" });
+//   const [expanded, setExpanded] = useState(null);
+//   const [rerunning, setRerunning] = useState(null);
+const DEFAULT_FILTERS = {
+  search: "",
+  status: "ALL",
+  mti: "ALL",
+  profileId: "",
+  fromDate: "",
+  toDate: "",
+  page: 0,
+  size: 20,
+  sortBy: "createdAt",
+  sortDir: "desc"
+};
+
 export default function History() {
   const { can } = useAuth();
-  const [filters, setFilters] = useState({ page:0, size:20, sortBy:"createdAt", sortDir:"desc" });
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [expanded, setExpanded] = useState(null);
   const [rerunning, setRerunning] = useState(null);
+  const [dateError, setDateError] = useState(null);
 
   const { data, loading, error, refetch } = useApi(() => getHistory(filters), [filters]);
   const { data: stats } = useApi(getHistoryStats);
   const { data: profiles } = useApi(getProfiles);
 
-  const setFilter = (key, val) => setFilters(f => ({ ...f, [key]: val, page: 0 }));
+  // const setFilter = (key, val) => setFilters(f => ({ ...f, [key]: val, page: 0 }));
+
+  // const handleRerun = async (runReference) => {
+  //   setRerunning(runReference);
+  //   try { await rerunValidation(runReference); refetch(); }
+  //   catch {}
+  //   finally { setRerunning(null); }
+  // };
+
+  // const handleExport = async (format) => {
+  //   const data = await exportHistory(filters, format);
+  //   const blob = format==="csv" ? data : new Blob([JSON.stringify(data,null,2)], { type:"application/json" });
+  //   const url  = URL.createObjectURL(blob);
+  //   const a    = document.createElement("a");
+  //   a.href = url; a.download = `history.${format}`; a.click();
+  // };
+
+  const setFilter = (key, val) => {
+    setFilters(f => {
+      const next = { ...f, [key]: val, page: 0 };
+
+     
+      if (next.fromDate && next.toDate && next.fromDate > next.toDate) {
+        setDateError("'From' date must not be after 'To' date.");
+      } else {
+        setDateError(null);
+      }
+
+      return next;
+    });
+  };
+
+  const handleReset = () => {
+    setFilters(DEFAULT_FILTERS);
+    setDateError(null);
+  };
 
   const handleRerun = async (runReference) => {
     setRerunning(runReference);
@@ -35,6 +89,16 @@ export default function History() {
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
     a.href = url; a.download = `history.${format}`; a.click();
+  };
+
+  const handleDownloadRaw = (h) => {
+    const blob = new Blob([h.rawMessage || ""], { type: "text/plain" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `${h.runReference}-raw.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const SL = { width:"100%", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" };
@@ -53,46 +117,54 @@ export default function History() {
         </div>
       )}
 
-      {/* Filters */}
+    {/* Filters */}
       <Card>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 140px 140px 160px 130px 130px", gap:10, alignItems:"end" }}>
           <div>
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>Search</div>
-            <input placeholder="Run ID, MTI…" onChange={e=>setFilter("search",e.target.value)}
+            <input placeholder="Run ID, MTI…" value={filters.search} onChange={e=>setFilter("search",e.target.value)}
               style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"8px 12px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" }} />
           </div>
           <div>
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>Status</div>
-            <select onChange={e=>setFilter("status",e.target.value)} style={SL}>
+            <select value={filters.status} onChange={e=>setFilter("status",e.target.value)} style={SL}>
               {["ALL","PASSED","FAILED","WARNED","PARSE_ERROR"].map(s=><option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>MTI</div>
-            <select onChange={e=>setFilter("mti",e.target.value)} style={SL}>
-              {["ALL","0200","0210","0420","0800","0810"].map(s=><option key={s}>{s}</option>)}
+   
+            <select value={filters.mti} onChange={e=>setFilter("mti",e.target.value)} style={SL}>
+              <option value="ALL">ALL</option>
+              {Object.keys(stats?.runsByMti || {}).sort().map(m=><option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div>
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>Profile</div>
-            <select onChange={e=>setFilter("profileId",e.target.value)} style={SL}>
+           
+            <select value={filters.profileId} onChange={e=>setFilter("profileId",e.target.value)} style={SL}>
               <option value="">ALL</option>
-              {profiles?.content?.map(p=><option key={p.id} value={p.id}>{p.profileName}</option>)}
+              {profiles?.map(p=><option key={p.id} value={p.id}>{p.profileName}</option>)}
             </select>
           </div>
           <div>
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>From</div>
-            <input type="date" onChange={e=>setFilter("fromDate",e.target.value)} style={{ ...SL, width:"100%", boxSizing:"border-box" }} />
+            <input type="date" value={filters.fromDate} onChange={e=>setFilter("fromDate",e.target.value)} style={{ ...SL, width:"100%", boxSizing:"border-box" }} />
           </div>
           <div>
             <div style={{ fontSize:10.5, color:T.muted, marginBottom:5, fontWeight:600 }}>To</div>
-            <input type="date" onChange={e=>setFilter("toDate",e.target.value)} style={{ ...SL, width:"100%", boxSizing:"border-box" }} />
+            <input type="date" value={filters.toDate} onChange={e=>setFilter("toDate",e.target.value)} style={{ ...SL, width:"100%", boxSizing:"border-box" }} />
           </div>
         </div>
+
+       
+        {dateError && (
+          <div style={{ marginTop:10, fontSize:11, color:T.red }}>⚠ {dateError}</div>
+        )}
+
         <div style={{ display:"flex", gap:8, marginTop:10, justifyContent:"flex-end" }}>
           <SmBtn onClick={()=>handleExport("csv")}>⬇ CSV</SmBtn>
-          {/* <SmBtn onClick={()=>handleExport("json")}>⬇ JSON</SmBtn> */}
-          <SmBtn onClick={()=>setFilters({ page:0, size:20, sortBy:"createdAt", sortDir:"desc" })}>↺ Reset</SmBtn>
+          <SmBtn onClick={handleReset}>↺ Reset</SmBtn>
         </div>
       </Card>
 
@@ -137,7 +209,7 @@ export default function History() {
                     <td style={{ padding:"8px 8px" }}>
                       <div style={{ display:"flex", gap:4 }}>
                         {can.validate && <SmBtn onClick={()=>handleRerun(h.runReference)}>{rerunning===h.runReference?"…":"↺"}</SmBtn>}
-                        <SmBtn>⬇</SmBtn>
+                        <SmBtn onClick={()=>handleDownloadRaw(h)}>⬇</SmBtn>
                       </div>
                     </td>
                   </tr>
@@ -146,7 +218,7 @@ export default function History() {
                       <td colSpan={14} style={{ padding:"10px 14px" }}>
                         <div style={{ fontSize:11, color:T.muted, marginBottom:6 }}>Raw Message:</div>
                         <div style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:4, padding:"8px 12px", fontSize:11, color:T.accent, wordBreak:"break-all" }}>
-                          {h.rawMessageSnapshot}
+                          {h.rawMessage || <span style={{ color:T.faint }}>—</span>}
                         </div>
                       </td>
                     </tr>

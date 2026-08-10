@@ -29,9 +29,16 @@ export default function Login() {
       if (err?.response?.status === 423) {
         const until = err?.response?.data?.data?.lockedUntil;
         setError(`Account locked${until ? ` until ${new Date(until).toLocaleTimeString()}` : ""}. Contact admin.`);
+      // } else {
+      //   setError(err?.response?.data?.error?.message || "Invalid credentials.");
+      // }
       } else {
-        setError(err?.response?.data?.error?.message || "Invalid credentials.");
-      }
+  setError(
+    err?.response?.data?.message ||
+    err?.response?.data?.error?.message ||
+    "Invalid credentials."
+  );
+}
     } finally { setLoading(false); }
   };
 

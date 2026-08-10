@@ -37,6 +37,11 @@ export default function AuditLog() {
     [filters, page]
   );
 
+  const updateFilter = (key, value) => {
+  setFilters((f) => ({ ...f, [key]: value || undefined }));
+  setPage(0);
+};
+
   const SL = {
     background: T.surface2,
     border: `1px solid ${T.border}`,
@@ -81,12 +86,7 @@ export default function AuditLog() {
 
             <input
               placeholder="Search entity..."
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  entityId: e.target.value || undefined
-                }))
-              }
+             onChange={(e) => updateFilter("entityId", e.target.value)}
               style={{
                 width: "100%",
                 boxSizing: "border-box",
@@ -115,22 +115,14 @@ export default function AuditLog() {
             </div>
 
             <select
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  sourceService:
-                    e.target.value === "ALL"
-                      ? undefined
-                      : e.target.value
-                }))
-              }
+             onChange={(e) => updateFilter("sourceService", e.target.value === "ALL" ? undefined : e.target.value)}
               style={SL}
             >
               {[
                 "ALL",
                 "profile-service",
                 "format-service",
-                "rule-service",
+                "rules-service",
                 "validation-service",
                 "auth-service",
                 "user-service",
@@ -155,15 +147,7 @@ export default function AuditLog() {
             </div>
 
             <select
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  action:
-                    e.target.value === "ALL"
-                      ? undefined
-                      : e.target.value
-                }))
-              }
+           onChange={(e) => updateFilter("action", e.target.value === "ALL" ? undefined : e.target.value)}
               style={SL}
             >
               {[
@@ -194,15 +178,7 @@ export default function AuditLog() {
             </div>
 
             <select
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  entityType:
-                    e.target.value === "ALL"
-                      ? undefined
-                      : e.target.value
-                }))
-              }
+             onChange={(e) => updateFilter("entityType", e.target.value === "ALL" ? undefined : e.target.value)}
               style={SL}
             >
               {[
@@ -236,12 +212,13 @@ export default function AuditLog() {
 
             <input
               type="date"
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  fromDate: e.target.value || undefined
-                }))
-              }
+              // onChange={(e) =>
+              //   setFilters((f) => ({
+              //     ...f,
+              //     fromDate: e.target.value || undefined
+              //   }))
+              // }
+              onChange={(e) => updateFilter("fromDate", e.target.value)}
               style={{
                 ...SL,
                 width: "100%",
@@ -264,12 +241,13 @@ export default function AuditLog() {
 
             <input
               type="date"
-              onChange={(e) =>
-                setFilters((f) => ({
-                  ...f,
-                  toDate: e.target.value || undefined
-                }))
-              }
+              // onChange={(e) =>
+              //   setFilters((f) => ({
+              //     ...f,
+              //     toDate: e.target.value || undefined
+              //   }))
+              // }
+              onChange={(e) => updateFilter("toDate", e.target.value)}
               style={{
                 ...SL,
                 width: "100%",

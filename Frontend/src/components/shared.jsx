@@ -17,9 +17,32 @@ export function Btn({ children, primary, danger, onClick, disabled, style:s }) {
   return <button onClick={onClick} disabled={disabled} style={{ background:bg, border, color, padding:"8px 14px", borderRadius:6, fontFamily:"inherit", fontSize:11, fontWeight:600, cursor:disabled?"not-allowed":"pointer", whiteSpace:"nowrap", opacity:disabled?0.5:1, ...s }}>{children}</button>;
 }
 
-export function SmBtn({ children, danger, onClick, style:s }) {
-  return <button onClick={onClick} style={{ background:"none", border:`1px solid ${danger?T.red+"44":T.border}`, color:danger?T.red:T.muted, padding:"3px 9px", borderRadius:4, fontFamily:"inherit", fontSize:9.5, cursor:"pointer", whiteSpace:"nowrap", ...s }}>{children}</button>;
-}
+// export function SmBtn({ children, danger, onClick, style:s }) {
+//   return <button onClick={onClick} style={{ background:"none", border:`1px solid ${danger?T.red+"44":T.border}`, color:danger?T.red:T.muted, padding:"3px 9px", borderRadius:4, fontFamily:"inherit", fontSize:9.5, cursor:"pointer", whiteSpace:"nowrap", ...s }}>{children}</button>;
+// }
+export function SmBtn({ children, danger, onClick, disabled, style: s }) {
+  return (
+    <button
+      disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+      style={{
+        background: "none",
+        border: `1px solid ${danger ? T.red + "44" : T.border}`,
+        color: danger ? T.red : T.muted,
+        padding: "3px 9px",
+        borderRadius: 4,
+        fontFamily: "inherit",
+        fontSize: 9.5,
+        cursor: disabled ? "not-allowed" : "pointer",
+        whiteSpace: "nowrap",
+        opacity: disabled ? 0.4 : 1,
+        ...s
+      }}
+    >
+      {children}
+    </button>
+  );
+}       
 
 export function Toggle({ label, active, onClick }) {
   return (
@@ -101,13 +124,24 @@ export function StatCard({ label, value, color }) {
   );
 }
 
+// export function Pagination({ page, totalPages, onPageChange }) {
+//   if (totalPages <= 1) return null;
+//   return (
+//     <div style={{ display:"flex", alignItems:"center", gap:8, justifyContent:"flex-end", marginTop:14 }}>
+//       <span style={{ fontSize:11, color:T.muted }}>Page {page+1} of {totalPages}</span>
+//       <SmBtn onClick={() => onPageChange(page-1)} style={{ opacity:page===0?0.4:1 }}>← Prev</SmBtn>
+//       <SmBtn onClick={() => onPageChange(page+1)} style={{ opacity:page>=totalPages-1?0.4:1 }}>Next →</SmBtn>
+//     </div>
+//   );
+// }
+
 export function Pagination({ page, totalPages, onPageChange }) {
   if (totalPages <= 1) return null;
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:8, justifyContent:"flex-end", marginTop:14 }}>
-      <span style={{ fontSize:11, color:T.muted }}>Page {page+1} of {totalPages}</span>
-      <SmBtn onClick={() => onPageChange(page-1)} style={{ opacity:page===0?0.4:1 }}>← Prev</SmBtn>
-      <SmBtn onClick={() => onPageChange(page+1)} style={{ opacity:page>=totalPages-1?0.4:1 }}>Next →</SmBtn>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
+      <span style={{ fontSize: 11, color: T.muted }}>Page {page + 1} of {totalPages}</span>
+      <SmBtn onClick={() => onPageChange(page - 1)} disabled={page === 0}>← Prev</SmBtn>
+      <SmBtn onClick={() => onPageChange(page + 1)} disabled={page >= totalPages - 1}>Next →</SmBtn>
     </div>
   );
 }
