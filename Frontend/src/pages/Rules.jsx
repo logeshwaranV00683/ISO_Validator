@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { T, SEV, MTIS } from "../constants/theme";
+import { T, SEV } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getRules, deleteRule, toggleRule, exportRules } from "../api/rules";
-import { getProfiles } from "../api/profiles";
+import { getProfiles, getFormatMtis } from "../api/profiles";  
 import {
   PageHeader, Card, Tag, SmBtn, Btn, RoleBanner,
   LoadingBar, ErrorBanner, StatCard, Th, Pagination
@@ -13,7 +13,7 @@ import RuleModal from "./modals/RuleModal";
 export default function Rules() {
   const { can } = useAuth();
   const [profileId, setProfileId] = useState(null);
-  const [mti, setMti] = useState(MTIS[0]);
+  const [mti, setMti] = useState(null);
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [editRule, setEditRule] = useState(null);
@@ -27,10 +27,29 @@ export default function Rules() {
     }
   }, [profiles, profileId]);
 
-  const { data, loading, error, refetch } = useApi(
-    () => profileId ? getRules({ profileId, mti }) : Promise.resolve(null),
-    [profileId, mti, page]
-  );
+  // const { data, loading, error, refetch } = useApi(
+  //   () => profileId ? getRules({ profileId, mti }) : Promise.resolve(null),
+  //   [profileId, mti, page]
+  // );
+  const { data: availableMtis } = useApi(
+  () => profileId ? getFormatMtis(profileId) : Promise.resolve([]),
+  [profileId]
+);
+const mtiList = availableMtis || [];
+
+useEffect(() => {
+  if (mtiList.length > 0 && !mtiList.includes(mti)) {
+    setMti(mtiList[0]);
+    setPage(0);
+  } else if (mtiList.length === 0) {
+    setMti(null);
+  }
+}, [mtiList]);
+
+const { data, loading, error, refetch } = useApi(
+  () => (profileId && mti) ? getRules({ profileId, mti }) : Promise.resolve(null),  // CHANGED — guard on mti too
+  [profileId, mti, page]
+);
 
   const { mutate: doDelete } = useMutation(deleteRule);
   const { mutate: doToggle } = useMutation((id) => toggleRule(id));
@@ -85,22 +104,22 @@ export default function Rules() {
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
             <div style={{ fontSize: 11, color: T.muted, marginBottom: 5, fontWeight: 600 }}>MTI</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {MTIS.map(m => (
-                <button
-                  key={m}
-                  onClick={() => { setMti(m); setPage(0); }}
-                  style={{
-                    background: mti === m ? T.accent + "22" : T.surface2,
-                    border: `1px solid ${mti === m ? T.accent : T.border}`,
-                    color: mti === m ? T.accent : T.muted,
-                    padding: "5px 12px",
-                    borderRadius: 20,
-                    fontFamily: "inherit",
-                    fontSize: 11,
-                    cursor: "pointer",
-                    fontWeight: mti === m ? 700 : 400,
-                    transition: "all 0.15s",
-                  }}
+               {mtiList.map(m => (
+        <button
+          key={m}
+          onClick={() => { setMti(m); setPage(0); }}
+          style={{
+            background: mti === m ? T.accent + "22" : T.surface2,
+            border: `1px solid ${mti === m ? T.accent : T.border}`,
+            color: mti === m ? T.accent : T.muted,
+            padding: "5px 12px",
+            borderRadius: 20,
+            fontFamily: "inherit",
+            fontSize: 11,
+            cursor: "pointer",
+            fontWeight: mti === m ? 700 : 400,
+            transition: "all 0.15s",
+          }}
                 >
                   {m}
                 </button>

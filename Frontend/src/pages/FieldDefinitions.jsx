@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { T, MTIS } from "../constants/theme";
+import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getFieldDefinitions, deleteFieldDef, updateFieldDef } from "../api/rules";
-import { getProfiles } from "../api/profiles";
+import { getProfiles,getFormatMtis } from "../api/profiles";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner, Th, Toggle } from "../components/shared";
 import FieldDefModal from "./modals/FieldDefModal";
 
@@ -11,29 +11,43 @@ import FieldDefModal from "./modals/FieldDefModal";
 export default function FieldDefinitions() {
   const { can } = useAuth();
   const [profileId, setProfileId] = useState("");
-  const [mti, setMti] = useState("0200");
+  const [mti, setMti] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editDef, setEditDef] = useState(null);
 
   const { data: profiles } = useApi(getProfiles);
 
-  useEffect(() => {
-    const list = Array.isArray(profiles)
-      ? profiles
-      : profiles?.content || [];
+useEffect(() => {
+  const list = Array.isArray(profiles)
+    ? profiles
+    : profiles?.content || [];
 
-    if (!profileId && list.length > 0) {
-      setProfileId(String(list[0].id));
-    }
-  }, [profiles, profileId]);
+  if (!profileId && list.length > 0) {
+    setProfileId(String(list[0].id));
+  }
+}, [profiles, profileId]);
 
-  const { data: defs, loading, error, refetch } = useApi(
-    () =>
-      profileId
-        ? getFieldDefinitions({ profileId, mti })
-        : Promise.resolve([]),
-    [profileId, mti]
-  );
+const { data: availableMtis } = useApi(
+  () => (profileId ? getFormatMtis(profileId) : Promise.resolve([])),
+  [profileId]
+);
+const mtiList = availableMtis || [];
+
+useEffect(() => {
+  if (mtiList.length > 0 && !mtiList.includes(mti)) {
+    setMti(mtiList[0]);
+  } else if (mtiList.length === 0) {
+    setMti(null);
+  }
+}, [mtiList]); 
+
+ const { data: defs, loading, error, refetch } = useApi(
+  () =>
+    profileId && mti                              
+      ? getFieldDefinitions({ profileId, mti })
+      : Promise.resolve([]),
+  [profileId, mti]
+);
 
   const { mutate: doDelete } = useMutation(deleteFieldDef);
   const { mutate: doUpdate } = useMutation((id, d) => updateFieldDef(id, d));
@@ -75,21 +89,21 @@ export default function FieldDefinitions() {
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
             <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>MTI</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {MTIS.map(m => (
-                <button key={m} onClick={() => setMti(m)}
-                  style={{
-                    background: mti === m ? T.accent + "22" : T.surface2,
-                    border: `1px solid ${mti === m ? T.accent : T.border}`,
-                    color: mti === m ? T.accent : T.muted,
-                    padding: "5px 12px",
-                    borderRadius: 20,
-                    fontFamily: "inherit",
-                    fontSize: 11,
-                    cursor: "pointer",
-                    fontWeight: mti === m ? 700 : 400,
-                    transition: "all 0.15s",
-                  }}
-                >{m}</button>
+               {mtiList.map(m => (
+        <button key={m} onClick={() => setMti(m)}
+          style={{
+            background: mti === m ? T.accent + "22" : T.surface2,
+            border: `1px solid ${mti === m ? T.accent : T.border}`,
+            color: mti === m ? T.accent : T.muted,
+            padding: "5px 12px",
+            borderRadius: 20,
+            fontFamily: "inherit",
+            fontSize: 11,
+            cursor: "pointer",
+            fontWeight: mti === m ? 700 : 400,
+            transition: "all 0.15s",
+          }}
+        >{m}</button>
               ))}
             </div>
           </div>

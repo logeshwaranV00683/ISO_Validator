@@ -25,3 +25,5 @@ export const getFormatVersions  = async (id)   => unwrap(await apiClient.get(`/f
 export const rollbackFormat     = async (id,v) => unwrap(await apiClient.put(`/formats/${id}/rollback/${v}`));
 export const reloadFormat       = async (id)   => unwrap(await apiClient.post(`/formats/${id}/reload`));
 export const toggleFormatStatus = async (id,s) => unwrap(await apiClient.patch(`/formats/${id}/status`, { status: s }));
+export const getFormatMtis = async (profileId) =>
+  unwrap(await apiClient.get("/formats/mtis", { params: { profileId } }));
