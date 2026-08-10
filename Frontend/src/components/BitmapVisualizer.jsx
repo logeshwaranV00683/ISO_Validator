@@ -26,6 +26,16 @@ function LegendDot({ color, label }) {
 export function BitmapVisualizer({ catalogByDe, fieldValues, extraFields, onSelectCatalog, onToggleCustom }) {
   const [showExtended, setShowExtended] = useState(false);
 
+  const normalizedCatalog = {};
+
+Object.entries(catalogByDe || {}).forEach(([key, value]) => {
+  const match = String(key).match(/\d+/);
+
+  if (match) {
+    normalizedCatalog[Number(match[0])] = value;
+  }
+});
+
   const range = showExtended
     ? Array.from({ length: 63 }, (_, i) => i + 66)
     : Array.from({ length: 63 }, (_, i) => i + 2);
@@ -46,8 +56,23 @@ export function BitmapVisualizer({ catalogByDe, fieldValues, extraFields, onSele
       <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 4 }}>
         {range.map(de => {
           const key = `DE${de}`;
-          const fd = catalogByDe[key];
-          const hasVal = fd ? !!fieldValues[key]?.trim() : !!extraFields[de]?.trim();
+          const fd = normalizedCatalog[de];
+          const value =
+  fieldValues?.[de] ??
+  fieldValues?.[key] ??
+  fieldValues?.[`DE ${de}`] ??
+  "";
+
+const customValue =
+  extraFields?.[de] ??
+  extraFields?.[key] ??
+  extraFields?.[`DE ${de}`] ??
+  "";
+
+const hasVal = fd
+  ? String(value).trim().length > 0
+  : String(customValue).trim().length > 0;
+          //const hasVal = fd ? !!fieldValues[key]?.trim() : !!extraFields[de]?.trim();
           const isCustomOpen = !fd && extraFields[de] !== undefined;
 
           let state;
