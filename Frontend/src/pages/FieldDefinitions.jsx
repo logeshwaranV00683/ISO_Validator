@@ -39,7 +39,7 @@ export default function FieldDefinitions() {
     } else if (mtiList.length === 0) {
       setMti(null);
     }
-  }, [mtiList]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mtiList]); 
 
   const { data: defs, loading, error, refetch } = useApi(
     () =>
