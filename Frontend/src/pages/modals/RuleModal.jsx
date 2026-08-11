@@ -116,7 +116,8 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
         <Field label="Message Profile" required error={errors.profileId}>
-          <select value={form.profileId} onChange={e => set("profileId", +e.target.value)} style={SL}>
+          {/* <select value={form.profileId} onChange={e => set("profileId", +e.target.value)} style={SL}> */}
+          <select value={form.profileId} style={SL} disabled>
             <option value="">Select profile…</option>
             {profiles.map(p => (
               <option key={p.id} value={p.id}>
@@ -127,7 +128,7 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
         </Field>
 
         <Field label="MTI" required>
-          <select value={form.mti} onChange={e => set("mti", e.target.value)} style={{ ...SL, maxHeight: 120, overflowY: "auto" }} size={1}>
+          <select value={form.mti} onChange={e => set("mti", e.target.value)} style={{ ...SL, maxHeight: 120, overflowY: "auto" }} size={1} disabled>
             {MTIS.map(m => (
               <option key={m} value={m}>{m}</option>
             ))}
@@ -146,7 +147,9 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
         </Field>
 
         <Field label="Field Name" required error={errors.fieldName} style={{ gridColumn: "1/-1" }}>
-          <input value={form.fieldName} onChange={e => set("fieldName", e.target.value)} placeholder="Transmission Date & Time" style={inp(errors.fieldName)} />
+          <input value={form.fieldName} onChange={e => set("fieldName", e.target.value)} placeholder="Transmission Date & Time" style={inp(errors.fieldName)}
+           readOnly={isEdit} />
+         
         </Field>
 
         <Field label="Min Length">
