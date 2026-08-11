@@ -7,7 +7,7 @@ function bitColor(state) {
     case "mandatory-filled": return T.green;
     case "mandatory-empty":  return T.red;
     case "optional-filled":  return T.accent;
-    case "optional-empty":   return T.border2;
+    case "optional-empty":  return   T.accent2;
     case "custom-filled":    return T.purple;
     case "custom-empty":     return T.yellow;
     default:                 return T.faint;
@@ -134,7 +134,7 @@ const hasVal = fd
         <LegendDot color={T.green}   label="Mand·set" />
         <LegendDot color={T.red}     label="Mand·empty" />
         <LegendDot color={T.accent}  label="Opt·set" />
-        <LegendDot color={T.border2} label="Opt·empty" />
+        <LegendDot color={T.accent2} label="Opt·empty" />
         <LegendDot color={T.purple}  label="Custom·set" />
         <LegendDot color={T.yellow}  label="Custom·open" />
         <LegendDot color={T.faint}   label="Unused" />
