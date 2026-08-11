@@ -135,7 +135,7 @@ const { data, loading, error, refetch } = useApi(
           <span style={{ color: T.text, fontWeight: 700 }}>{totalElements}</span> rules
         </span>
         <div style={{ flex: 1 }} />
-        {can.add && <Btn primary onClick={() => { setEditRule(null); setShowModal(true); }}>+ Add Rule</Btn>}
+        {/* {can.add && <Btn primary onClick={() => { setEditRule(null); setShowModal(true); }}>+ Add Rule</Btn>} */}
         {/* {can.edit && <SmBtn>⬆ Import JSON</SmBtn>} */}
         <SmBtn onClick={handleExport}>⬇ Export JSON</SmBtn>
       </div>
