@@ -24,6 +24,11 @@ apiClient.interceptors.response.use(
       localStorage.removeItem("user_info");
       window.location.href = "/login";
     }
+   const backendMessage = error.response?.data?.error?.message;
+    if (backendMessage) {
+      error.message = backendMessage;
+    }
+
     return Promise.reject(error);
   }
 );
