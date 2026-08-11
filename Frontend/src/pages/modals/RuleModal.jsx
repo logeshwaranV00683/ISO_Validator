@@ -45,6 +45,16 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
     if (!form.deNumber.trim()) e.deNumber = "Required";
     if (!form.fieldName.trim()) e.fieldName = "Required";
     if (!form.maxLength) e.maxLength = "Required";
+    if (form.effectiveFrom && form.effectiveTo && form.effectiveTo < form.effectiveFrom) {
+      e.effectiveTo = "Effective To cannot be before Effective From";
+    }
+    if (
+    form.minLength !== "" &&
+    form.maxLength !== "" &&
+    Number(form.minLength) > Number(form.maxLength)
+  ) {
+    e.minLength = "Min Length cannot be greater than Max Length";
+  }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -148,8 +158,8 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
 
         <Field label="Field Name" required error={errors.fieldName} style={{ gridColumn: "1/-1" }}>
           <input value={form.fieldName} onChange={e => set("fieldName", e.target.value)} placeholder="Transmission Date & Time" style={inp(errors.fieldName)}
-           readOnly={isEdit} />
-         
+            readOnly={isEdit} />
+
         </Field>
 
         <Field label="Min Length">
@@ -182,8 +192,8 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
           <input type="date" value={form.effectiveFrom} onChange={e => set("effectiveFrom", e.target.value)} style={inp()} />
         </Field>
 
-        <Field label="Effective To (leave blank = no expiry)">
-          <input type="date" value={form.effectiveTo} onChange={e => set("effectiveTo", e.target.value)} style={inp()} />
+        <Field label="Effective To (leave blank = no expiry)" error={errors.effectiveTo}>
+          <input type="date" value={form.effectiveTo} onChange={e => set("effectiveTo", e.target.value)} style={inp(errors.effectiveTo)} />
         </Field>
 
         <Field label="Allowed Values (enum)" style={{ gridColumn: "1/-1" }}>
