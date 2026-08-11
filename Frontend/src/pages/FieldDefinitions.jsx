@@ -3,7 +3,7 @@ import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getFieldDefinitions, deleteFieldDef, updateFieldDef } from "../api/rules";
-import { getProfiles,getFormatMtis } from "../api/profiles";
+import { getProfiles, getFormatMtis } from "../api/profiles";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner, Th, Toggle } from "../components/shared";
 import FieldDefModal from "./modals/FieldDefModal";
 
@@ -17,37 +17,37 @@ export default function FieldDefinitions() {
 
   const { data: profiles } = useApi(getProfiles);
 
-useEffect(() => {
-  const list = Array.isArray(profiles)
-    ? profiles
-    : profiles?.content || [];
+  useEffect(() => {
+    const list = Array.isArray(profiles)
+      ? profiles
+      : profiles?.content || [];
 
-  if (!profileId && list.length > 0) {
-    setProfileId(String(list[0].id));
-  }
-}, [profiles, profileId]);
+    if (!profileId && list.length > 0) {
+      setProfileId(String(list[0].id));
+    }
+  }, [profiles, profileId]);
 
-const { data: availableMtis } = useApi(
-  () => (profileId ? getFormatMtis(profileId) : Promise.resolve([])),
-  [profileId]
-);
-const mtiList = availableMtis || [];
+  const { data: availableMtis } = useApi(
+    () => (profileId ? getFormatMtis(profileId) : Promise.resolve([])),
+    [profileId]
+  );
+  const mtiList = availableMtis || [];
 
-useEffect(() => {
-  if (mtiList.length > 0 && !mtiList.includes(mti)) {
-    setMti(mtiList[0]);
-  } else if (mtiList.length === 0) {
-    setMti(null);
-  }
-}, [mtiList]); 
+  useEffect(() => {
+    if (mtiList.length > 0 && !mtiList.includes(mti)) {
+      setMti(mtiList[0]);
+    } else if (mtiList.length === 0) {
+      setMti(null);
+    }
+  }, [mtiList]); // eslint-disable-line react-hooks/exhaustive-deps
 
- const { data: defs, loading, error, refetch } = useApi(
-  () =>
-    profileId && mti                              
-      ? getFieldDefinitions({ profileId, mti })
-      : Promise.resolve([]),
-  [profileId, mti]
-);
+  const { data: defs, loading, error, refetch } = useApi(
+    () =>
+      profileId && mti
+        ? getFieldDefinitions({ profileId, mti })
+        : Promise.resolve([]),
+    [profileId, mti]
+  );
 
   const { mutate: doDelete } = useMutation(deleteFieldDef);
   const { mutate: doUpdate } = useMutation((id, d) => updateFieldDef(id, d));
@@ -85,27 +85,33 @@ useEffect(() => {
             </select>
           </div>
 
-          {/* MTI pills */}
+          {/* MTI pills — now sourced from actual uploaded Message Formats for this profile */}
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
             <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>MTI</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-               {mtiList.map(m => (
-        <button key={m} onClick={() => setMti(m)}
-          style={{
-            background: mti === m ? T.accent + "22" : T.surface2,
-            border: `1px solid ${mti === m ? T.accent : T.border}`,
-            color: mti === m ? T.accent : T.muted,
-            padding: "5px 12px",
-            borderRadius: 20,
-            fontFamily: "inherit",
-            fontSize: 11,
-            cursor: "pointer",
-            fontWeight: mti === m ? 700 : 400,
-            transition: "all 0.15s",
-          }}
-        >{m}</button>
-              ))}
-            </div>
+            {mtiList.length === 0 ? (
+              <div style={{ fontSize: 11, color: T.faint }}>
+                No message formats uploaded for this profile yet — upload one on the Formats page first.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {mtiList.map(m => (
+                  <button key={m} onClick={() => setMti(m)}
+                    style={{
+                      background: mti === m ? T.accent + "22" : T.surface2,
+                      border: `1px solid ${mti === m ? T.accent : T.border}`,
+                      color: mti === m ? T.accent : T.muted,
+                      padding: "5px 12px",
+                      borderRadius: 20,
+                      fontFamily: "inherit",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontWeight: mti === m ? 700 : 400,
+                      transition: "all 0.15s",
+                    }}
+                  >{m}</button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -154,7 +160,7 @@ useEffect(() => {
             ))}
             {!defs?.length && !loading && (
               <tr><td colSpan={11} style={{ padding: "24px", textAlign: "center", color: T.faint, fontSize: 12 }}>
-                No field definitions for {mti}. Add fields to enable the Message Builder for this profile + MTI.
+                {mti ? `No field definitions for ${mti}. Add fields to enable the Message Builder for this profile + MTI.` : "Select a profile with an uploaded Message Format to see field definitions."}
               </td></tr>
             )}
           </tbody>
