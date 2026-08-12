@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+// import { useState } from "react";
 import { T, SEV, MTIS } from "../../constants/theme";
 import { useMutation } from "../../hooks/useApi";
 import { createRule, updateRule } from "../../api/rules";
@@ -22,7 +23,6 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
     patternRegex: rule?.patternRegex || "",
     severity: rule?.severity || "CRITICAL",
     priority: rule?.priority || 1,
-    // FIX: backend RuleDto returns `active`, not `isActive` — read from correct field
     isActive: rule?.active ?? true,
     effectiveFrom: rule?.effectiveFrom || new Date().toISOString().split("T")[0],
     effectiveTo: rule?.effectiveTo || "",
@@ -31,6 +31,30 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
   });
   const [newVal, setNewVal] = useState("");
   const [errors, setErrors] = useState({});
+
+
+  useEffect(() => {
+    if (rule) {
+      setForm({
+        profileId: rule.profileId || profileId || "",
+        mti: rule.mti || mti || "0200",
+        deNumber: rule.deNumber || "",
+        fieldName: rule.fieldName || "",
+        isMandatory: rule.isMandatory ?? false,
+        minLength: rule.minLength ?? "",
+        maxLength: rule.maxLength ?? "",
+        dataType: rule.dataType || "numeric",
+        patternRegex: rule.patternRegex || "",
+        severity: rule.severity || "CRITICAL",
+        priority: rule.priority || 1,
+        isActive: rule.active ?? true,
+        effectiveFrom: rule.effectiveFrom || new Date().toISOString().split("T")[0],
+        effectiveTo: rule.effectiveTo || "",
+        description: rule.description || "",
+        allowedValues: rule.allowedValues || [],
+      });
+    }
+  }, [rule]);
 
   const { mutate: doCreate, loading: creating } = useMutation(createRule);
   // FIX: backend RuleDto uses `id`, not `ruleId`
@@ -45,16 +69,22 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
     if (!form.deNumber.trim()) e.deNumber = "Required";
     if (!form.fieldName.trim()) e.fieldName = "Required";
     if (!form.maxLength) e.maxLength = "Required";
+
+    if (form.description && form.description.length > 255) {
+    e.description = "Description cannot exceed 255 characters";
+  }
+  
     if (form.effectiveFrom && form.effectiveTo && form.effectiveTo < form.effectiveFrom) {
       e.effectiveTo = "Effective To cannot be before Effective From";
     }
     if (
-    form.minLength !== "" &&
-    form.maxLength !== "" &&
-    Number(form.minLength) > Number(form.maxLength)
-  ) {
-    e.minLength = "Min Length cannot be greater than Max Length";
-  }
+      form.minLength !== "" &&
+      form.maxLength !== "" &&
+      Number(form.minLength) > Number(form.maxLength)
+    ) {
+      e.minLength = "Min Length cannot be greater than Max Length";
+    }
+    
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -67,8 +97,8 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
         const updatePayload = {
           fieldName: form.fieldName,
           isMandatory: form.isMandatory,
-          minLength: form.minLength || null,
-          maxLength: form.maxLength || null,
+          minLength: form.minLength === "" ? null : form.minLength,
+          maxLength: form.maxLength === "" ? null : form.maxLength,
           exactLength: form.exactLength || null,
           dataType: form.dataType,
           patternRegex: form.patternRegex || null,
@@ -162,8 +192,8 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
 
         </Field>
 
-        <Field label="Min Length">
-          <input type="number" value={form.minLength} onChange={e => set("minLength", +e.target.value)} min={0} style={inp()} />
+        <Field label="Min Length" error={errors.minLength}>
+          <input type="number" value={form.minLength} onChange={e => set("minLength", +e.target.value)} min={0} style={inp(errors.minLength)} />
         </Field>
 
         <Field label="Max Length" required error={errors.maxLength}>
@@ -214,7 +244,7 @@ export default function RuleModal({ rule, profileId, mti, profiles, onClose, onS
             : <div style={{ fontSize: 10, color: T.faint }}>No values added — any value will be accepted</div>}
         </Field>
 
-        <Field label="Description" style={{ gridColumn: "1/-1" }}>
+        <Field label="Description" error={errors.description} style={{ gridColumn: "1/-1" }}>
           <textarea rows={2} value={form.description} onChange={e => set("description", e.target.value)}
             style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 5, fontFamily: "inherit", fontSize: 11, outline: "none", resize: "vertical" }} />
         </Field>
