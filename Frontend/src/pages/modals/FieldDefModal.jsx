@@ -215,8 +215,29 @@ export default function FieldDefModal({ def, profileId, mti, profiles = [], onCl
         </Field>
 
         <div style={{ gridColumn: "1/-1", display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <ToggleSm label="LLVAR" active={form.isLlvar} onClick={() => set("isLlvar", !form.isLlvar)} />
-          <ToggleSm label="LLLVAR" active={form.isLllvar} onClick={() => set("isLllvar", !form.isLllvar)} />
+         <ToggleSm
+  label="LLVAR"
+  active={form.isLlvar}
+  onClick={() => {
+    set("isLlvar", !form.isLlvar);
+
+    if (!form.isLlvar) {
+      set("isLllvar", false);
+    }
+  }}
+/>
+
+<ToggleSm
+  label="LLLVAR"
+  active={form.isLllvar}
+  onClick={() => {
+    set("isLllvar", !form.isLllvar);
+
+    if (!form.isLllvar) {
+      set("isLlvar", false);
+    }
+  }}
+/>
           <ToggleSm label="Mandatory" active={form.isMandatory} onClick={() => set("isMandatory", !form.isMandatory)} />
           <ToggleSm label="Builder Visible" active={form.isBuilderVisible} onClick={() => set("isBuilderVisible", !form.isBuilderVisible)} />
           <ToggleSm label="Active" active={form.isActive} onClick={() => set("isActive", !form.isActive)} />
