@@ -42,8 +42,8 @@ export const deleteTemplate = async (id) =>
   unwrap(await apiClient.delete(`/ai/templates/${id}`));
 export const getTemplateVersions = async (id) =>
   unwrap(await apiClient.get(`/ai/templates/${id}/versions`));
-export const rollbackTemplate = async (id) =>
-  unwrap(await apiClient.put(`/ai/templates/${id}/rollback`));
+export const rollbackTemplate = (id, targetVersion) =>
+  apiClient.put(`/ai/templates/${id}/rollback`, null, { params: { targetVersion } });
 
 // ── AI Logs ───────────────────────────────────────────────────────────────────
 // filters: { runReference, status, page, size }
