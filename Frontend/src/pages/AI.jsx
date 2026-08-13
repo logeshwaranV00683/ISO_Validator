@@ -17,22 +17,22 @@ import {
 } from "../components/shared";
 
 const CONFIG_KEY_MAP = {
-  "ollama.host":    "ollamaHost",
-  "ollama.model":       "activeModel",
+  "ollama.host": "ollamaHost",
+  "ollama.model": "activeModel",
   "ollama.temperature": "temperature",
-  "ollama.max.tokens":  "maxTokens",
-  "ollama.timeout.ms":  "timeoutMs",
+  "ollama.max.tokens": "maxTokens",
+  "ollama.timeout.ms": "timeoutMs",
   "ollama.retry.count": "retryCount",
-  "ollama.fallback":    "fallbackBehavior",
+  "ollama.fallback": "fallbackBehavior",
 };
 
 const REVERSE_CONFIG_KEY_MAP = {
-  ollamaHost:   "ollama.host",
-  activeModel:      "ollama.model",
-  temperature:      "ollama.temperature",
-  maxTokens:        "ollama.max.tokens",
-  timeoutMs:        "ollama.timeout.ms",
-  retryCount:       "ollama.retry.count",
+  ollamaHost: "ollama.host",
+  activeModel: "ollama.model",
+  temperature: "ollama.temperature",
+  maxTokens: "ollama.max.tokens",
+  timeoutMs: "ollama.timeout.ms",
+  retryCount: "ollama.retry.count",
   fallbackBehavior: "ollama.fallback",
 };
 
@@ -42,7 +42,7 @@ export default function AI() {
   const [testOutput, setTestOutput] = useState(null);
   const [testing, setTesting] = useState(false);
   const [versions, setVersions] = useState(null);
-  const [globalContent, setGlobalContent] = useState("");
+  const [globalContent, setGlobalContent] = useState(null);
   const [configForm, setConfigForm] = useState(null);
 
   const { data: cfg, loading: cfgLoad, error: cfgErr, refetch: cfgRefetch } = useApi(getAiConfig);
@@ -84,18 +84,18 @@ export default function AI() {
   };
 
   function formatBytes(bytes) {
-  if (!bytes) return "—";
-  const gb = bytes / (1024 ** 3);
-  if (gb >= 1) return gb.toFixed(2) + " GB";
-  const mb = bytes / (1024 ** 2);
-  return mb.toFixed(1) + " MB";
-}
+    if (!bytes) return "—";
+    const gb = bytes / (1024 ** 3);
+    if (gb >= 1) return gb.toFixed(2) + " GB";
+    const mb = bytes / (1024 ** 2);
+    return mb.toFixed(1) + " MB";
+  }
 
   const handleSavePrompt = async () => {
-    const content = globalContent || prompt?.promptTemplate || "";
-    await doUpdatePrompt(content, "Updated via UI");
-    await pRefetch();
-    setGlobalContent("");
+  const content = globalContent !== null ? globalContent : (prompt?.promptTemplate || "");
+  await doUpdatePrompt(content, "Updated via UI");
+  await pRefetch();
+  setGlobalContent(null);
     if (versions) {
       const v = await getPromptVersions(prompt.id);
       setVersions(v);
@@ -111,11 +111,12 @@ export default function AI() {
     } finally { setTesting(false); }
   };
 
-  const loadVersions = async () => {
-    if (!prompt?.id) return;
-    const v = await getPromptVersions(prompt.id);
-    setVersions(v);
-  };
+ const loadVersions = async () => {
+  if (versions) { setVersions(null); return; } 
+  if (!prompt?.id) return;
+  const v = await getPromptVersions(prompt.id);
+  setVersions(v);
+};
 
   const TABS = [["config", "Global Config"], ["profiles", "Per-Profile Prompts"], ["brd", "BRD Parser"], ["logs", "AI Logs"]];
 
@@ -172,17 +173,17 @@ export default function AI() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <Card title="Available Models" badge="Ollama local">
                 {modLoad && <LoadingBar text="Fetching models…" />}
-                  {modelList.map((m, i) => (
-                    <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < modelList.length - 1 ? `1px solid ${T.border}22` : "none" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, color: m.name === configForm?.activeModel ? T.accent : T.text }}>{m.name}</div>
-                        <div style={{ fontSize: 10, color: T.faint }}>{formatBytes(m.size)}</div>
-                      </div>
-                      {m.name === configForm?.activeModel
-                        ? <span style={{ fontSize: 10, color: T.green }}>● Active</span>
-                        : can.edit && <SmBtn>To Active change in the config</SmBtn>}
+                {modelList.map((m, i) => (
+                  <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < modelList.length - 1 ? `1px solid ${T.border}22` : "none" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, color: m.name === configForm?.activeModel ? T.accent : T.text }}>{m.name}</div>
+                      <div style={{ fontSize: 10, color: T.faint }}>{formatBytes(m.size)}</div>
                     </div>
-                  ))}
+                    {m.name === configForm?.activeModel
+                      ? <span style={{ fontSize: 10, color: T.green }}>● Active</span>
+                      : can.edit && <SmBtn>To Active change in the config</SmBtn>}
+                  </div>
+                ))}
               </Card>
 
               <Card title="Global Prompt Template" badge="Stored in DB">
@@ -192,7 +193,7 @@ export default function AI() {
                     Variables: {["{mti}", "{profile}", "{fields}", "{errors}"].map(v => <Tag key={v} color={T.accent} small style={{ marginLeft: 4 }}>{v}</Tag>)}
                   </div>
                   <textarea rows={8} disabled={!can.edit}
-                    value={globalContent || prompt.promptTemplate || ""}
+                     value={globalContent !== null ? globalContent : (prompt.promptTemplate || "")}
                     onChange={e => setGlobalContent(e.target.value)}
                     style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none", opacity: can.edit ? 1 : 0.6 }} />
                   <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
@@ -219,7 +220,12 @@ export default function AI() {
                               <td style={{ padding: "6px 8px", color: T.muted }}>{v.changeNote}</td>
                               <td style={{ padding: "6px 8px" }}>
                                 {can.edit && v.versionNumber !== prompt.currentVersion && (
-                                  <SmBtn onClick={() => { doRollback(prompt.id, v.versionNumber); pRefetch(); }}>Rollback</SmBtn>
+                                  <SmBtn onClick={async () => {
+                                    await doRollback(prompt.id, v.versionNumber);
+                                    await pRefetch();
+                                    const updated = await getPromptVersions(prompt.id);
+                                    setVersions(updated);
+                                  }}>Rollback</SmBtn>
                                 )}
                               </td>
                             </tr>
@@ -281,27 +287,34 @@ export default function AI() {
 }
 
 function BrdPromptCard({ canEdit }) {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(null);
   const [versions, setVersions] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [versionsError, setVersionsError] = useState(null); // NEW
   const { data: templates, loading, error, refetch } = useApi(() => getTemplatesByScope("BRD_PARSE"));
 
   const template = Array.isArray(templates) ? templates[0] : templates;
 
   const { mutate: doCreate } = useMutation((body) => createTemplate(body));
   const { mutate: doUpdate } = useMutation((id, body) => updateTemplate(id, body));
-  const { mutate: doRollback } = useMutation((id) => rollbackTemplate(id));
+  const { mutate: doRollback } = useMutation((id, v) => rollbackTemplate(id, v));
 
   const loadVersions = async () => {
+    if (versions) { setVersions(null); return; }
     if (!template?.id) return;
-    const v = await getTemplateVersions(template.id);
-    setVersions(v);
+    try {
+      setVersionsError(null);
+      const v = await getTemplateVersions(template.id);
+      setVersions(v);
+    } catch (e) {
+      setVersionsError(e.message); 
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const promptTemplate = content || template?.promptTemplate || "";
+      const promptTemplate = content !== null ? content : (template?.promptTemplate || "");
       if (template?.id) {
         await doUpdate(template.id, { ...template, promptTemplate });
       } else {
@@ -312,11 +325,12 @@ function BrdPromptCard({ canEdit }) {
         });
       }
       await refetch();
-      setContent("");
+      setContent(null);
       if (versions) {
         const v = await getTemplateVersions(template.id);
         setVersions(v);
       }
+      alert("BRD parser prompt saved!"); 
     } catch (e) {
       alert("Failed to save BRD prompt: " + (e?.response?.data?.message || e.message));
     } finally {
@@ -335,14 +349,20 @@ function BrdPromptCard({ canEdit }) {
         Variables: <Tag color={T.accent} small style={{ marginLeft: 4 }}>{"{brd_text}"}</Tag>
       </div>
       <textarea rows={16} disabled={!canEdit}
-        placeholder="No BRD_PARSE template exists yet — paste the extraction prompt here and Save to create one…"
-        value={content || (template?.promptTemplate || "")}
-        onChange={e => setContent(e.target.value)}
+  placeholder="No BRD_PARSE template exists yet — paste the extraction prompt here and Save to create one…"
+  value={content !== null ? content : (template?.promptTemplate || "")}
+  onChange={e => setContent(e.target.value)}
+
         style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none", opacity: canEdit ? 1 : 0.6 }} />
-      <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
-        {canEdit && <Btn primary onClick={handleSave}>{saving ? "Saving…" : "Save"}</Btn>}
-        <SmBtn onClick={loadVersions} style={{ opacity: template?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
-      </div>
+     <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+  {canEdit && <Btn primary onClick={handleSave}>{saving ? "Saving…" : "Save"}</Btn>}
+  <SmBtn onClick={loadVersions} style={{ opacity: template?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
+</div>
+{versionsError && (
+  <div style={{ marginTop: 8, background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 5, padding: "8px 12px", fontSize: 11, color: T.red }}>
+    ✕ {versionsError}
+  </div>
+)}
 
       {versions && (
         <div style={{ marginTop: 12, borderTop: `1px solid ${T.border}`, paddingTop: 12 }}>
@@ -369,7 +389,7 @@ function BrdPromptCard({ canEdit }) {
                   <td style={{ padding: "6px 8px" }}>
                     {canEdit && v.versionNumber !== template?.currentVersion && (
                       <SmBtn onClick={async () => {
-                        await doRollback(template.id);
+                        await doRollback(template.id, v.versionNumber);
                         await refetch();
                         const updated = await getTemplateVersions(template.id);
                         setVersions(updated);
@@ -387,17 +407,43 @@ function BrdPromptCard({ canEdit }) {
 }
 
 function ProfilePromptCard({ profile, canEdit }) {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(null);
   const [versions, setVersions] = useState(null);
+    const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null); 
   const { data, refetch } = useApi(() => getProfilePrompt(profile.id), [profile.id]);
   const { mutate: doUpsert } = useMutation((c, n) => upsertProfilePrompt(profile.id, c, n));
   const { mutate: doDelete } = useMutation(() => deleteProfilePrompt(profile.id));
   const { mutate: doRollback } = useMutation((id, v) => rollbackPrompt(id, v));
 
-  const loadVersions = async () => {
+   const loadVersions = async () => {
+    if (versions) { setVersions(null); return; }
     if (!data?.id) return;
-    const v = await getPromptVersions(data.id);
-    setVersions(v);
+    try {
+      const v = await getPromptVersions(data.id);
+      setVersions(v);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+  const handleSaveOverride = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const valueToSave = content !== null ? content : (data?.promptTemplate || "");
+      await doUpsert(valueToSave, "Updated via UI");
+      await refetch();
+      setContent(null);
+      if (versions) {
+        const v = await getPromptVersions(data.id);
+        setVersions(v);
+      }
+      alert("Profile prompt override saved!");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const envColor = { PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" }[profile.environment] || "#888";
@@ -412,29 +458,29 @@ function ProfilePromptCard({ profile, canEdit }) {
       }
     >
       <textarea rows={3} disabled={!canEdit} placeholder="Leave blank to use global template…"
-        value={content || (data?.promptTemplate || "")}
-        onChange={e => setContent(e.target.value)}
-        style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
-      {canEdit && (
-        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
-          <Btn primary onClick={async () => {
-            await doUpsert(content, "Updated via UI");
-            await refetch();
-            setContent("");
-            if (versions) {
-              const v = await getPromptVersions(data.id);
-              setVersions(v);
-            }
-          }}>Save Override</Btn>
-          {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(""); setVersions(null); }}>↺ Clear</Btn>}
-          <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
-        </div>
-      )}
-      {!canEdit && (
-        <div style={{ marginTop: 8 }}>
-          <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
-        </div>
-      )}
+  value={content !== null ? content : (data?.promptTemplate || "")}
+  onChange={e => setContent(e.target.value)}
+  style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
+
+{canEdit && (
+  <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+    <Btn primary onClick={handleSaveOverride} disabled={saving}>
+      {saving ? "Saving…" : "Save Override"}
+    </Btn>
+    {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(null); setVersions(null); }}>↺ Clear</Btn>}
+    <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
+  </div>
+)}
+{error && (
+  <div style={{ marginTop: 8, background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 5, padding: "8px 12px", fontSize: 11, color: T.red }}>
+    ✕ {error}
+  </div>
+)}
+{!canEdit && (
+  <div style={{ marginTop: 8 }}>
+    <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
+  </div>
+)}
 
       {/* Version history table */}
       {versions && (
