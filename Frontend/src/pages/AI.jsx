@@ -108,6 +108,8 @@ export default function AI() {
     try {
       const res = await doTestPrompt({ templateContent: globalContent || prompt?.promptTemplate, sampleMti: "0200", sampleProfileName: "Visa Switch", sampleErrors: ["DE7 missing", "DE4 length error"] });
       setTestOutput(res);
+    } catch (e) {
+      setTestOutput({ status: "FAILED", error: e.message || "Request failed" });
     } finally { setTesting(false); }
   };
 
@@ -201,10 +203,16 @@ export default function AI() {
                     <Btn onClick={handleTestPrompt}>{testing ? "Testing…" : "▶ Test Prompt"}</Btn>
                     <SmBtn onClick={loadVersions}>Version History</SmBtn>
                   </div>
-                  {testOutput && (
+                  {testOutput && testOutput.status === "SUCCESS" && (
                     <div style={{ marginTop: 12, background: T.bg, border: `1px solid ${T.green}33`, borderRadius: 6, padding: "10px 12px" }}>
                       <div style={{ fontSize: 10, color: T.green, marginBottom: 6 }}>✓ AI Response ({testOutput.durationMs}ms · {testOutput.modelUsed})</div>
-                      <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.7 }}>{testOutput.response}</div>
+                      <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{testOutput.response}</div>
+                    </div>
+                  )}
+                  {testOutput && testOutput.status !== "SUCCESS" && (
+                    <div style={{ marginTop: 12, background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 6, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 10, color: T.red, marginBottom: 6 }}>✗ AI Test Failed</div>
+                      <div style={{ fontSize: 11, color: T.red, lineHeight: 1.7 }}>{testOutput.error || "Unknown error — check Ollama connectivity and config."}</div>
                     </div>
                   )}
                   {versions && (
