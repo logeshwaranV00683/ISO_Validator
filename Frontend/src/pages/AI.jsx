@@ -455,18 +455,21 @@ function ProfilePromptCard({ profile, canEdit }) {
   };
 
   const envColor = { PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" }[profile.environment] || "#888";
+  const isCleared = !!data?.deletedAt;
 
   return (
     <Card
       title={profile.profileName}
       badge={
-        data?.currentVersion
+        isCleared
+          ? <Tag color={T.muted} small>Cleared</Tag>
+          : data?.currentVersion
           ? <Tag color={T.purple} small>v{data.currentVersion}</Tag>
           : null
       }
     >
       <textarea rows={3} disabled={!canEdit} placeholder="Leave blank to use global template…"
-  value={content !== null ? content : (data?.promptTemplate || "")}
+  value={content !== null ? content : (isCleared ? "" : (data?.promptTemplate || ""))}
   onChange={e => setContent(e.target.value)}
   style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none" }} />
 
@@ -475,7 +478,7 @@ function ProfilePromptCard({ profile, canEdit }) {
     <Btn primary onClick={handleSaveOverride} disabled={saving}>
       {saving ? "Saving…" : "Save Override"}
     </Btn>
-    {data && <Btn onClick={async () => { await doDelete(); refetch(); setContent(null); setVersions(null); }}>↺ Clear</Btn>}
+    {data && !isCleared && <Btn onClick={async () => { await doDelete(); refetch(); setContent(null); setVersions(null); }}>↺ Clear</Btn>}
     <SmBtn onClick={loadVersions} style={{ opacity: data?.id ? 1 : 0.35 }}>🕓 Version History</SmBtn>
   </div>
 )}
