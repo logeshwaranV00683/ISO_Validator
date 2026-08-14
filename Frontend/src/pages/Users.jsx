@@ -36,7 +36,9 @@ export default function Users() {
     await doRole(id, role); refetch();
   };
 
-  const users = data?.content || [];
+  //const users = data?.content || [];
+  const allUsers = data?.content || [];
+const users = roleFilter ? allUsers.filter(u => u.role === roleFilter) : allUsers;
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
@@ -73,7 +75,7 @@ export default function Users() {
         <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
           <thead>
             <tr style={{ borderBottom:`1px solid ${T.border}` }}>
-              {["Avatar","Username","Full Name","Email","Role","Status","Created","Actions"].map(h=><Th key={h}>{h}</Th>)}
+              {["Avatar","Username","Full Name","Email","Role","Status","Createdby","Actions"].map(h=><Th key={h}>{h}</Th>)}
             </tr>
           </thead>
           <tbody>
@@ -98,8 +100,9 @@ export default function Users() {
                   <td style={{ padding:"8px 8px" }}>
                     <Tag color={u.active?T.green:T.faint} small>{u.active?"ACTIVE":"INACTIVE"}</Tag>
                   </td>
-                  <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                  <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 ,whiteSpace:"nowrap" }}>
+                      {u.createdBy || "—" }
+                    {/* {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"} */}
                   </td>
                   <td style={{ padding:"8px 8px" }}>
                     <div style={{ display:"flex", gap:4 }}>
