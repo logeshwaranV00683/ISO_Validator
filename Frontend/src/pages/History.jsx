@@ -227,7 +227,7 @@ export default function History() {
               })}
             </tbody>
           </table>
-          <Pagination page={data.page} totalPages={data.totalPages} onPageChange={p=>setFilters(f=>({...f,page:p}))} />
+         <Pagination page={filters.page} totalPages={data.totalPages} onPageChange={p=>setFilters(f=>({...f,page:p}))} />
         </Card>
       )}
     </div>
