@@ -1,21 +1,54 @@
-import { useState } from "react";
+// import { useState } from "react";
+// import { T, ROLES } from "../constants/theme";
+// import { useApi, useMutation } from "../hooks/useApi";
+// import { getUsers, deleteUser, toggleUserStatus,
+//          changeUserRole, revokeUserSessions } from "../api/users";
+// import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar,
+//          ErrorBanner, StatCard, Th, Pagination } from "../components/shared";
+// import UserModal from "./modals/UserModal";
+
+// export default function Users() {
+//   const [page, setPage]         = useState(0);
+//   const [showModal, setShowModal] = useState(false);
+//   const [editUser, setEditUser] = useState(null);
+//   const [roleFilter, setRoleFilter] = useState("");
+
+//   const { data, loading, error, refetch } = useApi(
+//     () => getUsers({ role: roleFilter, page, size: 20 }),
+//     [roleFilter, page]
+//   );
+import { useState, useEffect } from "react";
 import { T, ROLES } from "../constants/theme";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getUsers, deleteUser, toggleUserStatus,
          changeUserRole, revokeUserSessions } from "../api/users";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar,
          ErrorBanner, StatCard, Th, Pagination } from "../components/shared";
+import { getConfigValue } from "../api/config";
 import UserModal from "./modals/UserModal";
+
+const DEFAULT_SIZE = 20;
 
 export default function Users() {
   const [page, setPage]         = useState(0);
+  const [size, setSize]         = useState(DEFAULT_SIZE);
   const [showModal, setShowModal] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [roleFilter, setRoleFilter] = useState("");
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const configured = await getConfigValue("pagination.default.size", DEFAULT_SIZE);
+      const parsed = parseInt(configured, 10);
+      if (!cancelled && !isNaN(parsed) && parsed > 0) setSize(parsed);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const { data, loading, error, refetch } = useApi(
-    () => getUsers({ role: roleFilter, page, size: 20 }),
-    [roleFilter, page]
+    () => getUsers({ role: roleFilter, page, size }),
+    [roleFilter, page, size]
   );
   const { mutate: doDelete  } = useMutation(deleteUser);
   const { mutate: doToggle  } = useMutation((id,v) => toggleUserStatus(id,v));
