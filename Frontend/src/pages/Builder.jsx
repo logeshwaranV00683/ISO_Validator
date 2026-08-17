@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { T, MTI_DESCRIPTIONS, MTI_SHORT_LABELS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
-import { getProfiles } from "../api/profiles";
+import { getProfiles, getFormatMtis } from "../api/profiles";
 import { getFieldDefinitions } from "../api/rules";
 import { buildMessage } from "../api/validation";
 import { BitmapVisualizer } from "../components/BitmapVisualizer";
@@ -16,12 +16,17 @@ import {
 // ── MTI free-text input with suggestions ─────────────────────────────────────
 const ALL_MTIS = Object.entries(MTI_SHORT_LABELS).map(([code, label]) => ({ code, label }));
 
-function MtiInput({ value, onChange }) {
+function MtiInput({ value, onChange, mtis }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
   const ref = useRef(null);
   const inputRef = useRef(null);
+
+  
+  const candidateMtis = mtis && mtis.length > 0
+    ? mtis.map(code => ({ code, label: MTI_SHORT_LABELS[code] || "" }))
+    : ALL_MTIS;
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -44,11 +49,11 @@ function MtiInput({ value, onChange }) {
   };
 
   const filtered = query.trim()
-    ? ALL_MTIS.filter(m =>
+    ? candidateMtis.filter(m =>
         m.code.includes(query) ||
         m.label.toLowerCase().includes(query.toLowerCase())
       )
-    : ALL_MTIS;
+    : candidateMtis;
 
   const commit = (code) => {
     setQuery(code);
@@ -164,7 +169,7 @@ export default function Builder() {
   const { can } = useAuth();
   const navigate = useNavigate();
 
-  const [profileId, setProfileId] = useState(null);
+  const [profileId, setProfileId] = useState(location.state?.profileId ?? null);
   const [mti, setMti] = useState("0200");
   const [fieldValues, setFieldValues] = useState({});
   const [extraFields, setExtraFields] = useState({});
@@ -192,6 +197,19 @@ export default function Builder() {
     () => profileId ? getFieldDefinitions({ profileId, mti }) : Promise.resolve([]),
     [profileId, mti]
   );
+
+  const { data: availableMtis } = useApi(
+    () => (profileId ? getFormatMtis(profileId) : Promise.resolve([])),
+    [profileId]
+  );
+  const mtiList = availableMtis || [];
+
+
+  useEffect(() => {
+    if (mtiList.length > 0 && !mtiList.includes(mti)) {
+      setMti(mtiList[0]);
+    }
+  }, [mtiList]);
 
   const catalog = fieldDefs || [];
   const mandatory = catalog.filter(f => f.isMandatory && f.isBuilderVisible !== false);
@@ -282,7 +300,7 @@ export default function Builder() {
           </div>
           <div>
             <Label>MTI</Label>
-            <MtiInput value={mti} onChange={(code) => { setMti(code); resetAll(); }} />
+            <MtiInput value={mti} onChange={(code) => { setMti(code); resetAll(); }} mtis={mtiList} />
           </div>
         </div>
       </Card>
@@ -468,14 +486,6 @@ export default function Builder() {
       {built && (
         <Card title="Generated Raw Message" badge={<Tag color={T.green} small>READY</Tag>}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ background: T.bg, border: `1px solid ${T.green}44`, borderRadius: 6, padding: "12px 14px", fontSize: 11, wordBreak: "break-all", lineHeight: 2.2 }}>
-              <span title="MTI" style={{ color: T.yellow, background: T.yellow + "18", padding: "2px 3px", borderRadius: 3, marginRight: 2 }}>{built.rawMessage?.substring(0, 4)}</span>
-              <span title="Primary Bitmap" style={{ color: T.accent, background: T.accent + "18", padding: "2px 3px", borderRadius: 3, marginRight: 2 }}>{built.bitmapHex?.substring(0, 16)}</span>
-              {built.bitmapHex?.length > 16 && (
-                <span title="Secondary Bitmap" style={{ color: T.purple, background: T.purple + "18", padding: "2px 3px", borderRadius: 3, marginRight: 2 }}>{built.bitmapHex?.substring(16)}</span>
-              )}
-              <span style={{ color: T.text }}>{built.rawMessage?.substring(4 + (built.bitmapHex?.length || 16))}</span>
-            </div>
             <div style={{ display: "flex", gap: 14, fontSize: 10, flexWrap: "wrap" }}>
               <span>MTI: <span style={{ color: T.yellow }}>{mti}</span> · {MTI_DESCRIPTIONS[mti] || mti}</span>
               <span>
@@ -502,7 +512,7 @@ export default function Builder() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <Btn primary onClick={() => navigate("/validator", { state: { rawMsg: built.rawMessage } })}>▶ Send to Validator</Btn>
+              <Btn primary onClick={() => navigate("/validator", { state: { rawMsg: built.rawMessage, profileId } })}>▶ Send to Validator</Btn>
               <Btn onClick={() => { navigator.clipboard?.writeText(built.rawMessage); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
                 {copied ? "✓ Copied" : "⎘ Copy Raw"}
               </Btn>

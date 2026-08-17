@@ -37,6 +37,9 @@ export default function Validator({ initialMsg = "" }) {
     setResult(null);
     setError(null);
   }
+   if (location.state?.profileId != null) {
+    setProfileId(location.state.profileId);
+   }
 }, [location.state]);
 
   // Set default profile on load
