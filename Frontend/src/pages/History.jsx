@@ -1,10 +1,18 @@
-import { useState } from "react";
+// import { useState } from "react";
+// import { T, ENV_COLORS } from "../constants/theme";
+// import { useAuth } from "../context/AuthContext";
+// import { useApi } from "../hooks/useApi";
+// import { getHistory, getHistoryStats, exportHistory } from "../api/history";
+// import { getProfiles } from "../api/profiles";
+// import { rerunValidation } from "../api/validation";
+import { useState, useEffect } from "react";
 import { T, ENV_COLORS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { getHistory, getHistoryStats, exportHistory } from "../api/history";
 import { getProfiles } from "../api/profiles";
 import { rerunValidation } from "../api/validation";
+import { getConfigValue } from "../api/config";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner,
          StatCard, Pagination, Th } from "../components/shared";
 
@@ -38,6 +46,18 @@ export default function History() {
   const { data, loading, error, refetch } = useApi(() => getHistory(filters), [filters]);
   const { data: stats } = useApi(getHistoryStats);
   const { data: profiles } = useApi(getProfiles);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const configured = await getConfigValue("pagination.default.size", DEFAULT_FILTERS.size);
+      const parsed = parseInt(configured, 10);
+      if (!cancelled && !isNaN(parsed) && parsed > 0 && parsed !== DEFAULT_FILTERS.size) {
+        setFilters(f => ({ ...f, size: parsed, page: 0 }));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // const setFilter = (key, val) => setFilters(f => ({ ...f, [key]: val, page: 0 }));
 
