@@ -1,156 +1,268 @@
-/* ── LoginBackground.css ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* ═══════════════════════════════════════════════════════════
+   ROOT
+═══════════════════════════════════════════════════════════ */
 .lb-root {
   position: fixed; inset: 0; z-index: 0;
   overflow: hidden;
-  transition: background 1s ease;
+  transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Canvas for particles */
 .lb-canvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.5s ease;
 }
 
-/* ── Scene crossfade wrapper ── */
+/* ═══════════════════════════════════════════════════════════
+   SCENE MANAGEMENT
+═══════════════════════════════════════════════════════════ */
 .lb-scene {
   position: absolute; inset: 0;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 .lb-scene.lb-visible { opacity: 1; }
 
-/* ══ SCENE A — POS data streams ══ */
+/* ═══════════════════════════════════════════════════════════
+   SCENE A — PREMIUM DATA STREAMS
+═══════════════════════════════════════════════════════════ */
 .lb-data-stream {
   position: absolute;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', monospace;
+  font-weight: 500;
   white-space: nowrap;
   pointer-events: none;
+  padding: 8px 16px;
+  background: rgba(0,210,255,0.06);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,210,255,0.15);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,210,255,0.1);
   animation: lbStreamFloat linear infinite;
 }
 @keyframes lbStreamFloat {
-  0%   { transform: translateY(0);    opacity: 0;   }
-  10%  { opacity: 1; }
-  85%  { opacity: 0.7; }
-  100% { transform: translateY(-80px); opacity: 0; }
+  0%   { transform: translateY(0); opacity: 0; filter: blur(4px); }
+  8%   { opacity: 0.9; filter: blur(0); }
+  90%  { opacity: 0.6; filter: blur(2px); }
+  100% { transform: translateY(-100px); opacity: 0; filter: blur(6px); }
 }
 
-/* Grid overlay for POS scene */
+/* Modern grid overlay */
 .lb-grid {
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(0,210,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,210,255,0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(rgba(0,210,255,0.04) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgba(0,210,255,0.04) 1.5px, transparent 1.5px);
+  background-size: 60px 60px;
+  animation: gridPulse 4s ease-in-out infinite alternate;
+}
+@keyframes gridPulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
 }
 
-/* Light theme grid */
 .lb-light .lb-grid {
   background-image:
-    linear-gradient(rgba(0,87,204,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,87,204,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(0,87,204,0.06) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgba(0,87,204,0.06) 1.5px, transparent 1.5px);
 }
 
-/* ══ SCENE B — Network switch ══ */
+/* ═══════════════════════════════════════════════════════════
+   SCENE B — NETWORK VISUALIZATION
+═══════════════════════════════════════════════════════════ */
 .lb-scene {
-  perspective: 1200px;
+  perspective: 1600px;
 }
+
 .lb-network-svg {
   position: absolute;
   top: 50%; left: 50%;
-  width: min(700px, 90vw);
-  height: min(500px, 80vh);
-  opacity: 0.55;
+  width: min(800px, 95vw);
+  height: min(550px, 85vh);
+  opacity: 0.7;
   transform-style: preserve-3d;
-  animation: lbNetworkDrift 16s ease-in-out infinite alternate;
+  animation: lbNetworkDrift 20s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 40px rgba(0,210,255,0.2));
 }
 @keyframes lbNetworkDrift {
-  from { transform: translate(-50%, -50%) rotateX(10deg) rotateY(-5deg) rotateZ(-1deg); }
-  to   { transform: translate(-50%, -50%) rotateX(15deg) rotateY(5deg)  rotateZ(1deg); }
+  from { 
+    transform: translate(-50%, -50%) rotateX(8deg) rotateY(-4deg) rotateZ(-0.5deg);
+  }
+  to { 
+    transform: translate(-50%, -50%) rotateX(12deg) rotateY(4deg) rotateZ(0.5deg);
+  }
 }
 
-/* Light theme dimmer network */
-.lb-light .lb-network-svg { opacity: 0.3; }
+.lb-light .lb-network-svg { 
+  opacity: 0.4;
+  filter: drop-shadow(0 0 30px rgba(0,87,204,0.15));
+}
 
-/* ══ Central orb glow ══ */
+/* ═══════════════════════════════════════════════════════════
+   AMBIENT ORB GLOWS
+═══════════════════════════════════════════════════════════ */
 .lb-orb {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
+  filter: blur(60px);
 }
 .lb-orb-a {
+  width: 800px; height: 800px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(0,87,255,0.15) 0%, transparent 70%);
+  animation: lbOrbPulse 5s ease-in-out infinite alternate;
+}
+.lb-orb-b {
   width: 600px; height: 600px;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(0,87,255,0.12) 0%, transparent 65%);
-  animation: lbOrbPulse 4s ease-in-out infinite alternate;
-}
-.lb-orb-b {
-  width: 400px; height: 400px;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(0,210,255,0.08) 0%, transparent 60%);
-  animation: lbOrbPulse 3s ease-in-out infinite alternate-reverse;
+  background: radial-gradient(circle, rgba(0,210,255,0.12) 0%, transparent 65%);
+  animation: lbOrbPulse 4s ease-in-out infinite alternate-reverse;
 }
 
-/* Light theme orbs — subtler */
 .lb-light .lb-orb-a {
-  background: radial-gradient(circle, rgba(0,87,204,0.06) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(0,87,204,0.08) 0%, transparent 70%);
 }
 .lb-light .lb-orb-b {
-  background: radial-gradient(circle, rgba(0,150,255,0.05) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(0,150,255,0.06) 0%, transparent 65%);
 }
 
 @keyframes lbOrbPulse {
-  from { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
-  to   { transform: translate(-50%,-50%) scale(1.15); opacity: 1;   }
+  from { 
+    transform: translate(-50%,-50%) scale(1);
+    opacity: 0.6;
+  }
+  to { 
+    transform: translate(-50%,-50%) scale(1.2);
+    opacity: 1;
+  }
 }
 
-/* ══ Corner HUD labels ══ */
+/* ═══════════════════════════════════════════════════════════
+   HUD CORNER LABELS
+═══════════════════════════════════════════════════════════ */
 .lb-hud {
   position: absolute;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1s ease;
-  animation: lbHudBlink 3s ease-in-out infinite alternate;
+  transition: opacity 1.2s ease;
+  padding: 12px 16px;
+  background: rgba(0,210,255,0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0,210,255,0.15);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,210,255,0.1);
 }
 .lb-visible .lb-hud { opacity: 1; }
 .lb-hud-label {
-  font-size: 9px; letter-spacing: 0.12em;
-  color: rgba(0,210,255,0.4);
+  font-size: 10px; 
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: rgba(0,210,255,0.5);
   text-transform: uppercase;
+  margin-bottom: 4px;
 }
 .lb-hud-value {
-  font-size: 13px; font-weight: 700;
-  color: rgba(0,210,255,0.7);
-  margin-top: 2px;
+  font-size: 16px; 
+  font-weight: 700;
+  color: rgba(0,210,255,0.85);
+  letter-spacing: 0.5px;
 }
 
-/* Light theme HUD */
-.lb-light .lb-hud-label { color: rgba(0,87,204,0.35); }
-.lb-light .lb-hud-value  { color: rgba(0,87,204,0.55); }
-
-@keyframes lbHudBlink {
-  from { opacity: 0.6; } to { opacity: 1; }
+.lb-light .lb-hud {
+  background: rgba(0,87,204,0.04);
+  border: 1px solid rgba(0,87,204,0.12);
 }
+.lb-light .lb-hud-label { color: rgba(0,87,204,0.4); }
+.lb-light .lb-hud-value  { color: rgba(0,87,204,0.7); }
 
-/* ══ Scene indicator dots ══ */
+/* ═══════════════════════════════════════════════════════════
+   SCENE INDICATOR DOTS
+═══════════════════════════════════════════════════════════ */
 .lb-dots {
-  position: absolute; bottom: 16px; left: 50%;
+  position: absolute; bottom: 24px; left: 50%;
   transform: translateX(-50%);
-  display: flex; gap: 6px; z-index: 2;
+  display: flex; gap: 10px; z-index: 2;
+  background: rgba(0,210,255,0.05);
+  backdrop-filter: blur(12px);
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid rgba(0,210,255,0.15);
 }
 .lb-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: rgba(0,210,255,0.25);
-  transition: background 0.4s, transform 0.4s;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(0,210,255,0.3);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+}
+.lb-dot::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .lb-dot.lb-dot-active {
-  background: rgba(0,210,255,0.7);
-  transform: scale(1.4);
+  background: rgba(0,210,255,0.9);
+  transform: scale(1.3);
+  box-shadow: 0 0 20px rgba(0,210,255,0.6);
 }
-.lb-light .lb-dot { background: rgba(0,87,204,0.2); }
-.lb-light .lb-dot.lb-dot-active { background: rgba(0,87,204,0.6); }
+.lb-dot.lb-dot-active::before {
+  border-color: rgba(0,210,255,0.4);
+  animation: dotRipple 1.5s ease-out infinite;
+}
+
+@keyframes dotRipple {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.lb-light .lb-dots {
+  background: rgba(0,87,204,0.04);
+  border: 1px solid rgba(0,87,204,0.12);
+}
+.lb-light .lb-dot { background: rgba(0,87,204,0.25); }
+.lb-light .lb-dot.lb-dot-active { 
+  background: rgba(0,87,204,0.8);
+  box-shadow: 0 0 16px rgba(0,87,204,0.5);
+}
+.lb-light .lb-dot.lb-dot-active::before {
+  border-color: rgba(0,87,204,0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .lb-data-stream {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+  .lb-hud {
+    padding: 8px 12px;
+  }
+  .lb-hud-value {
+    font-size: 14px;
+  }
+  .lb-orb-a {
+    width: 600px; height: 600px;
+  }
+  .lb-orb-b {
+    width: 450px; height: 450px;
+  }
+}
