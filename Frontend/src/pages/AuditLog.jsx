@@ -1,7 +1,21 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+// import { T } from "../constants/theme";
+// import { useApi } from "../hooks/useApi";
+// import { getAuditLogs } from "../api/history";
+// import {
+//   PageHeader,
+//   Card,
+//   Tag,
+//   LoadingBar,
+//   ErrorBanner,
+//   Th,
+//   Pagination
+// } from "../components/shared";
+import React, { useState, useEffect } from "react";
 import { T } from "../constants/theme";
 import { useApi } from "../hooks/useApi";
 import { getAuditLogs } from "../api/history";
+import { getConfigValue } from "../api/config";
 import {
   PageHeader,
   Card,
@@ -11,6 +25,8 @@ import {
   Th,
   Pagination
 } from "../components/shared";
+
+const DEFAULT_SIZE = 30;
 
 const formatAuditValue = (value) => {
   if (!value) return "—";
@@ -23,18 +39,42 @@ const formatAuditValue = (value) => {
 };
 
 export default function AuditLog() {
+  // const [page, setPage] = useState(0);
+  // const [filters, setFilters] = useState({});
+  // const [expanded, setExpanded] = useState(null);
+
+  // const { data, loading, error, refetch } = useApi(
+  //   () =>
+  //     getAuditLogs({
+  //       ...filters,
+  //       page,
+  //       size: 30
+  //     }),
+  //   [filters, page]
+  // );
   const [page, setPage] = useState(0);
+  const [size, setSize] = useState(DEFAULT_SIZE);
   const [filters, setFilters] = useState({});
   const [expanded, setExpanded] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const configured = await getConfigValue("pagination.default.size", DEFAULT_SIZE);
+      const parsed = parseInt(configured, 10);
+      if (!cancelled && !isNaN(parsed) && parsed > 0) setSize(parsed);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const { data, loading, error, refetch } = useApi(
     () =>
       getAuditLogs({
         ...filters,
         page,
-        size: 30
+        size
       }),
-    [filters, page]
+    [filters, page, size]
   );
 
   const updateFilter = (key, value) => {
