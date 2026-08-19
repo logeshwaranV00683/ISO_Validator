@@ -121,7 +121,7 @@ export default function Validator({ initialMsg = "" }) {
             <Label>Raw Message</Label>
             <textarea value={rawMsg} onChange={e => setRawMsg(e.target.value)} rows={3}
               style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"10px 12px", borderRadius:6, fontSize:11, fontFamily:"inherit", resize:"vertical", outline:"none" }}
-              placeholder="Paste raw ISO8583 hex message here…" />
+              placeholder="Paste raw ISO8583 hex/ascii message here…" />
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             <div>

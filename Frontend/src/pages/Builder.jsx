@@ -169,20 +169,43 @@ export default function Builder() {
   const { can } = useAuth();
   const navigate = useNavigate();
 
-  const [profileId, setProfileId] = useState(location.state?.profileId ?? null);
-  const [mti, setMti] = useState("0200");
-  const [fieldValues, setFieldValues] = useState({});
-  const [extraFields, setExtraFields] = useState({});
+   const BUILDER_STORAGE_KEY = "iso_builder_draft_v1";
+  const [saved] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(BUILDER_STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  });
+
+    const [profileId, setProfileId] = useState(saved.profileId ?? null);
+  const [mti, setMti] = useState(saved.mti ?? "0200");
+  const [fieldValues, setFieldValues] = useState(saved.fieldValues ?? {});
+  const [extraFields, setExtraFields] =  useState(saved.extraFields ?? {});
   const [flashDe, setFlashDe] = useState(null);
   const [showOptional, setShowOptional] = useState(true);
-  const [built, setBuilt] = useState(null);
+  const [built, setBuilt] =  useState(saved.built ?? null);
   const [building, setBuilding] = useState(false);
   const [buildError, setBuildError] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [outputFormat, setOutputFormat] = useState("HEX");
+  const [outputFormat, setOutputFormat] = useState(saved.outputFormat ?? "HEX");
 
   const fieldRefs = useRef({});
+    const resultRef = useRef(null);
+  const [resultFlash, setResultFlash] = useState(false);
 
+  useEffect(() => {
+    if (built && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      setResultFlash(true);
+      const t = setTimeout(() => setResultFlash(false), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [built]);
+ useEffect(() => {
+    try {
+      sessionStorage.setItem(BUILDER_STORAGE_KEY, JSON.stringify({
+        profileId, mti, fieldValues, extraFields, outputFormat, built
+      }));
+    } catch {}
+  }, [profileId, mti, fieldValues, extraFields, outputFormat, built]);
   const { data: profiles } = useApi(getProfiles);
 
   useEffect(() => {
@@ -204,8 +227,10 @@ export default function Builder() {
   );
   const mtiList = availableMtis || [];
 
-
-  useEffect(() => {
+  // Whenever the switch (profile) changes, make sure the selected MTI is one that
+  // actually exists for that switch — otherwise the dropdown would still offer the
+  // old switch's MTIs and field definitions would silently come back empty.
+ useEffect(() => {
     if (mtiList.length > 0 && !mtiList.includes(mti)) {
       setMti(mtiList[0]);
     }
@@ -276,6 +301,14 @@ export default function Builder() {
     } finally { setBuilding(false); }
   };
 
+  // Scroll the "Generated Raw Message" card into view once a build result lands,
+  // so the user doesn't have to manually scroll down to see it.
+  useEffect(() => {
+    if (built && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [built]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <PageHeader title="Message Builder" sub="Construct well-formed Raw messages — fields driven dynamically from Field Definitions DB" />
@@ -300,8 +333,19 @@ export default function Builder() {
           </div>
           <div>
             <Label>MTI</Label>
-            <MtiInput value={mti} onChange={(code) => { setMti(code); resetAll(); }} mtis={mtiList} />
-          </div>
+            <select value={mti || ""} onChange={e => { setMti(e.target.value); resetAll(); }}
+              style={{ width: "100%", background: T.surface2, border: `1px solid ${T.border}`, color: T.text, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", fontSize: 12, outline: "none", letterSpacing: 1 }}>
+              {mtiList.length === 0 && <option value="">No MTIs configured for this switch</option>}
+              {mtiList.map(code => (
+                <option key={code} value={code}>{code}{MTI_SHORT_LABELS[code] ? ` — ${MTI_SHORT_LABELS[code]}` : ""}</option>
+              ))}
+            </select>
+            {MTI_SHORT_LABELS[mti] && (
+              <div style={{ fontSize: 9.5, color: T.accent, marginTop: 3 }}>
+                ✓ {MTI_DESCRIPTIONS[mti] || MTI_SHORT_LABELS[mti]}
+              </div>
+            )}
+         </div>
         </div>
       </Card>
 
@@ -417,9 +461,13 @@ export default function Builder() {
           </div>
 
           {/* Summary + actions column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignSelf: "stretch" }}>
-            <Card title="Live Field Summary" style={{ flex: 1 }}>
-              {/* Table header */}
+          {/* alignSelf: "start" — without this, CSS Grid's default stretch behavior forces
+              this column to match the (usually taller) left column's height, and the
+              "Live Field Summary" card would stretch to fill that leftover space,
+              leaving a large empty gap below the last listed DE row. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignSelf: "start" }}>
+            <Card title="Live Field Summary">
+             {/* Table header */}
               <div style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, padding: "0 0 5px 0", borderBottom: `1px solid ${T.border}55`, marginBottom: 4 }}>
                 <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>DE</span>
                 <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>Field Name</span>
@@ -462,7 +510,7 @@ export default function Builder() {
             </Card>
 
             {buildError && <div style={{ background: T.red + "12", border: `1px solid ${T.red}44`, borderRadius: 5, padding: "8px 12px", fontSize: 11, color: T.red }}>✕ {buildError}</div>}
-            <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <Btn primary onClick={handleBuild} disabled={building || !can.build} style={{ width: "100%", textAlign: "center" }}>
                 {building ? "Building…" : "⊞ Build Raw Message"}
               </Btn>
@@ -484,8 +532,20 @@ export default function Builder() {
 
       {/* Result */}
       {built && (
+         <div
+          ref={resultRef}
+          style={{
+            borderRadius: 8,
+            transition: "box-shadow 0.4s ease, background-color 0.4s ease",
+            boxShadow: resultFlash ? `0 0 0 3px ${T.green}88, 0 0 24px ${T.green}55` : "0 0 0 0px transparent",
+            backgroundColor: resultFlash ? `${T.green}0d` : "transparent",
+          }}
+        >
         <Card title="Generated Raw Message" badge={<Tag color={T.green} small>READY</Tag>}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+               <div style={{ background: T.bg, border: `1px solid ${T.green}44`, borderRadius: 6, padding: "12px 14px", fontSize: 11, wordBreak: "break-all", lineHeight: 2.2, color: T.text}}>
+              {built.rawMessage}
+            </div>
             <div style={{ display: "flex", gap: 14, fontSize: 10, flexWrap: "wrap" }}>
               <span>MTI: <span style={{ color: T.yellow }}>{mti}</span> · {MTI_DESCRIPTIONS[mti] || mti}</span>
               <span>
@@ -519,6 +579,7 @@ export default function Builder() {
             </div>
           </div>
         </Card>
+        </div>
       )}
     </div>
   );
