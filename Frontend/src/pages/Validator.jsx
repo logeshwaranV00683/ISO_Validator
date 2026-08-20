@@ -1,45 +1,669 @@
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
+// import { useLocation } from "react-router-dom";
+// import { T, SEV } from "../constants/theme";
+// import { useAuth } from "../context/AuthContext";
+// import { useApi } from "../hooks/useApi";
+// import { getProfiles } from "../api/profiles";
+// import { validateMessage, rerunValidation, askAiChat } from "../api/validation";
+// import { suggestSwitch } from "../api/brd";
+// import { PageHeader, Card, RoleBanner, LoadingBar, ErrorBanner,
+//          Btn, SmBtn, Tag, Toggle, Label, Row, Th } from "../components/shared";
+
+// // Follow-up chatbot embedded in the AI Explanation card. Grounded in the
+// // validation's own context (MTI, errors, parsed fields, original
+// // explanation) so questions like "why is DE48 required here?" or
+// // "what would fix this?" get answered specifically about this message,
+// // not as a generic ISO 8583 Q&A. Conversation is local to this card and
+// // resets whenever a new validation runs (see resetChat() below).
+// function AiChatBox({ mti, profileName, errors, parsedFields, originalExplanation }) {
+//   const [messages, setMessages] = useState([]); // [{ role: "user"|"assistant", text }]
+//   const [input, setInput] = useState("");
+//   const [asking, setAsking] = useState(false);
+//   const [chatError, setChatError] = useState(null);
+
+//   const handleAsk = async () => {
+//     const question = input.trim();
+//     if (!question || asking) return;
+
+//     const nextMessages = [...messages, { role: "user", text: question }];
+//     setMessages(nextMessages);
+//     setInput("");
+//     setChatError(null);
+//     setAsking(true);
+
+//     try {
+//       // Backend expects parsedFields as a { deNumber: value } map; the
+//       // validator result carries it as an array — flatten it here.
+//       const parsedFieldsMap = Array.isArray(parsedFields)
+//         ? Object.fromEntries(parsedFields.map(f => [f.deNumber, f.displayValue ?? f.rawValue]))
+//         : (parsedFields || {});
+
+//       const answer = await askAiChat({
+//         mti,
+//         profileName,
+//         errors: (errors || []).map(e => ({
+//           deNumber: e.deNumber,
+//           fieldName: e.fieldName,
+//           severity: e.severity,
+//           errorMessage: e.issueDescription,
+//         })),
+//         parsedFields: parsedFieldsMap,
+//         originalExplanation,
+//         history: nextMessages.map(m => ({ role: m.role, text: m.text })),
+//         question,
+//       });
+//       setMessages(m => [...m, { role: "assistant", text: answer || "I couldn't generate a response — please try again." }]);
+//     } catch (err) {
+//       setChatError(err?.response?.data?.message || err.message || "Failed to get a response");
+//       // Roll back the optimistic user message's "pending" feel isn't needed —
+//       // keep it visible, just surface the error below the thread.
+//     } finally {
+//       setAsking(false);
+//     }
+//   };
+
+//   const handleKeyDown = (e) => {
+//     if (e.key === "Enter" && !e.shiftKey) {
+//       e.preventDefault();
+//       handleAsk();
+//     }
+//   };
+
+//   return (
+//     <div style={{ marginTop: 12, borderTop: `1px solid ${T.border}`, paddingTop: 12 }}>
+//       <div style={{ fontSize: 11, fontWeight: 700, color: T.muted, marginBottom: 8 }}>
+//         💬 Ask a follow-up question
+//       </div>
+
+//       {messages.length > 0 && (
+//         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10, maxHeight: 260, overflowY: "auto" }}>
+//           {messages.map((m, i) => (
+//             <div key={i} style={{
+//               alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+//               maxWidth: "85%",
+//               background: m.role === "user" ? T.accent + "1a" : T.surface2,
+//               border: `1px solid ${m.role === "user" ? T.accent + "44" : T.border}`,
+//               borderRadius: 8, padding: "8px 10px", fontSize: 11.5, lineHeight: 1.6, color: T.text,
+//               whiteSpace: "pre-wrap",
+//             }}>
+//               {m.text}
+//             </div>
+//           ))}
+//           {asking && (
+//             <div style={{ alignSelf: "flex-start" }}>
+//               <LoadingBar text="Thinking…" />
+//             </div>
+//           )}
+//         </div>
+//       )}
+
+//       {chatError && <div style={{ marginBottom: 8 }}><ErrorBanner message={chatError} /></div>}
+
+//       <div style={{ display: "flex", gap: 8 }}>
+//         <textarea
+//           value={input}
+//           onChange={e => setInput(e.target.value)}
+//           onKeyDown={handleKeyDown}
+//           placeholder="e.g. Why is DE48 flagged? What would fix this error?"
+//           rows={2}
+//           style={{
+//             flex: 1, resize: "vertical", background: T.bg, border: `1px solid ${T.border}`,
+//             color: T.text, borderRadius: 6, padding: "8px 10px", fontFamily: "inherit", fontSize: 11.5, outline: "none",
+//           }}
+//         />
+//         <Btn primary onClick={handleAsk} disabled={!input.trim() || asking} style={{ alignSelf: "flex-end" }}>
+//           {asking ? "Asking…" : "Ask"}
+//         </Btn>
+//       </div>
+//     </div>
+//   );
+// }
+
+// export default function Validator({ initialMsg = "" }) {
+//   const location = useLocation();
+//   const { can } = useAuth();
+//   const { data: profiles } = useApi(getProfiles);
+
+//   const [profileId, setProfileId] = useState(null);
+//   const [rawMsg, setRawMsg] = useState(
+//   location.state?.rawMsg || initialMsg || ""
+// );
+//   const [enableAi, setEnableAi]   = useState(false);
+//   const [sevFilter, setSevFilter] = useState("ALL");
+//   const [result, setResult]       = useState(null);
+//   const [loading, setLoading]     = useState(false);
+//   const [error, setError]         = useState(null);
+//   const [bitmapExt, setBitmapExt] = useState(false);
+//   const [expanded, setExpanded]   = useState({});
+//   const [copied, setCopied]       = useState(false);
+
+//   // BRD AI Feature: switch-profile suggestions based on raw message content
+//   const [suggestions, setSuggestions] = useState([]);
+//   const [suggesting, setSuggesting]   = useState(false);
+
+//   useEffect(() => {
+//   if (location.state?.rawMsg) {
+//     setRawMsg(location.state.rawMsg);
+//     setResult(null);
+//     setError(null);
+//   }
+// }, [location.state]);
+
+//   // Set default profile on load
+//   useEffect(() => {
+//     if (profiles?.length && !profileId) {
+//       const def = profiles.find(p => p.isDefault) || profiles[0];
+//       setProfileId(def.id);
+//     }
+//   }, [profiles, profileId]);
+
+//   // BRD AI Feature: debounced switch suggestion as the user types the raw message
+//   useEffect(() => {
+//     if (!rawMsg || rawMsg.trim().length <= 8) {
+//       setSuggestions([]);
+//       return;
+//     }
+//     const handle = setTimeout(async () => {
+//       setSuggesting(true);
+//       try {
+//         const res = await suggestSwitch(rawMsg.trim());
+//         setSuggestions(res?.suggestions || []);
+//       } catch (err) {
+//         // Suggestion failure must never affect the validate button or UX.
+//         setSuggestions([]);
+//       } finally {
+//         setSuggesting(false);
+//       }
+//     }, 800);
+//     return () => clearTimeout(handle);
+//   }, [rawMsg]);
+
+//   const profile = profiles?.find(p => p.id === profileId);
+
+//   const validate = async () => {
+//     if (!profileId || !rawMsg.trim()) return;
+//     setLoading(true); setError(null); setResult(null);
+//     try {
+//       setResult(await validateMessage(profileId, rawMsg.trim(), enableAi));
+//     } catch (err) {
+//       const raw = err?.response?.data?.message
+//               || err?.response?.data?.error?.message
+//               || err.message
+//               || "Validation failed";
+//       // Extract inner message from Feign error: [...][{"message":"..."}]
+//       const innerMatch = raw.match(/\[\{"success":false,"message":"([^"]+)"/);
+//       setError(innerMatch ? innerMatch[1] : raw);
+//     } finally { setLoading(false); }
+//   };
+
+//   const rerun = async () => {
+//     if (!result?.runReference) return;
+//     setLoading(true); setError(null);
+//     try { setResult(await rerunValidation(result.runReference)); }
+//     catch (err) {
+//       const raw = err?.response?.data?.message
+//               || err?.response?.data?.error?.message
+//               || err.message;
+//       const innerMatch = raw?.match(/\[\{"success":false,"message":"([^"]+)"/);
+//       setError(innerMatch ? innerMatch[1] : raw);
+//     }
+//     finally { setLoading(false); }
+//   };
+
+//   const filtered = result
+//     ? (sevFilter === "ALL" ? result.errors : result.errors.filter(e => e.severity === sevFilter))
+//     : [];
+
+//   const STATUS_COLOR = { PASSED:T.green, FAILED:T.red, WARNED:T.yellow, PARSE_ERROR:T.red };
+
+//   return (
+//     <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+//       <PageHeader title="Message Validator" sub="Parse · Validate · AI-explain Raw messages in one click" />
+//       {!can.validate && <RoleBanner roleNeeded="ANALYST or ADMIN" action="validate messages" />}
+
+//       {/* Input */}
+//       <Card>
+//         <div style={{ display:"grid", gridTemplateColumns:"1fr 240px", gap:16 }}>
+//           <div>
+//             <Label>Raw Message</Label>
+//             <textarea value={rawMsg} onChange={e => setRawMsg(e.target.value)} rows={3}
+//               style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"10px 12px", borderRadius:6, fontSize:11, fontFamily:"inherit", resize:"vertical", outline:"none" }}
+//               placeholder="Paste raw ISO8583 hex message here…" />
+//           </div>
+//           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+//             <div>
+//               <Label>Message Profile</Label>
+//               <select value={profileId||""} onChange={e => setProfileId(+e.target.value)}
+//                 style={{ width:"100%", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" }}>
+//                 {!profiles && <option>Loading…</option>}
+//                 {profiles?.map(p => (
+//                   <option key={p.id} value={p.id}>{p.profileName}{p.isDefault?" (default)":""}</option>
+//                 ))}
+//               </select>
+//               {profile && (
+//                 <div style={{ fontSize:10, color:T.muted, marginTop:4, display:"flex", gap:6, alignItems:"center" }}>
+//                   <span>{profile.formatName}</span>
+//                 </div>
+//               )}
+//             </div>
+//             <Toggle label="Enable AI Explanation" active={enableAi} onClick={() => setEnableAi(x=>!x)} />
+//             <div style={{ display:"flex", gap:8 }}>
+//               <Btn primary onClick={validate} disabled={loading||!can.validate||!profileId} style={{ flex:1 }}>
+//                 {loading?"Processing…":"▶ VALIDATE"}
+//               </Btn>
+//               <Btn onClick={() => { setRawMsg(""); setResult(null); setError(null); }}>✕</Btn>
+//             </div>
+//           </div>
+//         </div>
+//       </Card>
+
+//       {/* BRD AI Feature: switch suggestion banner */}
+//       {suggestions.length > 0 && (
+//         <div style={{ display:"flex", alignItems:"center", gap:10, background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"8px 14px", flexWrap:"wrap" }}>
+//           <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>◈ AI suggests:</span>
+//           {suggestions.slice(0, 3).map((s, i) => (
+//             <button key={i} onClick={() => setProfileId(s.profileId)}
+//               style={{ background:T.accent+"18", border:`1px solid ${T.accent}44`, color:T.accent, padding:"4px 10px", borderRadius:20, fontFamily:"inherit", fontSize:10.5, cursor:"pointer", fontWeight:600 }}>
+//               {s.profileName} ({Math.round((s.confidence||0)*100)}%)
+//             </button>
+//           ))}
+//           <div style={{ flex:1 }} />
+//           <SmBtn onClick={() => setSuggestions([])}>✕</SmBtn>
+//         </div>
+//       )}
+
+//       {loading && (
+//         <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"16px 20px", textAlign:"center" }}>
+//           <div style={{ fontSize:12, color:T.muted, marginBottom:8 }}>Parsing → Validating{enableAi?" → AI Explanation":""}…</div>
+//           <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
+//             {["1. Parsing","2. Validating",...(enableAi?["3. AI Explain"]:[])].map(s => (
+//               <span key={s} style={{ padding:"4px 12px", borderRadius:20, fontSize:11, background:T.accent+"18", color:T.accent, border:`1px solid ${T.accent}44` }}>{s}</span>
+//             ))}
+//           </div>
+//         </div>
+//       )}
+
+//       {error && <ErrorBanner message={error} onRetry={validate} />}
+
+//       {result && !loading && (<>
+//         {/* Meta bar */}
+//         <div style={{ display:"flex", gap:10, alignItems:"center", background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"8px 14px", fontSize:11, flexWrap:"wrap" }}>
+//           <span style={{ color:T.muted }}>Run: <span style={{ color:T.accent }}>{result.runReference}</span></span>
+//           <span style={{ color:T.faint }}>|</span>
+//           {[["Parse",result.timing?.parseDurationMs,T.accent],["Validate",result.timing?.validationDurationMs,T.green],...(result.ai?.enabled?[["AI",result.timing?.aiDurationMs,T.purple]]:[])].map(([l,v,c]) => (
+//             <span key={l} style={{ color:T.muted }}>{l}: <span style={{ color:c, fontWeight:700 }}>{v}ms</span></span>
+//           ))}
+//           <span style={{ color:T.faint }}>| Total: <span style={{ color:T.text, fontWeight:700 }}>{result.timing?.totalDurationMs}ms</span></span>
+//           <div style={{ flex:1 }} />
+//           <Tag color={STATUS_COLOR[result.status]||T.muted}>{result.status}</Tag>
+//           <SmBtn onClick={() => { navigator.clipboard?.writeText(JSON.stringify(result,null,2)); setCopied(true); setTimeout(()=>setCopied(false),1500); }}>
+//             {copied?"✓ Copied":"⎘ Copy JSON"}
+//           </SmBtn>
+//         </div>
+
+//         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, alignItems:"start" }}>
+//           {/* Left */}
+//           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+//             {/* Parsed Fields */}
+//             <Card title="Parsed Fields" badge={`${result.parsedFields?.filter(f=>f.present).length}/${result.parsedFields?.length} present`}>
+//               <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+//                 <thead><tr style={{ borderBottom:`1px solid ${T.border}` }}>{["DE","Field Name","Value","Status","Display"].map(h=><Th key={h}>{h}</Th>)}</tr></thead>
+//                 <tbody>
+//                   {result.parsedFields?.map(f => (
+//                     <tr key={f.deNumber} style={{ borderBottom:`1px solid ${T.border}22` }}>
+//                       <td style={{ padding:"6px 8px", color:T.accent, fontWeight:700 }}>{f.deNumber}</td>
+//                       <td style={{ padding:"6px 8px", color:T.muted, fontSize:10 }}>{f.fieldName}</td>
+//                       <td style={{ padding:"6px 8px", color:f.present?T.text:T.faint}}>{f.rawValue||"—"}</td>
+//                       <td style={{ padding:"6px 8px" }}>
+//                         <span style={{ fontSize:9, padding:"2px 6px", borderRadius:3, background:f.present?T.green+"22":T.red+"22", color:f.present?T.green:T.red }}>
+//                           {f.present?"PRESENT":"ABSENT"}
+//                         </span>
+//                       </td>
+//                       <td style={{ padding:"6px 8px", color:T.muted, fontSize:10 }}>{f.displayValue}</td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </Card>
+
+//             {/* Bitmap — expands to fill remaining left column space */}
+//             <Card title={bitmapExt?"Bitmap — Extended (128-bit)":"Bitmap — Primary (64-bit)"}
+//               badge={`${result.bitmap?.bitsSet?.length||0} bits ON`}
+//               extra={<Toggle label="Extended" active={bitmapExt} onClick={()=>setBitmapExt(x=>!x)} />}
+//               style={{ flex:1 }}>
+//               <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:4 }}>
+//                 {Array.from({length:bitmapExt?128:64},(_,i) => {
+//                   const on = result.bitmap?.bitsSet?.includes(i+1);
+//                   return <div key={i} title={`DE${i+1}`} style={{ padding:"7px 0", textAlign:"center", borderRadius:4, background:on?T.accent+"22":T.surface2, border:`1px solid ${on?T.accent+"55":T.border}`, color:on?T.accent:T.faint, fontSize:9, fontWeight: on?700:400 }}>{i+1}</div>;
+//                 })}
+//               </div>
+//               <div style={{ marginTop:10, fontSize:10, color:T.muted }}>
+//                 Primary: <span style={{ color:T.accent }}>{result.bitmap?.primary}</span>
+//                 {result.bitmap?.extended && <> · Extended: <span style={{ color:T.purple }}>{result.bitmap.extended}</span></>}
+//               </div>
+//             </Card>
+//           </div>
+
+//           {/* Right */}
+//           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+//             {/* Errors */}
+//             <Card title="Validation Errors"
+//               badge={<span style={{ color:result.errors?.length>0?T.red:T.green }}>{result.errors?.length} issue{result.errors?.length!==1?"s":""}</span>}
+//               extra={
+//                 <div style={{ display:"flex", gap:4 }}>
+//                   {["ALL","CRITICAL","WARNING","INFO"].map(s => (
+//                     <button key={s} onClick={()=>setSevFilter(s)} style={{ background:sevFilter===s?(SEV[s]?.text||T.accent)+"22":"transparent", border:`1px solid ${sevFilter===s?(SEV[s]?.text||T.accent)+"66":T.border}`, color:sevFilter===s?(SEV[s]?.text||T.accent):T.faint, padding:"2px 7px", borderRadius:4, fontSize:9, fontFamily:"inherit", cursor:"pointer" }}>{s}</button>
+//                   ))}
+//                 </div>
+//               }>
+//               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+//                 {filtered.map((e,i) => {
+//                   const sc = SEV[e.severity]||SEV.INFO;
+//                   return (
+//                     <div key={i} style={{ background:sc.bg, border:`1px solid ${sc.border}`, borderRadius:6, padding:"10px 12px" }}>
+//                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+//                         <span style={{ color:sc.text, fontWeight:700 }}>{e.deNumber}</span>
+//                         <Tag color={sc.text} small>{e.severity}</Tag>
+//                         <span style={{ fontSize:10, color:T.muted, fontStyle:"italic" }}>{e.fieldName}</span>
+//                       </div>
+//                       <div style={{ fontSize:11, color:T.text, marginBottom:3 }}>{e.issueDescription}</div>
+//                       <div style={{ fontSize:10, color:T.faint }}>Rule: {e.ruleSnapshot}</div>
+//                     </div>
+//                   );
+//                 })}
+//                 {filtered.length===0 && (
+//                     result.message
+//                       ? <div style={{ background:T.red+"12", border:`1px solid ${T.red}33`, borderRadius:6, padding:"10px 12px", fontSize:11 }}>
+//                           <span style={{ color:T.red, fontWeight:700 }}>⚠ Parse Error: </span>
+//                           <span style={{ color:T.text, fontFamily:"monospace" }}>{result.message}</span>
+//                         </div>
+//                       : <div style={{ textAlign:"center", color:T.muted, fontSize:12, padding:"12px 0" }}>No issues{sevFilter!=="ALL"?` for ${sevFilter}`:""}</div>
+//                   )}
+//               </div>
+//             </Card>
+
+//             {/* AI */}
+//             {result.ai?.enabled && (
+//               result.ai?.skipped
+//                 ? <Card title="AI Explanation" badge={<span style={{ color:T.yellow }}>Skipped</span>}>
+//                     <div style={{ textAlign:"center", padding:"12px 0", fontSize:11, color:T.muted }}>
+//                       {result.ai.skipReason === "AI_UNAVAILABLE" && "⚠ AI service is currently unavailable"}
+//                       {result.ai.skipReason === "NO_ERRORS"      && "✓ No errors found — AI explanation skipped"}
+//                       {result.ai.skipReason === "PARSE_ERROR"    && "✗ Message could not be parsed — AI skipped"}
+//                     </div>
+//                   </Card>
+//                 : result.ai?.explanation && (
+//                 <Card title="AI Explanation" badge={<span style={{ color:T.purple }}>{result.ai.durationMs}ms</span>}>
+//                   <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+//                     {result.errors?.map((err, i) => {
+//                       const sc = SEV[err.severity] || SEV.INFO;
+//                       const expLines = result.ai.explanation.split(/\r?\n/).filter(Boolean);
+//                       const deLineIdx = expLines.findIndex(l => l.includes(err.deNumber));
+//                       const nextDeIdx = expLines.findIndex((l, idx) => idx > deLineIdx && /DE\d+/i.test(l) && !l.includes(err.deNumber));
+//                       const deChunk = deLineIdx >= 0
+//                         ? expLines.slice(deLineIdx, nextDeIdx > deLineIdx ? nextDeIdx : deLineIdx + 4)
+//                             .join(" ")
+//                             .replace(/^[-*\d.]\s*/, "")
+//                             .replace(/\*\*(.*?)\*\*/g, "$1")
+//                             .trim()
+//                         : err.issueDescription;
+
+//                       return (
+//                         <div key={i} style={{ background:sc.bg, border:`1px solid ${sc.border}`, borderRadius:6, overflow:"hidden" }}>
+//                           <button onClick={() => setExpanded(x => ({...x, [i]: !x[i]}))}
+//                             style={{ width:"100%", background:"none", border:"none", padding:"10px 12px", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between", alignItems:"center", fontFamily:"inherit" }}>
+//                             <span style={{ fontSize:11, fontWeight:700, color:sc.text }}>{err.deNumber} — {err.fieldName}</span>
+//                             <span style={{ color:T.faint, fontSize:10 }}>{expanded[i] === false ? "▼" : "▲"}</span>
+//                           </button>
+//                           {expanded[i] !== false && (
+//                             <div style={{ padding:"0 12px 12px" }}>
+//                               <div style={{ fontSize:11, lineHeight:1.8, color:T.muted, marginBottom:6 }}>
+//                                 {deChunk}
+//                               </div>
+//                               <div style={{ background:T.green+"10", borderLeft:`2px solid ${T.green}`, borderRadius:4, padding:"6px 10px", fontSize:11, color:T.green }}>
+//                                 ⚠ {err.issueDescription}
+//                               </div>
+//                             </div>
+//                           )}
+//                         </div>
+//                       );
+//                     })}
+//                   </div>
+
+//                   <AiChatBox
+//                     key={result.runReference}
+//                     mti={result.mti}
+//                     profileName={profile?.profileName}
+//                     errors={result.errors}
+//                     parsedFields={result.parsedFields}
+//                     originalExplanation={result.ai.explanation}
+//                   />
+//                 </Card>
+//               )
+//             )}
+
+
+//             {/* Actions */}
+//             <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+//               <Tag color={T.red}>{result.summary?.criticalCount} CRITICAL</Tag>
+//               <Tag color={T.yellow}>{result.summary?.warningCount} WARNING</Tag>
+//               <Tag color={T.blue}>{result.summary?.infoCount} INFO</Tag>
+//               <div style={{ flex:1 }} />
+//               {can.validate && <SmBtn onClick={rerun}>↺ Re-run</SmBtn>}
+//               {/* <SmBtn>⬇ Export JSON</SmBtn> */}
+//             </div>
+//           </div>
+//         </div>
+//       </>)}
+
+//       {!result && !loading && (
+//         <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", color:T.faint, fontSize:13, gap:8, padding:"40px 0" }}>
+//           <span style={{ fontSize:28 }}>⬡</span>
+//           <span>Paste a message, select a profile, and click VALIDATE</span>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+
+
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { T, SEV } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
 import { getProfiles } from "../api/profiles";
-import { validateMessage, rerunValidation } from "../api/validation";
+import { validateMessage, rerunValidation, askAiChat } from "../api/validation";
 import { suggestSwitch } from "../api/brd";
 import { PageHeader, Card, RoleBanner, LoadingBar, ErrorBanner,
          Btn, SmBtn, Tag, Toggle, Label, Row, Th } from "../components/shared";
 
+// Follow-up chatbot embedded in the AI Explanation card. Grounded in the
+// validation's own context (MTI, errors, parsed fields, original
+// explanation) so questions like "why is DE48 required here?" or
+// "what would fix this?" get answered specifically about this message,
+// not as a generic ISO 8583 Q&A. Conversation is local to this card and
+// resets whenever a new validation runs (see resetChat() below).
+function AiChatBox({ mti, profileName, errors, parsedFields, originalExplanation }) {
+  const [messages, setMessages] = useState([]); // [{ role: "user"|"assistant", text }]
+  const [input, setInput] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [chatError, setChatError] = useState(null);
+  const threadEndRef = useRef(null);
+
+  // Auto-scroll to the latest message (or the "Thinking…" indicator)
+  // whenever the thread changes — covers both sending a question and
+  // receiving the answer, so the user never has to scroll manually.
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, asking]);
+
+  // Ollama's raw output tends to carry markdown-ish artifacts (**bold**,
+  // stray leading dashes/asterisks) that read fine in a doc but look
+  // messy in a chat bubble. Strip that so answers read like plain,
+  // friendly sentences instead of raw model formatting.
+  const cleanAnswer = (text) => {
+    if (!text) return text;
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "$1")   // **bold** -> bold
+      .replace(/^[\s]*[-*]\s+/gm, "• ")  // stray -/* bullets -> •
+      .replace(/\n{3,}/g, "\n\n")        // collapse excessive blank lines
+      .trim();
+  };
+
+  const handleAsk = async () => {
+    const question = input.trim();
+    if (!question || asking) return;
+
+    const nextMessages = [...messages, { role: "user", text: question }];
+    setMessages(nextMessages);
+    setInput("");
+    setChatError(null);
+    setAsking(true);
+
+    try {
+      // Backend expects parsedFields as a { deNumber: value } map; the
+      // validator result carries it as an array — flatten it here.
+      const parsedFieldsMap = Array.isArray(parsedFields)
+        ? Object.fromEntries(parsedFields.map(f => [f.deNumber, f.displayValue ?? f.rawValue]))
+        : (parsedFields || {});
+
+      const answer = await askAiChat({
+        mti,
+        profileName,
+        errors: (errors || []).map(e => ({
+          deNumber: e.deNumber,
+          fieldName: e.fieldName,
+          severity: e.severity,
+          errorMessage: e.issueDescription,
+        })),
+        parsedFields: parsedFieldsMap,
+        originalExplanation,
+        history: nextMessages.map(m => ({ role: m.role, text: m.text })),
+        question,
+      });
+      setMessages(m => [...m, { role: "assistant", text: cleanAnswer(answer) || "I couldn't generate a response — please try again." }]);
+    } catch (err) {
+      setChatError(err?.response?.data?.message || err.message || "Failed to get a response");
+      // Roll back the optimistic user message's "pending" feel isn't needed —
+      // keep it visible, just surface the error below the thread.
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleAsk();
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 12, borderTop: `1px solid ${T.border}`, paddingTop: 12 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: T.muted, marginBottom: 8 }}>
+        💬 Ask a follow-up question
+      </div>
+
+      {messages.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10, maxHeight: 260, overflowY: "auto", scrollBehavior: "smooth" }}>
+          {messages.map((m, i) => (
+            <div key={i} style={{
+              alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+              maxWidth: "85%",
+              background: m.role === "user" ? T.accent + "1a" : T.surface2,
+              border: `1px solid ${m.role === "user" ? T.accent + "44" : T.border}`,
+              borderRadius: 8, padding: "8px 10px", fontSize: 11.5, lineHeight: 1.6, color: T.text,
+              whiteSpace: "pre-wrap",
+            }}>
+              {m.text}
+            </div>
+          ))}
+          {asking && (
+            <div style={{ alignSelf: "flex-start" }}>
+              <LoadingBar text="Thinking…" />
+            </div>
+          )}
+          <div ref={threadEndRef} />
+        </div>
+      )}
+
+      {chatError && <div style={{ marginBottom: 8 }}><ErrorBanner message={chatError} /></div>}
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="e.g. Why is DE48 flagged? What would fix this error?"
+          rows={2}
+          style={{
+            flex: 1, resize: "vertical", background: T.bg, border: `1px solid ${T.border}`,
+            color: T.text, borderRadius: 6, padding: "8px 10px", fontFamily: "inherit", fontSize: 11.5, outline: "none",
+          }}
+        />
+        <Btn primary onClick={handleAsk} disabled={!input.trim() || asking} style={{ alignSelf: "flex-end" }}>
+          {asking ? "Asking…" : "Ask"}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+// ── sessionStorage persistence ──────────────────────────────────────────────
+// Mirrors Builder's draft persistence — protects Validator state (raw
+// message, profile, filters, and last result) across navigation away and
 export default function Validator({ initialMsg = "" }) {
   const location = useLocation();
   const { can } = useAuth();
   const { data: profiles } = useApi(getProfiles);
 
-  const [profileId, setProfileId] = useState(null);
+  const VALIDATOR_STORAGE_KEY = "iso_validator_draft_v1";
+  const [saved] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(VALIDATOR_STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  });
+
+  const [profileId, setProfileId] = useState(location.state?.profileId ?? saved.profileId ?? null);
   const [rawMsg, setRawMsg] = useState(
-  location.state?.rawMsg || initialMsg || ""
-);
-  const [enableAi, setEnableAi]   = useState(false);
-  const [sevFilter, setSevFilter] = useState("ALL");
-  const [result, setResult]       = useState(null);
+    location.state?.rawMsg || saved.rawMsg || initialMsg || ""
+  );
+  const [enableAi, setEnableAi]   = useState(saved.enableAi ?? false);
+  const [sevFilter, setSevFilter] = useState(saved.sevFilter ?? "ALL");
+  const [result, setResult]       = useState(saved.result ?? null);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState(null);
-  const [bitmapExt, setBitmapExt] = useState(false);
-  const [expanded, setExpanded]   = useState({});
+  const [bitmapExt, setBitmapExt] = useState(saved.bitmapExt ?? false);
+  const [expanded, setExpanded]   = useState(saved.expanded ?? {});
   const [copied, setCopied]       = useState(false);
 
   // BRD AI Feature: switch-profile suggestions based on raw message content
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState(saved.suggestions ?? []);
   const [suggesting, setSuggesting]   = useState(false);
 
+  // Persist on every relevant change so returning to this page (e.g. after
+  // the chatbot navigates elsewhere and the user comes back) restores it.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(VALIDATOR_STORAGE_KEY, JSON.stringify({
+        profileId, rawMsg, enableAi, sevFilter, result, bitmapExt, expanded, suggestions
+      }));
+    } catch {}
+  }, [profileId, rawMsg, enableAi, sevFilter, result, bitmapExt, expanded, suggestions]);
+
+  // Builder → Validator handoff ("Send to Validator") always wins over a
+  // restored draft, since it represents a fresh, intentional action —
+  // both rawMsg and profileId come from router state, set above at init,
+  // and this effect additionally clears any stale result when a new
+  // message arrives via navigation after the page was already mounted.
   useEffect(() => {
   if (location.state?.rawMsg) {
     setRawMsg(location.state.rawMsg);
+    if (location.state?.profileId) setProfileId(location.state.profileId);
     setResult(null);
     setError(null);
   }
-   if (location.state?.profileId != null) {
-    setProfileId(location.state.profileId);
-   }
 }, [location.state]);
 
   // Set default profile on load
@@ -119,9 +743,9 @@ export default function Validator({ initialMsg = "" }) {
         <div style={{ display:"grid", gridTemplateColumns:"1fr 240px", gap:16 }}>
           <div>
             <Label>Raw Message</Label>
-            <textarea value={rawMsg} onChange={e => setRawMsg(e.target.value)} rows={3}
+            <textarea  className="raw-message-input" value={rawMsg} onChange={e => setRawMsg(e.target.value)} rows={3}
               style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${T.border}`, color:T.text, padding:"10px 12px", borderRadius:6, fontSize:11, fontFamily:"inherit", resize:"vertical", outline:"none" }}
-              placeholder="Paste raw ISO8583 hex/ascii message here…" />
+              placeholder="Paste raw ISO8583 hex message here…" />
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             <div>
@@ -144,7 +768,7 @@ export default function Validator({ initialMsg = "" }) {
               <Btn primary onClick={validate} disabled={loading||!can.validate||!profileId} style={{ flex:1 }}>
                 {loading?"Processing…":"▶ VALIDATE"}
               </Btn>
-              <Btn onClick={() => { setRawMsg(""); setResult(null); setError(null); }}>✕</Btn>
+              <Btn onClick={() => { setRawMsg(""); setResult(null); setError(null); try { sessionStorage.removeItem("iso_validator_draft_v1"); } catch {} }}>Clear ✕</Btn>
             </div>
           </div>
         </div>
@@ -322,6 +946,15 @@ export default function Validator({ initialMsg = "" }) {
                       );
                     })}
                   </div>
+
+                  <AiChatBox
+                    key={result.runReference}
+                    mti={result.mti}
+                    profileName={profile?.profileName}
+                    errors={result.errors}
+                    parsedFields={result.parsedFields}
+                    originalExplanation={result.ai.explanation}
+                  />
                 </Card>
               )
             )}
