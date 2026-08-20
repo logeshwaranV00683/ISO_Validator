@@ -974,7 +974,7 @@ export default function Validator({ initialMsg = "" }) {
       </>)}
 
       {!result && !loading && (
-        <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", color:T.faint, fontSize:13, gap:8, padding:"40px 0" }}>
+        <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", color:T.tetradic, fontSize:13, gap:8, padding:"40px 0" }}>
           <span style={{ fontSize:28 }}>⬡</span>
           <span>Paste a message, select a profile, and click VALIDATE</span>
         </div>

@@ -62,8 +62,16 @@ export default function Formats() {
   };
 
   const loadVersions = async (id) => {
-    const v = await getFormatVersions(id);
-    setVersions(x => ({ ...x, [id]: v }));
+    if (versions[id]) {
+    setVersions(x => {
+      const updated = { ...x };
+      delete updated[id];
+      return updated;
+    });
+    return;
+  }
+  const v = await getFormatVersions(id);
+  setVersions(x => ({ ...x, [id]: v }));
   };
 
   const handleReload = async (id) => {

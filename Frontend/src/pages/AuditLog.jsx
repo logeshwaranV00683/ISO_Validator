@@ -331,7 +331,7 @@ export default function AuditLog() {
                 "Entity Type",
                 "Entity",
                 "User",
-                "IP",
+                // "IP",
                 "Description"
               ].map((h) => (
                 <Th key={h}>{h}</Th>
@@ -348,7 +348,7 @@ export default function AuditLog() {
                 UPDATE: T.yellow,
                 DELETE: T.red,
                 LOGIN: T.accent,
-                LOGOUT: T.faint,
+                LOGOUT: T.red,
                 VALIDATE: T.blue
               };
 
@@ -447,15 +447,16 @@ export default function AuditLog() {
                         "System"}
                     </td>
 
-                    <td
+                  {/*  <td
                       style={{
                         padding: "8px",
-                        color: T.faint,
+                        color: T.cadbury,
                         fontSize: 10
                       }}
                     >
                       {l.ipAddress || "—"}
-                    </td>
+                    </td> */}
+                    
 
                     <td
                       style={{
