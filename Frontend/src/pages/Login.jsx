@@ -84,7 +84,7 @@ export default function Login() {
         <div style={{ textAlign:"center", marginBottom:20 }}>
           <div style={{ width:42, height:42, borderRadius:11, background:`linear-gradient(135deg,${T.accent2},${T.accent})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, margin:"0 auto 10px" }}>⬡</div>
           <div style={{ fontSize:25, fontWeight:700, color:T.text }}>Veri<span style={{ color:T.accent }}>Q</span>Forge<span style={{ color:T.accent }}> AI</span></div>
-          <div style={{ fontSize:11, color:T.faint, marginTop:4, fontWeight:200 }}>Enterprise Payment Message Platform</div>
+          <div style={{ fontSize:11, color:T.white, marginTop:4, fontWeight:200 }}>Enterprise Payment Message Platform</div>
         </div>
 
         {/* Form */}
