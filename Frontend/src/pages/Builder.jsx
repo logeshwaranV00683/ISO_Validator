@@ -124,6 +124,18 @@ function MtiInput({ value, onChange, mtis }) {
     </div>
   );
 }
+const TYPE_PATTERNS = {
+  numeric: /[^0-9]/g,
+  alpha: /[^a-zA-Z]/g,
+  alphanumeric: /[^a-zA-Z0-9]/g,
+  binary: /[^01]/g,
+  special: /[^a-zA-Z0-9!@#$%^&*()\-_=+[\]{};:'",.<>/?\\| ]/g,
+};
+
+function filterByDataType(raw, dataType) {
+  const pattern = TYPE_PATTERNS[dataType];
+  return pattern ? raw.replace(pattern, "") : raw;
+}
 
 // ── Field input row ───────────────────────────────────────────────────────────
 function FieldInput({ field, value, onChange, fieldRef, flashed }) {
@@ -147,7 +159,7 @@ function FieldInput({ field, value, onChange, fieldRef, flashed }) {
           {field.fieldName}{field.isMandatory && <span style={{ color: T.red }}> *</span>}
         </div>
         <div style={{ position: "relative" }}>
-          <input value={value} onChange={e => onChange(e.target.value)}
+          <input value={value} onChange={e => onChange(filterByDataType(e.target.value, field.dataType))}
             placeholder={field.placeholderValue || ""} maxLength={field.maxLength}
             style={{
               width: "100%", boxSizing: "border-box", background: T.bg,
