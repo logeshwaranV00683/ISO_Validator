@@ -158,36 +158,36 @@ const { data, loading, error, refetch } = useApi(
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                {["#", "DE", "Field Name", "Mandatory", "Min", "Max", "Type", "Severity", "Pattern", "Allowed Values", "Active", "Eff. From", "Eff. To", "Updated", ...(can.edit ? ["Actions"] : [])].map(h => <Th key={h}>{h}</Th>)}
+                {["ORDER", "DE", "Field Name", "Mandatory", "Min", "Max", "Type", "Severity", "Pattern", "Allowed Values", "Active", "Eff. From", "Eff. To", "Updated", ...(can.edit ? ["Actions"] : [])].map(h => <Th key={h}>{h}</Th>)}
               </tr>
             </thead>
             <tbody>
               {rules.map(r => (
                 <tr key={r.id} style={{ borderBottom: `1px solid ${T.border}22`, opacity: r.active ? 1 : 0.5 }}>
-                  <td style={{ padding: "8px 8px", color: T.faint, textAlign: "center" }}>{r.priority}</td>
+                  <td style={{ padding: "8px 8px", color: T.cement, textAlign: "center" }}>{r.priority}</td>
                   <td style={{ padding: "8px 8px", color: T.accent, fontWeight: 700 }}>{r.deNumber}</td>
                   <td style={{ padding: "8px 8px", color: T.muted, fontSize: 10, maxWidth: 130 }}>{r.fieldName}</td>
-                  <td style={{ padding: "8px 8px", textAlign: "center" }}><span style={{ color: r.isMandatory ? T.green : T.faint }}>{r.isMandatory ? "✓" : "✗"}</span></td>
+                  <td style={{ padding: "8px 8px", textAlign: "center" }}><span style={{ color: r.isMandatory ? T.green : T.red }}>{r.isMandatory ? "✓" : "✗"}</span></td>
                   <td style={{ padding: "8px 8px", textAlign: "center" }}>{r.minLength}</td>
                   <td style={{ padding: "8px 8px", textAlign: "center" }}>{r.maxLength}</td>
                   <td style={{ padding: "8px 8px" }}><Tag color={T.blue} small>{r.dataType}</Tag></td>
                   <td style={{ padding: "8px 8px" }}><Tag color={SEV[r.severity]?.text || T.muted} small>{r.severity}</Tag></td>
-                  <td style={{ padding: "8px 8px", color: T.faint, fontSize: 10 }}>{r.patternRegex || "—"}</td>
+                  <td style={{ padding: "8px 8px", color: T.tetradic, fontSize: 10 }}>{r.patternRegex || "—"}</td>
                   <td style={{ padding: "8px 8px", fontSize: 9 }}>
                     {r.allowedValues?.length
                       ? <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>{r.allowedValues.map(v => <span key={v} style={{ background: T.accent + "15", color: T.accent, padding: "1px 5px", borderRadius: 3 }}>{v}</span>)}</div>
-                      : <span style={{ color: T.faint }}>Any</span>}
+                      : <span style={{ color: T.teak }}>Any</span>}
                   </td>
                   <td style={{ padding: "8px 8px", textAlign: "center" }}>
                     {can.edit
                       ? <div onClick={() => handleToggle(r.id)} style={{ width: 28, height: 15, borderRadius: 8, background: r.active ? T.green + "44" : T.faint + "44", border: `1px solid ${r.active ? T.green : T.faint}`, display: "inline-flex", alignItems: "center", padding: "0 2px", cursor: "pointer" }}>
                           <div style={{ width: 11, height: 11, borderRadius: "50%", background: r.active ? T.green : T.faint, marginLeft: r.active ? 12 : 0, transition: "margin 0.15s" }} />
                         </div>
-                      : <span style={{ color: r.active ? T.green : T.faint }}>{r.active ? "✓" : "✗"}</span>}
+                      : <span style={{ color: r.active ? T.green : T.red }}>{r.active ? "✓" : "✗"}</span>}
                   </td>
                   <td style={{ padding: "8px 8px", color: T.muted, fontSize: 10 }}>{r.effectiveFrom || "—"}</td>
-                  <td style={{ padding: "8px 8px", color: r.effectiveTo ? T.yellow : T.faint, fontSize: 10 }}>{r.effectiveTo || "∞"}</td>
-                  <td style={{ padding: "8px 8px", fontSize: 9, color: T.faint }}><div>{r.updatedByName}</div><div>{r.updatedAt?.split("T")[0]}</div></td>
+                  <td style={{ padding: "8px 8px", color: r.effectiveTo ? T.yellow : T.muted, fontSize: 10 }}>{r.effectiveTo || "♾️"}</td>
+                  <td style={{ padding: "8px 8px", fontSize: 9, color: T.fyellow }}><div>{r.updatedByName}</div><div>{r.updatedAt?.split("T")[0]}</div></td>
                   {can.edit && (
                     <td style={{ padding: "8px 8px" }}>
                       <div style={{ display: "flex", gap: 4 }}>

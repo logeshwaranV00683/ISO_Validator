@@ -134,7 +134,7 @@ export default function FieldDefinitions() {
           <tbody>
             {(defs || []).map(d => (
               <tr key={d.id} style={{ borderBottom: `1px solid ${T.border}22`, opacity: d.isActive ? 1 : 0.5 }}>
-                <td style={{ padding: "8px 8px", color: T.faint, textAlign: "center" }}>{d.displayOrder}</td>
+                <td style={{ padding: "8px 8px", color: T.cement, textAlign: "center" }}>{d.displayOrder}</td>
                 <td style={{ padding: "8px 8px", color: T.accent, fontWeight: 700 }}>{d.deNumber}</td>
                 <td style={{ padding: "8px 8px", color: T.text }}>{d.fieldName}</td>
                 <td style={{ padding: "8px 8px" }}><Tag color={T.blue} small>{d.dataType}</Tag></td>
@@ -142,12 +142,12 @@ export default function FieldDefinitions() {
                 <td style={{ padding: "8px 8px", textAlign: "center" }}>
                   {(d.isLlvar || d.isLllvar) && <Tag color={T.purple} small>{d.isLllvar ? "LLLVAR" : "LLVAR"}</Tag>}
                 </td>
-                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isMandatory ? T.green : T.faint }}>{d.isMandatory ? "✓" : "✗"}</td>
-                <td style={{ padding: "8px 8px", color: T.faint, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isMandatory ? T.green : T.red }}>{d.isMandatory ? "✓" : "✗"}</td>
+                <td style={{ padding: "8px 8px", color: T.tetradic, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
                 <td style={{ padding: "8px 8px", textAlign: "center" }}>
                   <Toggle label="" active={d.isBuilderVisible} onClick={() => can.edit && handleToggleVisible(d)} />
                 </td>
-                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isActive ? T.green : T.faint }}>{d.isActive ? "✓" : "✗"}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isActive ? T.green : T.red }}>{d.isActive ? "✓" : "✗"}</td>
                 {can.edit && (
                   <td style={{ padding: "8px 8px" }}>
                     <div style={{ display: "flex", gap: 4 }}>

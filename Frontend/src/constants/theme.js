@@ -15,6 +15,13 @@ export const T = {
   yellow:   "var(--yellow)",
   blue:     "var(--blue)",
   purple:   "var(--purple)",
+  cadbury: "#B784A7",
+  turquoise:"#0DB985",
+  teal: "#0D97B9",
+  cement:"#ADADAD",
+  tetradic:"#E3DCDC",
+  teak:"#49F278",
+  fyellow:"#c2cd67"
 };
 
 export const SEV = {

@@ -46,8 +46,8 @@ export function SmBtn({ children, danger, onClick, disabled, style: s }) {
 
 export function Toggle({ label, active, onClick }) {
   return (
-    <button onClick={onClick} style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:`1px solid ${active?T.accent+"55":T.border}`, borderRadius:4, padding:"3px 8px", cursor:"pointer", fontFamily:"inherit", color:active?T.accent:T.faint, fontSize:10 }}>
-      <div style={{ width:20, height:11, borderRadius:6, background:active?T.accent+"33":T.surface2, border:`1px solid ${active?T.accent:T.faint}`, display:"flex", alignItems:"center", padding:"0 1px" }}>
+    <button onClick={onClick} style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:`1px solid ${active?T.accent+"55":T.border}`, borderRadius:4, padding:"3px 8px", cursor:"pointer", fontFamily:"inherit", color:active?T.accent:"#2BC4CD", fontSize:10 }}>
+      <div style={{ width:20, height:11, borderRadius:6, background:active?T.accent+"33":T.surface2, border:`1px solid ${active?T.accent:T.turquoise}`, display:"flex", alignItems:"center", padding:"0 1px" }}>
         <div style={{ width:9, height:9, borderRadius:"50%", background:active?T.accent:T.faint, marginLeft:active?8:0, transition:"margin 0.15s" }} />
       </div>
       {label}
