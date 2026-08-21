@@ -32,7 +32,7 @@ export default function Dashboard() {
           <StatCard label="Avg Total"   value={`${stats.avgTotalMs ?? "—"}ms`}         color={T.muted}  />
           <StatCard label="P95 Total"   value={`${stats.p95TotalMs ?? "—"}ms`}         color={T.yellow} />
           <StatCard label="Avg AI"      value={`${stats.avgAiMs ?? "—"}ms`}            color={T.purple} />
-          <StatCard label="AI Skips"    value={stats.aiSkipCount ?? 0}                 color={T.faint}  />
+          <StatCard label="AI Skips"    value={stats.aiSkipCount ?? 0}                 color={T.cement}  />
         </div>
 
         {/* Row 3 — charts */}
@@ -84,7 +84,7 @@ export default function Dashboard() {
                 <span style={{ color:T.yellow, fontWeight:700, fontSize:11 }}>{f.errorCount}</span>
               </div>
             ))}
-            {!stats.topErrorFields?.length && <span style={{ fontSize:11, color:T.faint }}>No errors recorded</span>}
+            {!stats.topErrorFields?.length && <span style={{ fontSize:11, color:T.tetradic }}>No errors recorded</span>}
           </Card>
         </div>
       </>)}
@@ -112,7 +112,7 @@ export default function Dashboard() {
                   <td style={{ padding:"8px 8px", color:T.muted, fontSize:10 }}>{new Date(h.createdAt).toLocaleString()}</td>
                   <td style={{ padding:"8px 8px", color:T.text, fontWeight:700 }}>{h.mti}</td>
                   <td style={{ padding:"8px 8px", color:T.text, fontSize:10 }}>{h.profileNameSnapshot}</td>
-                  <td style={{ padding:"8px 8px" }}><Tag color={ENV_COLORS[h.environment]||T.muted} small>{h.environment}</Tag></td>
+                  <td style={{ padding:"8px 8px" }}>{h.environment?(<Tag color={ENV_COLORS[h.environment]||T.muted} small>{h.environment}</Tag>):("—")}</td>
                   <td style={{ padding:"8px 8px" }}><Tag color={STATUS_COLOR[h.status]||T.muted} small>{h.status}</Tag></td>
                   <td style={{ padding:"8px 8px", color:h.totalErrors>0?T.yellow:T.green, fontWeight:700 }}>{h.totalErrors}</td>
                   <td style={{ padding:"8px 8px", color:T.muted }}>{h.totalDurationMs}ms</td>

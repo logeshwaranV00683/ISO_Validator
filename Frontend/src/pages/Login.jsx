@@ -4,7 +4,9 @@ import { T, ROLES } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Tag } from "../components/shared";
-import LoginBackground from "./animated/LoginBackground";
+import LoginBackground from "./animated/Loginbackground";
+
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const { login }  = useAuth();
@@ -101,9 +103,9 @@ export default function Login() {
               <div style={{ position:"relative" }}>
                 <input type={showPass?"text":"password"} value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key==="Enter" && handleLogin()} placeholder="Enter password"
                   style={{ width:"100%", boxSizing:"border-box", background:T.bg, border:`1px solid ${error?T.red:T.border}`, color:T.text, padding:"10px 36px 10px 12px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" }} />
-                <button onClick={() => setShowPass(x=>!x)} style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:T.faint, cursor:"pointer", fontSize:12, padding:0 }}>
-                  {showPass?"🙈":"👁"}
-                </button>
+                <button type="button" onClick={() => setShowPass(x=>!x)} aria-label={showPass?"Hide password":"Show password"} style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:T.faint, cursor:"pointer", padding:0, display:"flex", alignItems:"center" }}>
+  {showPass ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+</button>
               </div>
             </div>
 

@@ -124,6 +124,18 @@ function MtiInput({ value, onChange, mtis }) {
     </div>
   );
 }
+const TYPE_PATTERNS = {
+  numeric: /[^0-9]/g,
+  alpha: /[^a-zA-Z]/g,
+  alphanumeric: /[^a-zA-Z0-9]/g,
+  binary: /[^01]/g,
+  special: /[^a-zA-Z0-9!@#$%^&*()\-_=+[\]{};:'",.<>/?\\| ]/g,
+};
+
+function filterByDataType(raw, dataType) {
+  const pattern = TYPE_PATTERNS[dataType];
+  return pattern ? raw.replace(pattern, "") : raw;
+}
 
 // ── Field input row ───────────────────────────────────────────────────────────
 function FieldInput({ field, value, onChange, fieldRef, flashed }) {
@@ -140,14 +152,14 @@ function FieldInput({ field, value, onChange, fieldRef, flashed }) {
     >
       <div>
         <div style={{ fontSize: 10, fontWeight: 700, color: T.accent }}>{field.deNumber}</div>
-        <div style={{ fontSize: 8.5, color: T.faint, lineHeight: 1.5 }}>{field.dataType}<br />max {field.maxLength}</div>
+        <div style={{ fontSize: 8.5, color: T.muted, lineHeight: 1.5 }}>{field.dataType}<br />max {field.maxLength}</div>
       </div>
       <div>
         <div style={{ fontSize: 9.5, color: T.muted, marginBottom: 3 }}>
           {field.fieldName}{field.isMandatory && <span style={{ color: T.red }}> *</span>}
         </div>
         <div style={{ position: "relative" }}>
-          <input value={value} onChange={e => onChange(e.target.value)}
+          <input value={value} onChange={e => onChange(filterByDataType(e.target.value, field.dataType))}
             placeholder={field.placeholderValue || ""} maxLength={field.maxLength}
             style={{
               width: "100%", boxSizing: "border-box", background: T.bg,
@@ -155,7 +167,7 @@ function FieldInput({ field, value, onChange, fieldRef, flashed }) {
               color: T.text, padding: "7px 40px 7px 10px", borderRadius: 5,
               fontFamily: "inherit", fontSize: 11, outline: "none", transition: "border-color 0.15s",
             }} />
-          <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 8.5, color: hasVal && !lenOk ? T.red : T.faint }}>
+          <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 8.5, color: hasVal && !lenOk ? T.red : T.muted }}>
             {value.length}/{field.maxLength}
           </span>
         </div>
@@ -382,8 +394,8 @@ export default function Builder() {
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, padding: "10px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
           <span style={{ fontSize: 11, color: T.muted }}>
-            Mandatory: <span style={{ color: progress === 100 ? T.green : T.yellow, fontWeight: 700 }}>{mandatory.filter(f => fieldValues[f.deNumber]?.trim()).length}/{mandatory.length}</span>
-            <span style={{ color: T.faint }}> · Optional: {optional.filter(f => fieldValues[f.deNumber]?.trim()).length}/{optional.length}</span>
+            Mandatory: <span style={{ color: progress === 100 ? T.green : T.red, fontWeight: 700 }}>{mandatory.filter(f => fieldValues[f.deNumber]?.trim()).length}/{mandatory.length}</span>
+            <span style={{ color: T.yellow }}> · Optional: {optional.filter(f => fieldValues[f.deNumber]?.trim()).length}/{optional.length}</span>
           </span>
           <span style={{ fontSize: 10, color: progress === 100 ? T.green : T.muted }}>{progress}% ready</span>
         </div>
@@ -401,7 +413,7 @@ export default function Builder() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Card title="Mandatory Fields" badge={<Tag color={T.red} small>REQUIRED</Tag>}>
               {mandatory.length === 0
-                ? <div style={{ textAlign: "center", color: T.faint, fontSize: 12, padding: "12px 0" }}>No mandatory fields for {mti}</div>
+                ? <div style={{ textAlign: "center", color: T.red, fontSize: 12, padding: "12px 0" }}>No mandatory fields for {mti}</div>
                 : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {mandatory.map(f => (
                     <FieldInput key={f.deNumber} field={f}
@@ -409,6 +421,7 @@ export default function Builder() {
                       onChange={v => setFieldValues(x => ({ ...x, [f.deNumber]: v }))}
                       fieldRef={el => (fieldRefs.current[f.deNumber] = el)}
                       flashed={flashDe === f.deNumber}
+                      
                     />
                   ))}
                 </div>
@@ -469,10 +482,10 @@ export default function Builder() {
             <Card title="Live Field Summary">
              {/* Table header */}
               <div style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, padding: "0 0 5px 0", borderBottom: `1px solid ${T.border}55`, marginBottom: 4 }}>
-                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>DE</span>
-                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>Field Name</span>
-                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700 }}>Value</span>
-                <span style={{ fontSize: 9, color: T.faint, fontWeight: 700, textAlign: "center" }}>Length</span>
+                <span style={{ fontSize: 9, color: T.accent, fontWeight: 700 }}>DE</span>
+                <span style={{ fontSize: 9, color: T.accent, fontWeight: 700 }}>Field Name</span>
+                <span style={{ fontSize: 9, color: T.accent, fontWeight: 700 }}>Value</span>
+                <span style={{ fontSize: 9, color: T.accent, fontWeight: 700, textAlign: "center" }}>Length</span>
                 <span />
               </div>
               <div style={{ display: "flex", flexDirection: "column", overflowY: "auto" }}>
@@ -487,10 +500,10 @@ export default function Builder() {
                         {f.fieldName}{f.isMandatory && <span style={{ color: T.red }}> *</span>}
                       </span>
                       <span style={{ fontSize: 10, color: val ? T.text : T.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
-                      <span style={{ fontSize: 9, color: lenOver ? T.red : len ? T.green : T.faint, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-                        {len !== null ? `${len}/${f.maxLength}` : `—/${f.maxLength || "?"}`}
+                      <span style={{ fontSize: 9, color: lenOver ? T.red : len ? T.green : T.teal, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+                        {len !== null ? `${len}/${f.maxLength}` : `0/${f.maxLength || "?"}`}
                       </span>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.green : f.isMandatory ? T.red : T.faint, flexShrink: 0, display: "inline-block" }} />
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.green : f.isMandatory ? T.red : T.green, flexShrink: 0, display: "inline-block" }} />
                     </div>
                   );
                 })}

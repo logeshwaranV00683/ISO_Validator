@@ -35,7 +35,7 @@ export default function SystemConfig() {
               const isEditing = edits[c.configKey] !== undefined;
               return (
                 <tr key={c.configKey} style={{ borderBottom:`1px solid ${T.border}22`, background:isEditing?T.surface2:"transparent" }}>
-                  <td style={{ padding:"10px 8px", color:T.accent, fontWeight:700, fontFamily:"monospace", fontSize:11 }}>{c.configKey}</td>
+                  <td style={{ padding:"10px 8px", color:T.accent, fontWeight:700, fontFamily:"monospace", fontSize:13 }}>{c.configKey}</td>
                   <td style={{ padding:"10px 8px", minWidth:200 }}>
                     <input
                       value={isEditing ? edits[c.configKey] : c.configValue}
@@ -45,7 +45,7 @@ export default function SystemConfig() {
                   </td>
                   <td style={{ padding:"10px 8px", color:T.muted, fontSize:10, maxWidth:200 }}>{c.description}</td>
                   <td style={{ padding:"10px 8px", color:T.muted, fontSize:10 }}>{c.updatedBy}</td>
-                  <td style={{ padding:"10px 8px", color:T.faint, fontSize:10 }}>{c.updatedAt ? new Date(c.updatedAt).toLocaleString() : "—"}</td>
+                  <td style={{ padding:"10px 8px", color:T.green, fontSize:12 }}>{c.updatedAt ? new Date(c.updatedAt).toLocaleString() : "—"}</td>
                   <td style={{ padding:"10px 8px" }}>
                     <div style={{ display:"flex", gap:4 }}>
                       {isEditing && <Btn primary onClick={()=>handleSave(c.configKey,c.description)} style={{ padding:"3px 10px", fontSize:10 }}>{saving===c.configKey?"Saving…":"Save"}</Btn>}

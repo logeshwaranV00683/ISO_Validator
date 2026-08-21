@@ -214,11 +214,11 @@ export default function History() {
                     <td style={{ padding:"8px 8px", color:T.muted, fontSize:10, whiteSpace:"nowrap" }}>{new Date(h.createdAt).toLocaleString()}</td>
                     <td style={{ padding:"8px 8px", color:T.text, fontWeight:700 }}>{h.mti}</td>
                     <td style={{ padding:"8px 8px", color:T.text, fontSize:10 }}>{h.profileNameSnapshot}</td>
-                    <td style={{ padding:"8px 8px" }}><Tag color={ENV_COLORS[h.environment]||T.muted} small>{h.environment}</Tag></td>
+                    <td style={{ padding:"8px 8px" }}>{h.environment?(<Tag color={ENV_COLORS[h.environment]||T.muted} small>{h.environment}</Tag>):("—")}</td>
                     <td style={{ padding:"8px 8px", fontSize:10 }}>
                       {h.responseCode
                         ? <span style={{ color:h.responseCode==="00"?T.green:T.yellow, fontWeight:700 }}>{h.responseCode}</span>
-                        : <span style={{ color:T.faint }}>—</span>}
+                        : <span style={{ color:T.muted }}>—</span>}
                     </td>
                     <td style={{ padding:"8px 8px", color:h.totalErrors>0?T.yellow:T.green, fontWeight:700, textAlign:"center" }}>{h.totalErrors}</td>
                     <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.parseDurationMs}ms</td>
