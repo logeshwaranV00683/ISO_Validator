@@ -152,7 +152,7 @@ export default function FieldDefinitions() {
                   <td style={{ padding: "8px 8px" }}>
                     <div style={{ display: "flex", gap: 4 }}>
                       <SmBtn onClick={() => { setEditDef(d); setShowModal(true); }}>Edit</SmBtn>
-                      <SmBtn danger onClick={() => handleDelete(d.id)}>Del</SmBtn>
+                      {/* <SmBtn danger onClick={() => handleDelete(d.id)}>Del</SmBtn> */}
                     </div>
                   </td>
                 )}
