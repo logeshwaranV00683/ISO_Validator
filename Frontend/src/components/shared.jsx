@@ -47,10 +47,14 @@ export function SmBtn({ children, danger, onClick, disabled, style: s }) {
 export function Toggle({ label, active, onClick }) {
   return (
     <button onClick={onClick} style={{ display:"flex", alignItems:"center", gap:5, background:"none", border:`1px solid ${active?T.accent+"55":T.border}`, borderRadius:4, padding:"3px 8px", cursor:"pointer", fontFamily:"inherit", color:active?T.accent:"#2BC4CD", fontSize:10 }}>
-      <div style={{ width:20, height:11, borderRadius:6, background:active?T.accent+"33":T.surface2, border:`1px solid ${active?T.accent:T.turquoise}`, display:"flex", alignItems:"center", padding:"0 1px" }}>
-        <div style={{ width:9, height:9, borderRadius:"50%", background:active?T.accent:T.faint, marginLeft:active?8:0, transition:"margin 0.15s" }} />
+      <div style={{ width:20, height:11, borderRadius:6, background:active?T.accent+"33":T.surface2, border:`1px solid ${active?T.accent:T.red}`, display:"flex", alignItems:"center", padding:"0 1px" }}>
+        <div style={{ width:9, height:9, borderRadius:"50%", background:active?T.accent:T.red, marginLeft:active?8:0, transition:"margin 0.15s" }} />
       </div>
-      {label}
+      <span style={{color:active?T.accent:T.red}}>
+          {label}
+
+      </span>
+    
     </button>
   );
 }
@@ -93,6 +97,31 @@ export function LoadingBar({ text="Loading…" }) {
     <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"14px 20px", display:"flex", alignItems:"center", gap:10 }}>
       <div style={{ width:14, height:14, border:`2px solid ${T.accent}44`, borderTop:`2px solid ${T.accent}`, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
       <span style={{ fontSize:13, color:T.muted }}>{text}</span>
+    </div>
+  );
+}
+
+      
+export function ProgressBar({ percent = 0, text }) {
+  const pct = Math.max(0, Math.min(100, Math.round(percent)));
+  return (
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"14px 20px" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:14, height:14, border:"2px solid color-mix(in srgb, var(--accent) 30%, transparent)", borderTop:`2px solid ${T.accent}`, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
+          <span style={{ fontSize:13, color:T.muted }}>{text}</span>
+        </div>
+        <span style={{ fontSize:13, color:T.text, fontWeight:700, fontVariantNumeric:"tabular-nums" }}>{pct}%</span>
+      </div>
+      <div style={{ height:8, borderRadius:6, background:T.surface2, border:`1px solid ${T.border}`, overflow:"hidden" }}>
+        <div style={{
+          height:"100%", width:`${pct}%`, borderRadius:6,
+          backgroundImage:"linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, transparent) 50%, var(--accent) 100%)",
+          backgroundSize:"200% 100%",
+          animation:"progressStripes 1.4s linear infinite",
+          transition:"width 0.5s ease",
+        }} />
+      </div>
     </div>
   );
 }
