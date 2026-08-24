@@ -246,12 +246,12 @@ function SceneB({ isDark, visible }) {
       </svg>
 
       {/* HUD corner readouts */}
-      {HUD.map((h, i) => (
+      {/* {HUD.map((h, i) => (
         <div key={i} className="lb-hud" style={{ ...h.pos, animationDelay: `${i * 0.5}s` }}>
           <div className="lb-hud-label">{h.label}</div>
           <div className="lb-hud-value">{h.value}</div>
         </div>
-      ))}
+      ))} */}
     </div>
   );
 }

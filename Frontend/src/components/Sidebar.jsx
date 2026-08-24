@@ -1,21 +1,26 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
+import {
+  LayoutDashboard, Repeat, Braces, ListChecks, Table2,
+  FileUp, Sparkles, LayoutGrid, ShieldCheck, Users,
+  History, FileText, Settings,
+} from "lucide-react";
 
 const NAV = [
-  { to: "/dashboard", icon: "⬡", label: "Dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { to: "/profiles", icon: "⇄", label: "Message Profiles", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { to: "/formats", icon: "⬢", label: "Message Formats", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { to: "/rules", icon: "⚙", label: "Rules Manager", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { to: "/field-definitions", icon: "≡", label: "Field Definitions", roles: ["ADMIN"] },
-  { to: "/brd-import", icon: "⬆", label: "BRD Import", roles: ["ADMIN"] },
-  { to: "/ai", icon: "◈", label: "AI Settings", roles: ["ADMIN"] },
-  { to: "/builder", icon: "⊞", label: "Message Builder", roles: ["ADMIN", "ANALYST"] },
-  { to: "/validator", icon: "◎", label: "Message Validator", roles: ["ADMIN", "ANALYST"] },
-  { to: "/users", icon: "◉", label: "Users", roles: ["ADMIN"] },
-  { to: "/history", icon: "◷", label: "Validation History", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { to: "/audit", icon: "☰", label: "Audit Log", roles: ["ADMIN"] },
-  { to: "/config", icon: "⊛", label: "System Config", roles: ["ADMIN"] },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { to: "/profiles", icon: Repeat, label: "Message Profiles", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { to: "/formats", icon: Braces, label: "Message Formats", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { to: "/rules", icon: ListChecks, label: "Rules Manager", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { to: "/field-definitions", icon: Table2, label: "Field Definitions", roles: ["ADMIN"] },
+  { to: "/brd-import", icon: FileUp, label: "BRD Import", roles: ["ADMIN"] },
+  { to: "/ai", icon: Sparkles, label: "AI Settings", roles: ["ADMIN"] },
+  { to: "/builder", icon: LayoutGrid, label: "Message Builder", roles: ["ADMIN", "ANALYST"] },
+  { to: "/validator", icon: ShieldCheck, label: "Message Validator", roles: ["ADMIN", "ANALYST"] },
+  { to: "/users", icon: Users, label: "Users", roles: ["ADMIN"] },
+  { to: "/history", icon: History, label: "Validation History", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { to: "/audit", icon: FileText, label: "Audit Log", roles: ["ADMIN"] },
+  { to: "/config", icon: Settings, label: "System Config", roles: ["ADMIN"] },
 ];
 
 export default function Sidebar() {
@@ -26,38 +31,40 @@ export default function Sidebar() {
   const location = useLocation();
   return (
 
-    <aside style={{ width: 215, height: "calc(100vh - 60px)", background: T.surface, borderRight: `1px solid ${T.border}`, overflowY: "auto", overflowX: "hidden" }}>
+    <aside style={{ width: 215, height: "calc(100vh - 60px)", background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Scrollable Menu */}
       <div
         style={{
           flex: 1,
           overflowY: "auto",
+          overflowX: "hidden",
           padding: "12px 0",
         }}
       >
         {visible.map(n => {
           const isActive = location.pathname === n.to;
+          const Icon = n.icon;
 
           return (
-            <div
-              key={n.to}
-              onClick={() => navigate(n.to)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 20px",
-                cursor: "pointer",
-                background: isActive ? T.accent + "12" : "transparent",
-                borderLeft: `2px solid ${isActive ? T.accent : "transparent"}`,
-                color: isActive ? T.accent : T.muted,
-                fontSize: 11.5,
-                transition: "all 0.12s",
-              }}
-            >
-              <span style={{ fontSize: 20 }}>{n.icon}</span>
-              {n.label}
-            </div>
+           <div
+  key={n.to}
+  onClick={() => navigate(n.to)}
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "16px 18px",
+    cursor: "pointer",
+    background: isActive ? T.accent + "12" : "transparent",
+    borderLeft: `2px solid ${isActive ? T.accent : "transparent"}`,
+    color: isActive ? T.accent : T.muted,
+    fontSize: 11.5,
+    transition: "all 0.12s",
+  }}
+>
+  <Icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+  {n.label}
+</div>
           );
         })}
       </div>
