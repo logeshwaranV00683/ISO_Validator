@@ -172,7 +172,7 @@ const { data, loading, error, refetch } = useApi(
                   <td style={{ padding: "8px 8px", textAlign: "center" }}>{r.maxLength}</td>
                   <td style={{ padding: "8px 8px" }}><Tag color={T.blue} small>{r.dataType}</Tag></td>
                   <td style={{ padding: "8px 8px" }}><Tag color={SEV[r.severity]?.text || T.muted} small>{r.severity}</Tag></td>
-                  <td style={{ padding: "8px 8px", color: T.tetradic, fontSize: 10 }}>{r.patternRegex || "—"}</td>
+                  <td style={{ padding: "8px 8px", color: T.yellow, fontSize: 10 }}>{r.patternRegex || "—"}</td>
                   <td style={{ padding: "8px 8px", fontSize: 9 }}>
                     {r.allowedValues?.length
                       ? <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>{r.allowedValues.map(v => <span key={v} style={{ background: T.accent + "15", color: T.accent, padding: "1px 5px", borderRadius: 3 }}>{v}</span>)}</div>

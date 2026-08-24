@@ -28,7 +28,7 @@ export function SmBtn({ children, danger, onClick, disabled, style: s }) {
       style={{
         background: "none",
         border: `1px solid ${danger ? T.red + "44" : T.border}`,
-        color: danger ? T.red : T.muted,
+        color: danger ? T.red : T.text,
         padding: "3px 9px",
         borderRadius: 4,
         fontFamily: "inherit",

@@ -84,7 +84,7 @@ export default function Dashboard() {
                 <span style={{ color:T.yellow, fontWeight:700, fontSize:11 }}>{f.errorCount}</span>
               </div>
             ))}
-            {!stats.topErrorFields?.length && <span style={{ fontSize:11, color:T.tetradic }}>No errors recorded</span>}
+            {!stats.topErrorFields?.length && <span style={{ fontSize:13, color:T.cement }}>No errors recorded</span>}
           </Card>
         </div>
       </>)}

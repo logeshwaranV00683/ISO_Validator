@@ -223,7 +223,7 @@ export default function History() {
                     <td style={{ padding:"8px 8px", color:h.totalErrors>0?T.yellow:T.green, fontWeight:700, textAlign:"center" }}>{h.totalErrors}</td>
                     <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.parseDurationMs}ms</td>
                     <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.validationDurationMs}ms</td>
-                    <td style={{ padding:"8px 8px", color:h.aiDurationMs?T.purple:T.faint, textAlign:"center" }}>{h.aiDurationMs?`${h.aiDurationMs}ms`:"—"}</td>
+                    <td style={{ padding:"8px 8px", color:h.aiDurationMs?T.purple:T.muted, textAlign:"center" }}>{h.aiDurationMs?`${h.aiDurationMs}ms`:"—"}</td>
                     <td style={{ padding:"8px 8px", color:T.text, fontWeight:700 }}>{h.totalDurationMs}ms</td>
                     <td style={{ padding:"8px 8px" }}><Tag color={sc} small>{h.status}</Tag></td>
                     <td style={{ padding:"8px 8px" }}>

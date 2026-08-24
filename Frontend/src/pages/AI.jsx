@@ -179,7 +179,7 @@ export default function AI() {
                   <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < modelList.length - 1 ? `1px solid ${T.border}22` : "none" }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, color: m.name === configForm?.activeModel ? T.accent : T.text }}>{m.name}</div>
-                      <div style={{ fontSize: 10, color: T.faint }}>{formatBytes(m.size)}</div>
+                      <div style={{ fontSize: 11, color: "#27d0e3" }}>{formatBytes(m.size)}</div>
                     </div>
                     {m.name === configForm?.activeModel
                       ? <span style={{ fontSize: 10, color: T.green }}>● Active</span>

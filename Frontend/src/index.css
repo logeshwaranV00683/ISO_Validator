@@ -105,5 +105,5 @@ button { transition: opacity 0.12s, background 0.12s, border-color 0.12s; }
   100% { transform: scale(1); }
 }
 .raw-message-input::placeholder{
-  color:rgb(220, 222, 222);
+  color:#b900a7;
 }

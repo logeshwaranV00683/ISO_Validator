@@ -810,7 +810,7 @@ export default function Validator({ initialMsg = "" }) {
           {[["Parse",result.timing?.parseDurationMs,T.accent],["Validate",result.timing?.validationDurationMs,T.green],...(result.ai?.enabled?[["AI",result.timing?.aiDurationMs,T.purple]]:[])].map(([l,v,c]) => (
             <span key={l} style={{ color:T.muted }}>{l}: <span style={{ color:c, fontWeight:700 }}>{v}ms</span></span>
           ))}
-          <span style={{ color:T.faint }}>| Total: <span style={{ color:T.text, fontWeight:700 }}>{result.timing?.totalDurationMs}ms</span></span>
+          <span style={{ color:T.muted }}>| Total: <span style={{ color:T.green, fontWeight:700 }}>{result.timing?.totalDurationMs}ms</span></span>
           <div style={{ flex:1 }} />
           <Tag color={STATUS_COLOR[result.status]||T.muted}>{result.status}</Tag>
           <SmBtn onClick={() => { navigator.clipboard?.writeText(JSON.stringify(result,null,2)); setCopied(true); setTimeout(()=>setCopied(false),1500); }}>
@@ -851,7 +851,7 @@ export default function Validator({ initialMsg = "" }) {
               <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:4 }}>
                 {Array.from({length:bitmapExt?128:64},(_,i) => {
                   const on = result.bitmap?.bitsSet?.includes(i+1);
-                  return <div key={i} title={`DE${i+1}`} style={{ padding:"7px 0", textAlign:"center", borderRadius:4, background:on?T.accent+"22":T.surface2, border:`1px solid ${on?T.accent+"55":T.border}`, color:on?T.accent:T.faint, fontSize:9, fontWeight: on?700:400 }}>{i+1}</div>;
+                  return <div key={i} title={`DE${i+1}`} style={{ padding:"7px 0", textAlign:"center", borderRadius:4, background:on?T.accent+"22":T.surface2, border:`1px solid ${on?T.accent+"55":T.border}`, color:on?T.accent:T.blue, fontSize:9, fontWeight: on?700:400 }}>{i+1}</div>;
                 })}
               </div>
               <div style={{ marginTop:10, fontSize:10, color:T.muted }}>
@@ -869,7 +869,7 @@ export default function Validator({ initialMsg = "" }) {
               extra={
                 <div style={{ display:"flex", gap:4 }}>
                   {["ALL","CRITICAL","WARNING","INFO"].map(s => (
-                    <button key={s} onClick={()=>setSevFilter(s)} style={{ background:sevFilter===s?(SEV[s]?.text||T.accent)+"22":"transparent", border:`1px solid ${sevFilter===s?(SEV[s]?.text||T.accent)+"66":T.border}`, color:sevFilter===s?(SEV[s]?.text||T.accent):T.faint, padding:"2px 7px", borderRadius:4, fontSize:9, fontFamily:"inherit", cursor:"pointer" }}>{s}</button>
+                    <button key={s} onClick={()=>setSevFilter(s)} style={{ background:sevFilter===s?(SEV[s]?.text||T.accent)+"22":"transparent", border:`1px solid ${sevFilter===s?(SEV[s]?.text||T.accent)+"66":T.border}`, color:sevFilter===s?(SEV[s]?.text||T.accent):T.cement, padding:"2px 7px", borderRadius:4, fontSize:9, fontFamily:"inherit", cursor:"pointer" }}>{s}</button>
                   ))}
                 </div>
               }>

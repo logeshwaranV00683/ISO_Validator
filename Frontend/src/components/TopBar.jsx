@@ -63,7 +63,7 @@ export default function TopBar() {
               <div style={{ fontSize:10.5, color:T.text, lineHeight:1 }}>{user.fullName || user.username}</div>
               <div style={{ fontSize:9, color:role.color, marginTop:1 }}>{user.role}</div>
             </div>
-            <button onClick={logout} style={{ background:"none", border:`1px solid ${T.border}`, color:T.tetradic, padding:"2px 8px", borderRadius:4, fontSize:9, fontFamily:"inherit", cursor:"pointer", marginLeft:4 }}>⎋ Logout</button>
+            <button onClick={logout} style={{ background:"none", border:`1px solid ${T.border}`, color:T.text, padding:"2px 8px", borderRadius:4, fontSize:12, fontFamily:"inherit", cursor:"pointer", marginLeft:4 }}> 🛇 Logout</button>
           </div>
         )}
       </div>

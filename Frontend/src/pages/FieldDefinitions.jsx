@@ -143,7 +143,7 @@ export default function FieldDefinitions() {
                   {(d.isLlvar || d.isLllvar) && <Tag color={T.purple} small>{d.isLllvar ? "LLLVAR" : "LLVAR"}</Tag>}
                 </td>
                 <td style={{ padding: "8px 8px", textAlign: "center", color: d.isMandatory ? T.green : T.red }}>{d.isMandatory ? "✓" : "✗"}</td>
-                <td style={{ padding: "8px 8px", color: T.tetradic, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
+                <td style={{ padding: "8px 8px", color: T.text, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
                 <td style={{ padding: "8px 8px", textAlign: "center" }}>
                   <Toggle label="" active={d.isBuilderVisible} onClick={() => can.edit && handleToggleVisible(d)} />
                 </td>

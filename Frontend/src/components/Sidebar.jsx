@@ -57,7 +57,7 @@ export default function Sidebar() {
     cursor: "pointer",
     background: isActive ? T.accent + "12" : "transparent",
     borderLeft: `2px solid ${isActive ? T.accent : "transparent"}`,
-    color: isActive ? T.accent : T.muted,
+    color: isActive ? T.accent : T.text,
     fontSize: 11.5,
     transition: "all 0.12s",
   }}
