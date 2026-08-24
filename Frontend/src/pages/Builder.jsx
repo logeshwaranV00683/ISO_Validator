@@ -408,7 +408,7 @@ export default function Builder() {
 
       {!defsLoading && catalog.length > 0 && (
         <>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 500px", gap: 14 }}>
           {/* Fields column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <Card title="Mandatory Fields" badge={<Tag color={T.red} small>REQUIRED</Tag>}>
@@ -481,7 +481,7 @@ export default function Builder() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, alignSelf: "start" }}>
             <Card title="Live Field Summary">
              {/* Table header */}
-              <div style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, padding: "0 0 5px 0", borderBottom: `1px solid ${T.border}55`, marginBottom: 4 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "38px minmax(120px, 1fr) 120px 50px 10px", gap: 5, padding: "0 0 5px 0", borderBottom: `1px solid ${T.border}55`, marginBottom: 4 }}>
                 <span style={{ fontSize: 9, color: T.accent, fontWeight: 700 }}>DE</span>
                 <span style={{ fontSize: 9, color: T.accent, fontWeight: 700 }}>Field Name</span>
                 <span style={{ fontSize: 9, color: T.accent, fontWeight: 700 }}>Value</span>
@@ -494,13 +494,13 @@ export default function Builder() {
                   const len = val ? val.length : null;
                   const lenOver = len && f.maxLength && len > f.maxLength;
                   return (
-                    <div key={f.deNumber} style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, alignItems: "center", padding: "4px 0", borderBottom: `1px solid ${T.border}22` }}>
+                    <div key={f.deNumber} style={{ display: "grid",gridTemplateColumns: "38px minmax(120px, 1fr) 120px 50px 10px", gap: 5, alignItems: "center", padding: "4px 0", borderBottom: `1px solid ${T.border}22` }}>
                       <span style={{ color: T.accent, fontSize: 10, fontWeight: 700 }}>{f.deNumber}</span>
                       <span style={{ color: T.muted, fontSize: 9.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {f.fieldName}{f.isMandatory && <span style={{ color: T.red }}> *</span>}
                       </span>
-                      <span style={{ fontSize: 10, color: val ? T.text : T.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
-                      <span style={{ fontSize: 9, color: lenOver ? T.red : len ? T.green : T.teal, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+                      <span style={{ fontSize: 10, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
+                      <span style={{ fontSize: 9.8, color: lenOver ? T.red : len ? T.green : T.teal, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
                         {len !== null ? `${len}/${f.maxLength}` : `0/${f.maxLength || "?"}`}
                       </span>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: val ? T.green : f.isMandatory ? T.red : T.green, flexShrink: 0, display: "inline-block" }} />
@@ -510,7 +510,7 @@ export default function Builder() {
                 {Object.entries(extraFields).map(([de, value]) => {
                   const val = value?.trim();
                   return (
-                    <div key={`extra-${de}`} style={{ display: "grid", gridTemplateColumns: "38px 1fr 68px 46px 10px", gap: 5, alignItems: "center", padding: "4px 0", borderBottom: `1px solid ${T.border}22`, animation: "slideIn 0.25s ease" }}>
+                    <div key={`extra-${de}`} style={{ display: "grid", gridTemplateColumns:"38px minmax(120px, 1fr) 120px 50px 10px" , gap: 5, alignItems: "center", padding: "4px 0", borderBottom: `1px solid ${T.border}22`, animation: "slideIn 0.25s ease" }}>
                       <span style={{ color: T.purple, fontSize: 10, fontWeight: 700 }}>DE{de}</span>
                       <span style={{ color: T.muted, fontSize: 9.5 }}>Custom field</span>
                       <span style={{ fontSize: 10, color: val ? T.text : T.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val || "—"}</span>
@@ -572,7 +572,7 @@ export default function Builder() {
             </div>
             <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "10px 12px" }}>
               <div style={{ fontSize: 10, color: T.muted, fontWeight: 700, marginBottom: 8 }}>Field Breakdown</div>
-              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 60px", gap: 8, fontSize: 9, color: T.faint, borderBottom: `1px solid ${T.border}`, paddingBottom: 4, marginBottom: 4 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 160px 60px", gap: 8, fontSize: 10, color: T.text, borderBottom: `1px solid ${T.border}`, paddingBottom: 4, marginBottom: 4 }}>
                 <span>DE</span><span>Name</span><span>Value</span><span>Encoding</span>
               </div>
               {built.fieldBreakdown?.map(p => (
@@ -580,7 +580,7 @@ export default function Builder() {
                   <span style={{ color: T.accent, fontWeight: 700 }}>{p.deNumber}</span>
                   <span style={{ color: T.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.fieldName}</span>
                   <span style={{ color: T.text }}>{p.rawValue}</span>
-                  <span style={{ color: T.faint, fontSize: 9 }}>{p.encoding}</span>
+                  <span style={{ color: T.text, fontSize: 9 }}>{p.encoding}</span>
                 </div>
               ))}
             </div>
