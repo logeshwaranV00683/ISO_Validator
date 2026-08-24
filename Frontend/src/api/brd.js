@@ -4,7 +4,8 @@ export const uploadBrd = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
     return unwrap(await apiClient.post("/ai/brd/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 900000
     }));
 };
 export const getBrdList       = async ()         => unwrap(await apiClient.get("/ai/brd"));
