@@ -61,6 +61,16 @@ select { appearance: none; -webkit-appearance: none; }
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+@keyframes progressStripes {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* Moving-stripes fill animation used by ProgressBar (upload/extraction progress) */
+@keyframes progressStripes {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
 
 /* Focus outline */
 input:focus, textarea:focus, select:focus {
@@ -93,4 +103,7 @@ button { transition: opacity 0.12s, background 0.12s, border-color 0.12s; }
   0%   { transform: scale(1); }
   40%  { transform: scale(1.25); }
   100% { transform: scale(1); }
+}
+.raw-message-input::placeholder{
+  color:rgb(220, 222, 222);
 }
