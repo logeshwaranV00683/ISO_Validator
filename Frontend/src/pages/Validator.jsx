@@ -807,7 +807,7 @@ export default function Validator({ initialMsg = "" }) {
         <div style={{ display:"flex", gap:10, alignItems:"center", background:T.surface, border:`1px solid ${T.border}`, borderRadius:6, padding:"8px 14px", fontSize:11, flexWrap:"wrap" }}>
           <span style={{ color:T.muted }}>Run: <span style={{ color:T.accent }}>{result.runReference}</span></span>
           <span style={{ color:T.faint }}>|</span>
-          {[["Parse",result.timing?.parseDurationMs,T.accent],["Validate",result.timing?.validationDurationMs,T.green],...(result.ai?.enabled?[["AI",result.timing?.aiDurationMs,T.purple]]:[])].map(([l,v,c]) => (
+          {[["Parse",result.timing?.parseDurationMs,T.accent],["Validate",result.timing?.validationDurationMs,T.green],...(result.ai?.enabled?[["AI",result.timing?.aiDurationMs,T.purple]]:[]),...(result.timing?.otherDurationMs > 0 ? [["Other",result.timing.otherDurationMs,T.orange]] : [])].map(([l,v,c]) => (
             <span key={l} style={{ color:T.muted }}>{l}: <span style={{ color:c, fontWeight:700 }}>{v}ms</span></span>
           ))}
           <span style={{ color:T.muted }}>| Total: <span style={{ color:T.green, fontWeight:700 }}>{result.timing?.totalDurationMs}ms</span></span>
@@ -910,7 +910,7 @@ export default function Validator({ initialMsg = "" }) {
                     </div>
                   </Card>
                 : result.ai?.explanation && (
-                <Card title="AI Explanation" badge={<span style={{ color:T.purple }}>{result.ai.durationMs}ms</span>}>
+                <Card title="AI Explanation" badge={<span style={{ color:T.purple }}>{result.ai.modelUsed ? `${result.ai.modelUsed} · ` : ""}{result.ai.durationMs}ms</span>}>
                   <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                     {result.errors?.map((err, i) => {
                       const sc = SEV[err.severity] || SEV.INFO;

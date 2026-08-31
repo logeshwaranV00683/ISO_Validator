@@ -32,6 +32,11 @@ export const deleteRun = async (runReference) => {
   await apiClient.delete(`/history/${runReference}`);
 };
 
+export const bulkDeleteRuns = async (runReferences) => {
+  const res = await apiClient.post("/history/bulk-delete", runReferences);
+  return unwrap(res);
+};
+
 // ── Audit Logs ────────────────────────────────────────────────────────────────
 // filters: { sourceService, action, entityType, entityId, userId, fromDate, toDate, page, size }
 export const getAuditLogs = async (f = {}) => {

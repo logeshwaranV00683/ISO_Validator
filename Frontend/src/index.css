@@ -107,3 +107,6 @@ button { transition: opacity 0.12s, background 0.12s, border-color 0.12s; }
 .raw-message-input::placeholder{
   color:#b900a7;
 }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(40%) sepia(90%) saturate(1000%) hue-rotate(180deg);
+}

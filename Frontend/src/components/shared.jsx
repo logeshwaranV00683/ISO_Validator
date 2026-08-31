@@ -20,11 +20,12 @@ export function Btn({ children, primary, danger, onClick, disabled, style:s }) {
 // export function SmBtn({ children, danger, onClick, style:s }) {
 //   return <button onClick={onClick} style={{ background:"none", border:`1px solid ${danger?T.red+"44":T.border}`, color:danger?T.red:T.muted, padding:"3px 9px", borderRadius:4, fontFamily:"inherit", fontSize:9.5, cursor:"pointer", whiteSpace:"nowrap", ...s }}>{children}</button>;
 // }
-export function SmBtn({ children, danger, onClick, disabled, style: s }) {
+export function SmBtn({ children, danger, onClick, disabled,title, style: s }) {
   return (
     <button
       disabled={disabled}
       onClick={disabled ? undefined : onClick}
+      title={title}
       style={{
         background: "none",
         border: `1px solid ${danger ? T.red + "44" : T.border}`,
@@ -32,7 +33,7 @@ export function SmBtn({ children, danger, onClick, disabled, style: s }) {
         padding: "3px 9px",
         borderRadius: 4,
         fontFamily: "inherit",
-        fontSize: 9.5,
+        fontSize: 10.5,
         cursor: disabled ? "not-allowed" : "pointer",
         whiteSpace: "nowrap",
         opacity: disabled ? 0.4 : 1,

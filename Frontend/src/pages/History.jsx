@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { T, ENV_COLORS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../hooks/useApi";
-import { getHistory, getHistoryStats, exportHistory } from "../api/history";
+import { getHistory, getHistoryStats, exportHistory, bulkDeleteRuns } from "../api/history";
 import { getProfiles } from "../api/profiles";
 import { rerunValidation } from "../api/validation";
 import { getConfigValue } from "../api/config";
@@ -42,10 +42,14 @@ export default function History() {
   const [expanded, setExpanded] = useState(null);
   const [rerunning, setRerunning] = useState(null);
   const [dateError, setDateError] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const { data, loading, error, refetch } = useApi(() => getHistory(filters), [filters]);
   const { data: stats } = useApi(getHistoryStats);
   const { data: profiles } = useApi(getProfiles);
+
+  useEffect(() => { setSelected(new Set()); }, [filters]);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,9 +101,16 @@ export default function History() {
   };
 
   const handleRerun = async (runReference) => {
+
+    if (!window.confirm(
+      `Rerun ${runReference}?\n\nThis re-validates the original message and creates a NEW history record — it does not just refresh this row.`
+    )) return;
+
     setRerunning(runReference);
     try { await rerunValidation(runReference); refetch(); }
-    catch {}
+    catch (err) {
+      alert(err?.response?.data?.message || err?.response?.data?.error?.message || err.message || "Rerun failed.");
+    }
     finally { setRerunning(null); }
   };
 
@@ -119,6 +130,40 @@ export default function History() {
     a.download = `${h.runReference}-raw.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const pageRunReferences = data?.content?.map(h => h.runReference) || [];
+  const allOnPageSelected = pageRunReferences.length > 0 && pageRunReferences.every(r => selected.has(r));
+
+  const toggleSelected = (runReference) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(runReference) ? next.delete(runReference) : next.add(runReference);
+      return next;
+    });
+  };
+
+  const toggleSelectAllOnPage = () => {
+    setSelected(() => allOnPageSelected ? new Set() : new Set(pageRunReferences));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`Delete ${selected.size} selected run${selected.size===1?"":"s"}? This cannot be undone.`)) return;
+
+    setBulkDeleting(true);
+    try {
+      const result = await bulkDeleteRuns(Array.from(selected));
+      setSelected(new Set());
+      refetch();
+      if (result?.skippedCount > 0) {
+        alert(`${result.deletedCount} deleted, ${result.skippedCount} skipped (not found or not owned by you).`);
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || err?.response?.data?.error?.message || err.message || "Bulk delete failed.");
+    } finally {
+      setBulkDeleting(false);
+    }
   };
 
   const SL = { width:"100%", background:T.surface2, border:`1px solid ${T.border}`, color:T.text, padding:"8px 10px", borderRadius:6, fontFamily:"inherit", fontSize:11, outline:"none" };
@@ -182,9 +227,33 @@ export default function History() {
           <div style={{ marginTop:10, fontSize:11, color:T.red }}>⚠ {dateError}</div>
         )}
 
-        <div style={{ display:"flex", gap:8, marginTop:10, justifyContent:"flex-end" }}>
-          <SmBtn onClick={()=>handleExport("csv")}>⬇ CSV</SmBtn>
-          <SmBtn onClick={handleReset}>↺ Reset</SmBtn>
+        <div style={{ display:"flex", gap:8, marginTop:10, justifyContent:"space-between", alignItems:"center" }}>
+         <div>
+  {can.delete && selected.size > 0 && (
+    <button
+      type="button"
+      onClick={handleBulkDelete}
+      disabled={bulkDeleting}
+      style={{
+        background: T.blue,
+        color: "#fff",
+        border: "none",
+        borderRadius: 6,
+        padding: "9px 14px",
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: bulkDeleting ? "not-allowed" : "pointer",
+        opacity: bulkDeleting ? 0.6 : 1,
+      }}
+    >
+      🗑 {bulkDeleting ? "Deleting…" : `Delete ${selected.size} Selected`}
+    </button>
+  )}
+</div>
+          <div style={{ display:"flex", gap:8 }}>
+            <SmBtn onClick={()=>handleExport("csv")}>⬇ CSV</SmBtn>
+            <SmBtn onClick={handleReset}>↺ Reset</SmBtn>
+          </div>
         </div>
       </Card>
 
@@ -196,6 +265,10 @@ export default function History() {
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
             <thead>
               <tr style={{ borderBottom:`1px solid ${T.border}` }}>
+                <Th>
+                  <input type="checkbox" checked={allOnPageSelected} onChange={toggleSelectAllOnPage}
+                    title="Select all on this page" style={{ cursor:"pointer" }} />
+                </Th>
                 {["","Run ID","Timestamp","MTI","Profile","Env","RC","Errors","Parse","Val","AI","Total","Status",""].map((h,i)=><Th key={h+i}>{h}</Th>)}
               </tr>
             </thead>
@@ -205,6 +278,11 @@ export default function History() {
                 const open = expanded===h.runReference;
                 return (<>
                   <tr key={h.runReference} style={{ borderBottom:open?"none":`1px solid ${T.border}22`, background:open?T.surface2:"transparent" }}>
+                    <td style={{ padding:"8px 6px" }}>
+                      <input type="checkbox" checked={selected.has(h.runReference)}
+                        onChange={()=>toggleSelected(h.runReference)}
+                        style={{ cursor:"pointer" }} />
+                    </td>
                     <td style={{ padding:"8px 6px" }}>
                       <button onClick={()=>setExpanded(open?null:h.runReference)} style={{ background:"none", border:`1px solid ${T.border}`, color:T.muted, width:20, height:20, borderRadius:3, cursor:"pointer", fontSize:10 }}>
                         {open?"▲":"▼"}
@@ -223,19 +301,26 @@ export default function History() {
                     <td style={{ padding:"8px 8px", color:h.totalErrors>0?T.yellow:T.green, fontWeight:700, textAlign:"center" }}>{h.totalErrors}</td>
                     <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.parseDurationMs}ms</td>
                     <td style={{ padding:"8px 8px", color:T.muted, textAlign:"center" }}>{h.validationDurationMs}ms</td>
-                    <td style={{ padding:"8px 8px", color:h.aiDurationMs?T.purple:T.muted, textAlign:"center" }}>{h.aiDurationMs?`${h.aiDurationMs}ms`:"—"}</td>
+                    <td style={{ padding:"8px 8px", textAlign:"center" }}>
+                      {h.aiDurationMs
+                        ? <div style={{ display:"flex", flexDirection:"column", alignItems:"center", lineHeight:1.5 }}>
+                            <span style={{ color:T.purple, fontWeight:700, fontSize:10 }}>{h.aiModelUsed || "unknown"}</span>
+                            <span style={{ color:T.faint, fontSize:9 }}>{h.aiDurationMs}ms</span>
+                          </div>
+                        : <span style={{ color:T.muted }}>—</span>}
+                    </td>
                     <td style={{ padding:"8px 8px", color:T.text, fontWeight:700 }}>{h.totalDurationMs}ms</td>
                     <td style={{ padding:"8px 8px" }}><Tag color={sc} small>{h.status}</Tag></td>
                     <td style={{ padding:"8px 8px" }}>
                       <div style={{ display:"flex", gap:4 }}>
-                        {can.validate && <SmBtn onClick={()=>handleRerun(h.runReference)}>{rerunning===h.runReference?"…":"↺"}</SmBtn>}
-                        <SmBtn onClick={()=>handleDownloadRaw(h)}>⬇</SmBtn>
+                        {can.validate && <SmBtn title="Rerun — creates a new history record" onClick={()=>handleRerun(h.runReference)}>{rerunning===h.runReference?"…":"▶"}</SmBtn>}
+                        <SmBtn title="Download raw message" onClick={()=>handleDownloadRaw(h)}>⬇</SmBtn>
                       </div>
                     </td>
                   </tr>
                   {open && (
                     <tr key={h.runReference+"_exp"} style={{ borderBottom:`1px solid ${T.border}22`, background:T.surface2 }}>
-                      <td colSpan={14} style={{ padding:"10px 14px" }}>
+                      <td colSpan={15} style={{ padding:"10px 14px" }}>
                         <div style={{ fontSize:11, color:T.muted, marginBottom:6 }}>Raw Message:</div>
                         <div style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:4, padding:"8px 12px", fontSize:11, color:T.accent, wordBreak:"break-all" }}>
                           {h.rawMessage || <span style={{ color:T.faint }}>—</span>}

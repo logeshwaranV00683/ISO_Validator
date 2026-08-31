@@ -21,7 +21,8 @@ export const T = {
   cement:"#ADADAD",
   tetradic:"#E3DCDC",
   teak:"#49F278",
-  fyellow:"#c2cd67"
+  fyellow:"#c2cd67",
+  orange:"#FF991C"
 };
 
 export const SEV = {
