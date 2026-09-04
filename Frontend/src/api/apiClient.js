@@ -35,7 +35,16 @@ apiClient.interceptors.response.use(
 
 export default apiClient;
 
-export const unwrap    = (res) => res.data.data;
+export const unwrap = (res) => {
+  const body = res.data;
+
+  if (body && body.success === false) {
+    const err = new Error(body.message || "Request failed");
+    err.response = res;
+    throw err;
+  }
+  return body.data;
+};
 export const buildParams = (filters = {}) => {
   const p = {};
   Object.entries(filters).forEach(([k,v]) => {
