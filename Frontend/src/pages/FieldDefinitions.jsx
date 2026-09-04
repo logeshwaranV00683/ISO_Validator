@@ -1,9 +1,11 @@
+
+
 import { useState, useEffect } from "react";
-import { T } from "../constants/theme";
+import { T, MTIS } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
-import { getFieldDefinitions, deleteFieldDef, updateFieldDef } from "../api/rules";
-import { getProfiles, getFormatMtis } from "../api/profiles";
+import { getFieldDefinitions, deleteFieldDef, updateFieldDef, getRules } from "../api/rules";
+import { getProfiles } from "../api/profiles";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner, Th, Toggle } from "../components/shared";
 import FieldDefModal from "./modals/FieldDefModal";
 
@@ -11,7 +13,7 @@ import FieldDefModal from "./modals/FieldDefModal";
 export default function FieldDefinitions() {
   const { can } = useAuth();
   const [profileId, setProfileId] = useState("");
-  const [mti, setMti] = useState(null);
+  const [mti, setMti] = useState("0200");
   const [showModal, setShowModal] = useState(false);
   const [editDef, setEditDef] = useState(null);
 
@@ -27,27 +29,23 @@ export default function FieldDefinitions() {
     }
   }, [profiles, profileId]);
 
-  const { data: availableMtis } = useApi(
-    () => (profileId ? getFormatMtis(profileId) : Promise.resolve([])),
-    [profileId]
-  );
-  const mtiList = availableMtis || [];
-
-  useEffect(() => {
-    if (mtiList.length > 0 && !mtiList.includes(mti)) {
-      setMti(mtiList[0]);
-    } else if (mtiList.length === 0) {
-      setMti(null);
-    }
-  }, [mtiList]); 
-
   const { data: defs, loading, error, refetch } = useApi(
     () =>
-      profileId && mti
+      profileId
         ? getFieldDefinitions({ profileId, mti })
         : Promise.resolve([]),
     [profileId, mti]
   );
+
+  // Rules for this profile+MTI — fetched once here so the edit modal can show
+  // them read-only. Not rendered anywhere in this page's table.
+  const { data: rules } = useApi(
+    () => (profileId ? getRules({ profileId, mti }) : Promise.resolve([])),
+    [profileId, mti]
+  );
+
+  const rulesForDe = (deNumber) =>
+    (rules || []).filter(r => r.deNumber === deNumber);
 
   const { mutate: doDelete } = useMutation(deleteFieldDef);
   const { mutate: doUpdate } = useMutation((id, d) => updateFieldDef(id, d));
@@ -85,39 +83,33 @@ export default function FieldDefinitions() {
             </select>
           </div>
 
-          {/* MTI pills — now sourced from actual uploaded Message Formats for this profile */}
+          {/* MTI pills */}
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
             <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>MTI</div>
-            {mtiList.length === 0 ? (
-              <div style={{ fontSize: 11, color: T.faint }}>
-                No message formats uploaded for this profile yet — upload one on the Formats page first.
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {mtiList.map(m => (
-                  <button key={m} onClick={() => setMti(m)}
-                    style={{
-                      background: mti === m ? T.accent + "22" : T.surface2,
-                      border: `1px solid ${mti === m ? T.accent : T.border}`,
-                      color: mti === m ? T.accent : T.muted,
-                      padding: "5px 12px",
-                      borderRadius: 20,
-                      fontFamily: "inherit",
-                      fontSize: 11,
-                      cursor: "pointer",
-                      fontWeight: mti === m ? 700 : 400,
-                      transition: "all 0.15s",
-                    }}
-                  >{m}</button>
-                ))}
-              </div>
-            )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {MTIS.map(m => (
+                <button key={m} onClick={() => setMti(m)}
+                  style={{
+                    background: mti === m ? T.accent + "22" : T.surface2,
+                    border: `1px solid ${mti === m ? T.accent : T.border}`,
+                    color: mti === m ? T.accent : T.muted,
+                    padding: "5px 12px",
+                    borderRadius: 20,
+                    fontFamily: "inherit",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    fontWeight: mti === m ? 700 : 400,
+                    transition: "all 0.15s",
+                  }}
+                >{m}</button>
+              ))}
+            </div>
           </div>
         </div>
       </Card>
 
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        {/* {can.add && <Btn primary onClick={() => { setEditDef(null); setShowModal(true); }}>+ Add Field</Btn>} */}
+        {can.add && <Btn primary onClick={() => { setEditDef(null); setShowModal(true); }}>+ Add Field</Btn>}
         {/* {can.add && <SmBtn>⬆ Bulk Import</SmBtn>} */}
       </div>
 
@@ -134,7 +126,7 @@ export default function FieldDefinitions() {
           <tbody>
             {(defs || []).map(d => (
               <tr key={d.id} style={{ borderBottom: `1px solid ${T.border}22`, opacity: d.isActive ? 1 : 0.5 }}>
-                <td style={{ padding: "8px 8px", color: T.cement, textAlign: "center" }}>{d.displayOrder}</td>
+                <td style={{ padding: "8px 8px", color: T.faint, textAlign: "center" }}>{d.displayOrder}</td>
                 <td style={{ padding: "8px 8px", color: T.accent, fontWeight: 700 }}>{d.deNumber}</td>
                 <td style={{ padding: "8px 8px", color: T.text }}>{d.fieldName}</td>
                 <td style={{ padding: "8px 8px" }}><Tag color={T.blue} small>{d.dataType}</Tag></td>
@@ -142,17 +134,17 @@ export default function FieldDefinitions() {
                 <td style={{ padding: "8px 8px", textAlign: "center" }}>
                   {(d.isLlvar || d.isLllvar) && <Tag color={T.purple} small>{d.isLllvar ? "LLLVAR" : "LLVAR"}</Tag>}
                 </td>
-                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isMandatory ? T.green : T.red }}>{d.isMandatory ? "✓" : "✗"}</td>
-                <td style={{ padding: "8px 8px", color: T.text, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isMandatory ? T.green : T.faint }}>{d.isMandatory ? "✓" : "✗"}</td>
+                <td style={{ padding: "8px 8px", color: T.faint, fontSize: 10, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.placeholderValue || "—"}</td>
                 <td style={{ padding: "8px 8px", textAlign: "center" }}>
                   <Toggle label="" active={d.isBuilderVisible} onClick={() => can.edit && handleToggleVisible(d)} />
                 </td>
-                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isActive ? T.green : T.red }}>{d.isActive ? "✓" : "✗"}</td>
+                <td style={{ padding: "8px 8px", textAlign: "center", color: d.isActive ? T.green : T.faint }}>{d.isActive ? "✓" : "✗"}</td>
                 {can.edit && (
                   <td style={{ padding: "8px 8px" }}>
                     <div style={{ display: "flex", gap: 4 }}>
                       <SmBtn onClick={() => { setEditDef(d); setShowModal(true); }}>Edit</SmBtn>
-                      {/* <SmBtn danger onClick={() => handleDelete(d.id)}>Del</SmBtn> */}
+                      <SmBtn danger onClick={() => handleDelete(d.id)}>Del</SmBtn>
                     </div>
                   </td>
                 )}
@@ -160,7 +152,7 @@ export default function FieldDefinitions() {
             ))}
             {!defs?.length && !loading && (
               <tr><td colSpan={11} style={{ padding: "24px", textAlign: "center", color: T.faint, fontSize: 12 }}>
-                {mti ? `No field definitions for ${mti}. Add fields to enable the Message Builder for this profile + MTI.` : "Select a profile with an uploaded Message Format to see field definitions."}
+                No field definitions for {mti}. Add fields to enable the Message Builder for this profile + MTI.
               </td></tr>
             )}
           </tbody>
@@ -170,6 +162,7 @@ export default function FieldDefinitions() {
       {showModal && (
         <FieldDefModal
           def={editDef}
+          rules={editDef ? rulesForDe(editDef.deNumber) : []}
           profileId={profileId}
           mti={mti}
           profiles={
