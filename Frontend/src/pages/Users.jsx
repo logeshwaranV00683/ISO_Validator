@@ -149,8 +149,8 @@ const users = roleFilter ? allUsers.filter(u => u.role === roleFilter) : allUser
                       <SmBtn onClick={()=>{ setEditUser(u); setShowModal(true); }}>Edit</SmBtn>
                       <SmBtn disabled={isSelf} onClick={()=>!isSelf && handleToggle(u.id,u.active)}>{u.active?"Disable":"Enable"}</SmBtn>
                       <SmBtn disabled={isSelf} onClick={()=>!isSelf && doRevoke(u.id)}>Revoke Sessions</SmBtn>
-                      <SmBtn danger disabled={isSelf} onClick={()=>!isSelf && handleDelete(u.id)}>Del</SmBtn>
-                      {isSelf && <span style={{ fontSize:9, color:T.faint, marginLeft:2 }} title="You can't disable, revoke, or delete your own account while logged in">(you)</span>}
+                      <SmBtn danger disabled={isSelf} onClick={()=>!isSelf && handleDelete(u.id)} style={{color:T.text}}>🗑 Del</SmBtn>
+                      {isSelf && <span style={{ fontSize:9, color:T.text, marginLeft:2 }} title="You can't disable, revoke, or delete your own account while logged in">(👤 you)</span>}
                       
                     </div>
                   </td>

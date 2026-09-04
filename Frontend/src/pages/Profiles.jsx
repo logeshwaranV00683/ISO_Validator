@@ -103,7 +103,7 @@ export default function Profiles() {
                 {can.edit && <SmBtn onClick={() => { setEditProfile(p); setShowModal(true); }}>✎ Edit</SmBtn>}
                 {/* {can.add  && <SmBtn onClick={() => handleClone(p.id, p.profileName)}>⎘ Clone</SmBtn>} */}
                 {can.edit && !p.isDefault && <SmBtn onClick={() => handleSetDefault(p.id)}>★ Set Default</SmBtn>}
-                {can.delete && !p.isDefault && <SmBtn danger onClick={() => handleDelete(p.id)}>Delete</SmBtn>}
+                {can.delete && !p.isDefault && <SmBtn danger onClick={() => handleDelete(p.id)} style={{color:T.text}}>🗑 Delete</SmBtn>}
               </div>
             </div>
           );

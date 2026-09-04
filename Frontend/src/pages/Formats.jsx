@@ -161,7 +161,7 @@ export default function Formats() {
                   </SmBtn>
                 )} */}
                 <SmBtn onClick={() => loadVersions(f.id)}>Versions</SmBtn>
-                {can.delete && <SmBtn danger onClick={() => handleDelete(f.id)}>Delete</SmBtn>}
+                {can.delete && <SmBtn danger onClick={() => handleDelete(f.id)} style={{color:T.text}}>🗑 Delete</SmBtn>}
               </div>
             </div>
 

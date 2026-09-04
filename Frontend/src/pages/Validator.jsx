@@ -768,7 +768,7 @@ export default function Validator({ initialMsg = "" }) {
               <Btn primary onClick={validate} disabled={loading||!can.validate||!profileId} style={{ flex:1 }}>
                 {loading?"Processing…":"▶ VALIDATE"}
               </Btn>
-              <Btn onClick={() => { setRawMsg(""); setResult(null); setError(null); try { sessionStorage.removeItem("iso_validator_draft_v1"); } catch {} }}>Clear ✕</Btn>
+              <SmBtn onClick={() => { setRawMsg(""); setResult(null); setError(null); try { sessionStorage.removeItem("iso_validator_draft_v1"); } catch {} }}>Clear ✕</SmBtn>
             </div>
           </div>
         </div>

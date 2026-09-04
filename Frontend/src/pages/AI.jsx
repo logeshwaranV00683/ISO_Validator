@@ -183,7 +183,7 @@ export default function AI() {
                     </div>
                     {m.name === configForm?.activeModel
                       ? <span style={{ fontSize: 10, color: T.green }}>● Active</span>
-                      : can.edit && <SmBtn>To Active change in the config</SmBtn>}
+                      : can.edit && <Btn>To Active change in the config</Btn>}
                   </div>
                 ))}
               </Card>
@@ -200,7 +200,7 @@ export default function AI() {
                     style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, color: T.text, padding: "10px 12px", borderRadius: 6, fontSize: 11, fontFamily: "inherit", resize: "vertical", outline: "none", opacity: can.edit ? 1 : 0.6 }} />
                   <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
                     {can.edit && <Btn primary onClick={handleSavePrompt}>Save</Btn>}
-                    <Btn onClick={handleTestPrompt}>{testing ? "Testing…" : "▶ Test Prompt"}</Btn>
+                    <SmBtn onClick={handleTestPrompt}>{testing ? "Testing…" : "▶ Test Prompt"}</SmBtn>
                     <SmBtn onClick={loadVersions}>Version History</SmBtn>
                   </div>
                   {testOutput && testOutput.status === "SUCCESS" && (

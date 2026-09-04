@@ -132,12 +132,12 @@ const { data, loading, error, refetch } = useApi(
       {/* Actions */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <span style={{ fontSize: 13, color: T.muted }}>
-          <span style={{ color: T.text, fontWeight: 700 }}>{totalElements}</span> rules
+          {/* <span style={{ color: T.text, fontWeight: 700 }}>{totalElements}</span> rules */}
         </span>
         <div style={{ flex: 1 }} />
         {/* {can.add && <Btn primary onClick={() => { setEditRule(null); setShowModal(true); }}>+ Add Rule</Btn>} */}
         {/* {can.edit && <SmBtn>⬆ Import JSON</SmBtn>} */}
-        <SmBtn onClick={handleExport}>⬇ Export JSON</SmBtn>
+        <SmBtn onClick={handleExport}> <img className="download-icon" src="src/assets/download-icon.png" alt="" /> Export JSON</SmBtn>
       </div>
 
       {/* Stats */}
@@ -192,7 +192,7 @@ const { data, loading, error, refetch } = useApi(
                     <td style={{ padding: "8px 8px" }}>
                       <div style={{ display: "flex", gap: 4 }}>
                         <SmBtn onClick={() => { setEditRule(r); setShowModal(true); }}>Edit</SmBtn>
-                        <SmBtn danger onClick={() => handleDelete(r.id)}>Del</SmBtn>
+                        <SmBtn danger onClick={() => handleDelete(r.id)} style={{color:T.text}}>🗑 Del</SmBtn>
                       </div>
                     </td>
                   )}

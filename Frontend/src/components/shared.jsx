@@ -22,13 +22,13 @@ export function Btn({ children, primary, danger, onClick, disabled, style:s }) {
 // }
 export function SmBtn({ children, danger, onClick, disabled,title, style: s }) {
   return (
-    <button
+    <button className={`sm-btn ${danger ? "sm-btn-danger" : ""}`}
       disabled={disabled}
       onClick={disabled ? undefined : onClick}
       title={title}
       style={{
-        background: "none",
-        border: `1px solid ${danger ? T.red + "44" : T.border}`,
+  
+        border: `1px solid ${danger ? T.red : T.accent}`,
         color: danger ? T.red : T.text,
         padding: "3px 9px",
         borderRadius: 4,

@@ -17,7 +17,7 @@ export default function TopBar() {
 
       <div style={{ display:"flex", gap:16, fontSize:11, color:T.muted, alignItems:"center" }}>
         {/* <span style={{ display:"flex", alignItems:"center", gap:5 }}><Dot color={T.green} /> API Gateway · localhost:8080</span> */}
-        <span style={{ color:T.faint }}>|</span>
+        {/* <span style={{ color:T.faint }}>|</span> */}
 
         {/* Theme toggle */}
         <button
@@ -52,7 +52,7 @@ export default function TopBar() {
           <span style={{ fontSize: 13 }}>{isDark ? "Light" : "Dark"}</span>
         </button>
 
-        <span style={{ color:T.faint }}>|</span>
+        <span style={{ color:T.faint }}></span>
 
         {user && (
           <div style={{ display:"flex", alignItems:"center", gap:8, background:T.surface2, border:`1px solid ${T.border}`, borderRadius:6, padding:"4px 10px" }}>

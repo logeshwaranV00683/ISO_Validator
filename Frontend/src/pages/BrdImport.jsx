@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { T } from "../constants/theme";
@@ -17,22 +16,43 @@ const POLL_MESSAGES = [
   "Analyzing with AI…",
 ];
 
-function StepIndicator({ step }) {
+const getProgressMessage = (percentage) => {
+  if (percentage >= 100) return "Completed";
+  if (percentage >= 66) return "Analyzing with AI…";
+  if (percentage >= 45) return "Understanding context…";
+  if (percentage >= 31) return "Generating embeddings…";
+  return "Extracting text…";
+};
+
+function StepIndicator({ step, unlockedSteps, onStepClick }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      {STEPS.map((s, i) => (
-        <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{
-            width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-            background: step >= s.n ? T.accent : T.surface2,
-            color: step >= s.n ? "#fff" : T.faint,
-            border: `1px solid ${step >= s.n ? T.accent : T.border}`,
-            fontSize: 11, fontWeight: 700,
-          }}>{s.n}</div>
-          <span style={{ fontSize: 11, color: step === s.n ? T.text : T.faint, fontWeight: step === s.n ? 700 : 400 }}>{s.label}</span>
-          {i < STEPS.length - 1 && <div style={{ width: 30, height: 1, background: step > s.n ? T.accent : T.border }} />}
-        </div>
-      ))}
+      {STEPS.map((s, i) => {
+        const unlocked = unlockedSteps.has(s.n);
+        return (
+          <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              onClick={() => unlocked && onStepClick(s.n)}
+              title={unlocked ? `Go to ${s.label}` : undefined}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                cursor: unlocked ? "pointer" : "default",
+                opacity: unlocked ? 1 : 0.5,
+              }}
+            >
+              <div style={{
+                width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                background: step >= s.n ? T.accent : T.surface2,
+                color: step >= s.n ? "#fff" : T.text,
+                border: `1px solid ${step >= s.n ? T.accent : T.blue}`,
+                fontSize: 11, fontWeight: 700,
+              }}>{s.n}</div>
+              <span style={{ fontSize: 11, color: step === s.n ? T.text : T.text, fontWeight: step === s.n ? 700 : 400 }}>{s.label}</span>
+            </div>
+            {i < STEPS.length - 1 && <div style={{ width: 30, height: 1, background: step > s.n ? T.accent : T.border }} />}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -72,7 +92,6 @@ export default function BrdImport() {
   const pollTimerRef = useRef(null);
   const msgTimerRef = useRef(null);
 
-
   useEffect(() => {
     try {
       sessionStorage.setItem(BRD_STORAGE_KEY, JSON.stringify({
@@ -81,12 +100,10 @@ export default function BrdImport() {
     } catch {}
   }, [step, uploading, progressPercent, brdId, config, confirmResult]);
 
-
   useEffect(() => {
     if (step === 1 && uploading && brdId) {
       startPolling(brdId);
     }
-    
   }, []);
 
   useEffect(() => {
@@ -172,8 +189,6 @@ export default function BrdImport() {
         await deleteBrd(idToCancel);
       }
     } catch (err) {
-      // Best-effort — even if the cleanup call fails, we still want to
-      // free up the UI so the user isn't stuck.
       console.warn("Failed to cancel BRD document on server:", err);
     } finally {
       setCancelling(false);
@@ -271,6 +286,11 @@ export default function BrdImport() {
     setError(null);
     try {
       const result = await confirmBrd(brdId);
+      if (!result) {
+        console.error("[BRD] confirmBrd resolved without a usable result. Check Network tab for the raw /ai/brd/{id}/confirm response.");
+        setError("Confirm failed: server responded but returned no confirmation data. Check the Network tab or backend logs for details.");
+        return;
+      }
       setConfirmResult(result);
       setStep(3);
     } catch (err) {
@@ -285,16 +305,26 @@ export default function BrdImport() {
     color: T.text, padding: "5px 7px", borderRadius: 4, fontFamily: "inherit", fontSize: 10.5, outline: "none",
   };
 
+  const unlockedSteps = new Set([1]);
+  if (config) unlockedSteps.add(2);
+  if (confirmResult) unlockedSteps.add(3);
+  if (uploading || confirming) unlockedSteps.clear();
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Scoutie+Sans:ital,wght@0,200..800;1,200..800&display=swap');`}</style>
+
       <PageHeader title="BRD Import" sub="Upload a Business Requirements Document — AI extracts a switch profile, field definitions, and rules" />
 
       <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-        <StepIndicator step={step} />
+        <StepIndicator
+          step={step}
+          unlockedSteps={unlockedSteps}
+          onStepClick={(n) => setStep(n)}
+        />
       </div>
 
       {error && <ErrorBanner message={error} onRetry={step === 1 ? handleUpload : undefined} />}
-
 
       {step === 1 && (
         <Card title="Upload BRD Document">
@@ -314,7 +344,9 @@ export default function BrdImport() {
               ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }}
               onChange={(e) => pickFile(e.target.files?.[0])}
             />
-            <div style={{ fontSize: 28, marginBottom: 10, color: T.faint }}>⬆</div>
+            {/* <div style={{ fontSize: 28, marginBottom: 10, color: T.text }}> */}
+            <img src="src/assets/upload-img.png" alt="" />
+            {/* </div> */}
             {selectedFile ? (
               <div>
                 <div style={{ fontSize: 13, color: T.text, fontWeight: 600 }}>{selectedFile.name}</div>
@@ -344,13 +376,12 @@ export default function BrdImport() {
 
           {uploading && (
             <div style={{ marginTop: 16 }}>
-              <ProgressBar percent={progressPercent} text={POLL_MESSAGES[pollMsgIdx]} />
+              <ProgressBar percent={progressPercent} text={getProgressMessage(progressPercent)} />
             </div>
           )}
         </Card>
       )}
 
-    
       {step === 2 && config && (
         <>
           <Card>
@@ -359,6 +390,7 @@ export default function BrdImport() {
               {config.warnings?.length > 0 && config.warnings.map((w, i) => (
                 <Tag key={i} color={T.yellow} small>{w}</Tag>
               ))}
+              <small style={{ fontSize: 13, color: T.blue, fontWeight: 420, fontFamily: "Scoutie Sans" }}>AI can make mistakes, Please verify once before proceeding to next step</small>
             </div>
           </Card>
 
@@ -495,7 +527,6 @@ export default function BrdImport() {
         </>
       )}
 
-    
       {step === 3 && confirmResult && (
         <Card>
           <div style={{ textAlign: "center", padding: "24px 0", display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
@@ -506,6 +537,24 @@ export default function BrdImport() {
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
               <Btn primary onClick={() => navigate("/profiles")}>Go to Profiles</Btn>
               <Btn onClick={resetWizard}>Import Another</Btn>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {step === 3 && !confirmResult && (
+        <Card>
+          <div style={{ textAlign: "center", padding: "24px 0", display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+            <div style={{ fontSize: 32, color: T.red }}>⚠</div>
+            <div style={{ fontSize: 14, color: T.text, fontWeight: 600 }}>
+              Something went wrong confirming this import — no confirmation details were returned.
+            </div>
+            <div style={{ fontSize: 12, color: T.faint }}>
+              Check the audit log or try confirming again. If this keeps happening, the BRD's extracted data may be conflicting with an existing switch profile.
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <Btn onClick={() => setStep(2)}>Back to Review</Btn>
+              <Btn onClick={resetWizard}>Start Over</Btn>
             </div>
           </div>
         </Card>

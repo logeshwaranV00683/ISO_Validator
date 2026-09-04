@@ -251,7 +251,7 @@ export default function History() {
   )}
 </div>
           <div style={{ display:"flex", gap:8 }}>
-            <SmBtn onClick={()=>handleExport("csv")}>⬇ CSV</SmBtn>
+            <SmBtn onClick={()=>handleExport("csv")}> <img className="download-icon" src="src/assets/download-icon.png" alt="" /> CSV</SmBtn>
             <SmBtn onClick={handleReset}>↺ Reset</SmBtn>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function History() {
                     <td style={{ padding:"8px 8px" }}>
                       <div style={{ display:"flex", gap:4 }}>
                         {can.validate && <SmBtn title="Rerun — creates a new history record" onClick={()=>handleRerun(h.runReference)}>{rerunning===h.runReference?"…":"▶"}</SmBtn>}
-                        <SmBtn title="Download raw message" onClick={()=>handleDownloadRaw(h)}>⬇</SmBtn>
+                        <SmBtn title="Download raw message" onClick={()=>handleDownloadRaw(h)}> <img className="download-icon" src="src/assets/download-icon.png" alt="" /> </SmBtn>
                       </div>
                     </td>
                   </tr>

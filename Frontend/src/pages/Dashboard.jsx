@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { T, ENV_COLORS } from "../constants/theme";
 import { useApi } from "../hooks/useApi";
 import { getHistoryStats, getHistory } from "../api/history";
-import { PageHeader, Card, Tag, StatCard, LoadingBar, ErrorBanner } from "../components/shared";
+import { PageHeader, Card, Tag, StatCard, LoadingBar, ErrorBanner, SmBtn } from "../components/shared";
 
 const STATUS_COLOR = { PASSED:T.green, FAILED:T.red, WARNED:T.yellow, PROCESSING:T.blue, PARSE_ERROR:T.red };
 
@@ -92,7 +92,7 @@ export default function Dashboard() {
       {/* Recent Runs */}
       <Card
         title="Recent Validations"
-        extra={<button onClick={() => navigate("/history")} style={{ background:"none", border:"none", color:T.accent, fontSize:10, cursor:"pointer", fontFamily:"inherit" }}>View all →</button>}
+        extra={<SmBtn onClick={() => navigate("/history")} >View all →</SmBtn>}
       >
         {rLoad && <LoadingBar text="Loading recent runs…" />}
         {recent?.content && (
