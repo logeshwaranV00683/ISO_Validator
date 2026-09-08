@@ -24,21 +24,21 @@ export const T = {
   fyellow:"#c2cd67",
   orange:"#FF991C"
 };
-
+ 
 export const SEV = {
   CRITICAL: { bg: "color-mix(in srgb, var(--red) 12%, transparent)",    border: "color-mix(in srgb, var(--red) 35%, transparent)",    text: "var(--red)"    },
   WARNING:  { bg: "color-mix(in srgb, var(--yellow) 12%, transparent)", border: "color-mix(in srgb, var(--yellow) 35%, transparent)", text: "var(--yellow)" },
   INFO:     { bg: "color-mix(in srgb, var(--blue) 12%, transparent)",   border: "color-mix(in srgb, var(--blue) 35%, transparent)",   text: "var(--blue)"   },
 };
-
+ 
 export const ENV_COLORS = { PROD: "#ff2d55", UAT: "#ff9f0a", DEV: "#3fb950" };
-
+ 
 export const ROLES = {
   ADMIN:   { label: "Admin",   color: "var(--red)",    can: { edit:true,  delete:true,  add:true,  validate:true,  build:true  } },
   ANALYST: { label: "Analyst", color: "var(--yellow)", can: { edit:false, delete:false, add:false, validate:true,  build:true  } },
   VIEWER:  { label: "Viewer",  color: "var(--blue)",   can: { edit:false, delete:false, add:false, validate:false, build:false } },
 };
-
+ 
 export const MTI_DESCRIPTIONS = {
   "0100":"Authorization Request (Online)",
   "0110":"Authorization Response (Online)",
@@ -60,7 +60,7 @@ export const MTI_DESCRIPTIONS = {
   "0810":"Network Management Response",
   "0820":"Network Management Advice",
 };
-
+ 
 export const MTI_SHORT_LABELS = {
   "0100":"Auth Req (Online)",   "0110":"Auth Resp (Online)",
   "0120":"Auth Advice",         "0130":"Auth Advice Resp",
@@ -71,15 +71,15 @@ export const MTI_SHORT_LABELS = {
   "0430":"Reversal Adv Resp",   "0800":"Net Mgmt Req",
   "0810":"Net Mgmt Resp",       "0820":"Net Mgmt Advice",
 };
-
+ 
 export const MTIS = Object.keys(MTI_DESCRIPTIONS);
-
+ 
 export const selectStyle = {
   width:"100%", background:"var(--surface2)", border:"1px solid var(--border)",
   color:"var(--text)", padding:"8px 10px", borderRadius:6,
   fontFamily:"inherit", fontSize:11, outline:"none", cursor:"pointer",
 };
-
+ 
 export const inputStyle = {
   width:"100%", boxSizing:"border-box", background:"var(--surface2)",
   border:"1px solid var(--border)", color:"var(--text)", padding:"8px 10px",

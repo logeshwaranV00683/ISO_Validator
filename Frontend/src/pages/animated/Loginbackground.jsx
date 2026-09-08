@@ -255,7 +255,6 @@ function SceneB({ isDark, visible }) {
     </div>
   );
 }
-
 /* ── Main export ── */
 export default function LoginBackground() {
   const { isDark } = useTheme();
