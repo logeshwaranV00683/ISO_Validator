@@ -1,11 +1,9 @@
-
-
 import { useState, useEffect } from "react";
-import { T, MTIS } from "../constants/theme";
+import { T } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { useApi, useMutation } from "../hooks/useApi";
 import { getFieldDefinitions, deleteFieldDef, updateFieldDef, getRules } from "../api/rules";
-import { getProfiles } from "../api/profiles";
+import { getProfiles, getFormatMtis } from "../api/profiles";
 import { PageHeader, Card, Tag, SmBtn, Btn, LoadingBar, ErrorBanner, Th, Toggle } from "../components/shared";
 import FieldDefModal from "./modals/FieldDefModal";
 
@@ -13,7 +11,7 @@ import FieldDefModal from "./modals/FieldDefModal";
 export default function FieldDefinitions() {
   const { can } = useAuth();
   const [profileId, setProfileId] = useState("");
-  const [mti, setMti] = useState("0200");
+  const [mti, setMti] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editDef, setEditDef] = useState(null);
 
@@ -29,9 +27,25 @@ export default function FieldDefinitions() {
     }
   }, [profiles, profileId]);
 
+  // MTIs actually configured for this profile (Message Formats) — same
+  // source Rules Manager uses, instead of the static full MTI list.
+  const { data: availableMtis } = useApi(
+    () => (profileId ? getFormatMtis(profileId) : Promise.resolve([])),
+    [profileId]
+  );
+  const mtiList = availableMtis || [];
+
+  useEffect(() => {
+    if (mtiList.length > 0 && !mtiList.includes(mti)) {
+      setMti(mtiList[0]);
+    } else if (mtiList.length === 0) {
+      setMti(null);
+    }
+  }, [mtiList]);
+
   const { data: defs, loading, error, refetch } = useApi(
     () =>
-      profileId
+      (profileId && mti)
         ? getFieldDefinitions({ profileId, mti })
         : Promise.resolve([]),
     [profileId, mti]
@@ -40,7 +54,7 @@ export default function FieldDefinitions() {
   // Rules for this profile+MTI — fetched once here so the edit modal can show
   // them read-only. Not rendered anywhere in this page's table.
   const { data: rules } = useApi(
-    () => (profileId ? getRules({ profileId, mti }) : Promise.resolve([])),
+    () => (profileId && mti) ? getRules({ profileId, mti }) : Promise.resolve([]),
     [profileId, mti]
   );
 
@@ -87,7 +101,12 @@ export default function FieldDefinitions() {
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12, alignItems: "start" }}>
             <div style={{ fontSize: 11, color: T.muted, fontWeight: 600 }}>MTI</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {MTIS.map(m => (
+              {mtiList.length === 0 && (
+                <div style={{ fontSize: 11, color: T.faint }}>
+                  No MTIs configured for this profile in Message Formats.
+                </div>
+              )}
+              {mtiList.map(m => (
                 <button key={m} onClick={() => setMti(m)}
                   style={{
                     background: mti === m ? T.accent + "22" : T.surface2,
