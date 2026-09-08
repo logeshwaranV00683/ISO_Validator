@@ -8,6 +8,15 @@ export const uploadBrd = async (file) => {
         timeout: 900000
     }));
 };
+
+export const uploadBrdMulti = async (files) => {
+    const formData = new FormData();
+    files.forEach(f => formData.append("files", f));
+    return unwrap(await apiClient.post("/ai/brd/upload-multi", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 900000
+    }));
+};
 export const getBrdList       = async ()         => unwrap(await apiClient.get("/ai/brd"));
 export const getBrdById       = async (id)       => unwrap(await apiClient.get(`/ai/brd/${id}`));
 export const getBrdPreview    = async (id)       => unwrap(await apiClient.get(`/ai/brd/${id}/preview`));

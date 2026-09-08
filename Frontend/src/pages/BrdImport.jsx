@@ -2,8 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { T } from "../constants/theme";
 import { PageHeader, Card, Btn, SmBtn, Tag, Label, LoadingBar, ProgressBar, ErrorBanner } from "../components/shared";
-import { uploadBrd, getBrdById, getBrdPreview, updateBrdPreview, confirmBrd, deleteBrd } from "../api/brd";
-
+import { uploadBrd, uploadBrdMulti, getBrdById, getBrdPreview, updateBrdPreview, confirmBrd, deleteBrd } from "../api/brd";
 const STEPS = [
   { n: 1, label: "Upload" },
   { n: 2, label: "Review" },
@@ -77,6 +76,7 @@ export default function BrdImport() {
   const [step, setStep] = useState(saved.step ?? 1);
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fileQueue, setFileQueue] = useState([]);
   const [uploading, setUploading] = useState(saved.uploading ?? false);
   const [pollMsgIdx, setPollMsgIdx] = useState(0);
   const [progressPercent, setProgressPercent] = useState(saved.progressPercent ?? 0);
@@ -113,15 +113,20 @@ export default function BrdImport() {
     };
   }, []);
 
-  const resetWizard = () => {
+   const resetWizard = () => {
     setStep(1);
-    setSelectedFile(null);
     setUploading(false);
     setError(null);
     setBrdId(null);
     setConfig(null);
     setConfirmResult(null);
     setProgressPercent(0);
+
+    setFileQueue(prev => {
+      const [next, ...rest] = prev;
+      setSelectedFile(next || null);
+      return rest;
+    });
   };
 
   const pickFile = (file) => {
@@ -135,10 +140,48 @@ export default function BrdImport() {
     setSelectedFile(file);
   };
 
+  
+  const pickFiles = (fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    const valid = [];
+    for (const file of files) {
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (!["pdf", "docx", "txt"].includes(ext)) {
+        setError(`Unsupported file type: ${file.name}`);
+        continue;
+      }
+      valid.push(file);
+    }
+    if (!valid.length) return;
+
+    setError(null);
+    if (!selectedFile) {
+      setSelectedFile(valid[0]);
+      setFileQueue(prev => [...prev, ...valid.slice(1)]);
+    } else {
+      setFileQueue(prev => [...prev, ...valid]);
+    }
+  };
+
+    const removeQueuedFile = (index) => {
+    setFileQueue(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeSelectedFile = () => {
+    // pull the next queued file into the active slot, same as resetWizard does
+    setFileQueue(prev => {
+      const [next, ...rest] = prev;
+      setSelectedFile(next || null);
+      return rest;
+    });
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    pickFile(e.dataTransfer.files?.[0]);
+    pickFiles(e.dataTransfer.files);
   };
 
   const startPolling = useCallback((id) => {
@@ -218,6 +261,35 @@ export default function BrdImport() {
     } catch (err) {
       setUploading(false);
       setError(err?.response?.data?.message || err.message || "Upload failed");
+    }
+  };
+
+  
+  
+  const handleUploadMerged = async () => {
+    const allFiles = [selectedFile, ...fileQueue].filter(Boolean);
+    if (!allFiles.length) return;
+    setUploading(true);
+    setError(null);
+    setProgressPercent(0);
+    try {
+      const doc = await uploadBrdMulti(allFiles);
+      setBrdId(doc.id);
+      setFileQueue([]); 
+      if (doc.status === "COMPLETED") {
+        const preview = await getBrdPreview(doc.id);
+        setConfig(preview);
+        setUploading(false);
+        setStep(2);
+      } else if (doc.status === "FAILED") {
+        setUploading(false);
+        setError(doc.errorMessage || "BRD extraction failed. Please try again.");
+      } else {
+        startPolling(doc.id);
+      }
+    } catch (err) {
+      setUploading(false);
+      setError(err?.response?.data?.message || err.message || "Merged upload failed");
     }
   };
 
@@ -329,27 +401,36 @@ export default function BrdImport() {
       {step === 1 && (
         <Card title="Upload BRD Document">
           <div
-            onClick={() => { if (!selectedFile && !uploading) fileInputRef.current?.click(); }}
+            onClick={() => { if (!uploading) fileInputRef.current?.click(); }}
             onDragOver={(e) => { e.preventDefault(); if (!uploading) setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => { if (!uploading) handleDrop(e); else e.preventDefault(); }}
             style={{
               border: `2px dashed ${dragOver ? T.accent : T.border}`,
               borderRadius: 10, padding: "40px 20px", textAlign: "center",
-              cursor: (selectedFile || uploading) ? "default" : "pointer",
+              cursor:  uploading ? "default" : "pointer",
               background: dragOver ? T.accent + "0c" : T.surface2, transition: "all 0.15s",
             }}
           >
             <input
-              ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }}
-              onChange={(e) => pickFile(e.target.files?.[0])}
+              ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" multiple style={{ display: "none" }}
+              onChange={(e) => pickFiles(e.target.files)}
             />
             {/* <div style={{ fontSize: 28, marginBottom: 10, color: T.text }}> */}
             <img src="src/assets/upload-img.png" alt="" />
             {/* </div> */}
-            {selectedFile ? (
+                        {selectedFile ? (
               <div>
-                <div style={{ fontSize: 13, color: T.text, fontWeight: 600 }}>{selectedFile.name}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <div style={{ fontSize: 13, color: T.text, fontWeight: 600 }}>{selectedFile.name}</div>
+                  {!uploading && (
+                    <span
+                      onClick={(e) => { e.stopPropagation(); removeSelectedFile(); }}
+                      style={{ cursor: "pointer", color: T.red, fontWeight: 700 }}
+                      title="Remove this file"
+                    >✕</span>
+                  )}
+                </div>
                 <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>{(selectedFile.size / 1024).toFixed(1)} KB</div>
               </div>
             ) : (
@@ -360,18 +441,36 @@ export default function BrdImport() {
             )}
           </div>
 
+          
+          {fileQueue.length > 0 && (
+            <div style={{ marginTop: 10, fontSize: 11, color: T.muted }}>
+              + {fileQueue.length} more file{fileQueue.length > 1 ? "s" : ""}:  {fileQueue.map(f => f.name).join(", ")}
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-end" }}>
-            {selectedFile && !uploading && (
-              <SmBtn onClick={() => setSelectedFile(null)}>✕ Clear</SmBtn>
+                        {(selectedFile || fileQueue.length > 0) && (
+              <SmBtn
+                onClick={() => { setSelectedFile(null); setFileQueue([]); }}
+                disabled={uploading}
+              >
+                ✕ Clear All{fileQueue.length > 0 ? ` (${fileQueue.length + 1})` : ""}
+              </SmBtn>
             )}
             {uploading && (
               <SmBtn onClick={handleCancel} disabled={cancelling}>
                 {cancelling ? "Cancelling…" : "Cancel"}
               </SmBtn>
             )}
-            <Btn primary onClick={handleUpload} disabled={!selectedFile || uploading}>
-              {uploading ? "Processing…" : "Upload & Extract"}
-            </Btn>
+                        {fileQueue.length > 0 ? (
+              <Btn primary onClick={handleUploadMerged} disabled={!selectedFile || uploading}>
+                {uploading ? "Processing…" : `Merge & Extract (${fileQueue.length + 1} files)`}
+              </Btn>
+            ) : (
+              <Btn primary onClick={handleUpload} disabled={!selectedFile || uploading}>
+                {uploading ? "Processing…" : "Upload & Extract"}
+              </Btn>
+            )}
           </div>
 
           {uploading && (
