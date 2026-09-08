@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { T } from "../constants/theme";
 import { PageHeader, Card, Btn, SmBtn, Tag, Label, LoadingBar, ProgressBar, ErrorBanner } from "../components/shared";
-import { uploadBrd, uploadBrdMulti, getBrdById, getBrdPreview, updateBrdPreview, confirmBrd, deleteBrd } from "../api/brd";
+import { uploadBrd, getBrdById, getBrdPreview, updateBrdPreview, confirmBrd, deleteBrd } from "../api/brd";
 const STEPS = [
   { n: 1, label: "Upload" },
   { n: 2, label: "Review" },
@@ -266,32 +266,32 @@ export default function BrdImport() {
 
   
   
-  const handleUploadMerged = async () => {
-    const allFiles = [selectedFile, ...fileQueue].filter(Boolean);
-    if (!allFiles.length) return;
-    setUploading(true);
-    setError(null);
-    setProgressPercent(0);
-    try {
-      const doc = await uploadBrdMulti(allFiles);
-      setBrdId(doc.id);
-      setFileQueue([]); 
-      if (doc.status === "COMPLETED") {
-        const preview = await getBrdPreview(doc.id);
-        setConfig(preview);
-        setUploading(false);
-        setStep(2);
-      } else if (doc.status === "FAILED") {
-        setUploading(false);
-        setError(doc.errorMessage || "BRD extraction failed. Please try again.");
-      } else {
-        startPolling(doc.id);
-      }
-    } catch (err) {
-      setUploading(false);
-      setError(err?.response?.data?.message || err.message || "Merged upload failed");
-    }
-  };
+  // const handleUploadMerged = async () => {
+  //   const allFiles = [selectedFile, ...fileQueue].filter(Boolean);
+  //   if (!allFiles.length) return;
+  //   setUploading(true);
+  //   setError(null);
+  //   setProgressPercent(0);
+  //   try {
+  //     const doc = await uploadBrdMulti(allFiles);
+  //     setBrdId(doc.id);
+  //     setFileQueue([]); 
+  //     if (doc.status === "COMPLETED") {
+  //       const preview = await getBrdPreview(doc.id);
+  //       setConfig(preview);
+  //       setUploading(false);
+  //       setStep(2);
+  //     } else if (doc.status === "FAILED") {
+  //       setUploading(false);
+  //       setError(doc.errorMessage || "BRD extraction failed. Please try again.");
+  //     } else {
+  //       startPolling(doc.id);
+  //     }
+  //   } catch (err) {
+  //     setUploading(false);
+  //     setError(err?.response?.data?.message || err.message || "Merged upload failed");
+  //   }
+  // };
 
   // ── Step 2 edit helpers ─────────────────────────────────────────────────
   const updateProfileField = (field, value) => {
@@ -443,8 +443,29 @@ export default function BrdImport() {
 
           
           {fileQueue.length > 0 && (
-            <div style={{ marginTop: 10, fontSize: 11, color: T.muted }}>
-              + {fileQueue.length} more file{fileQueue.length > 1 ? "s" : ""}:  {fileQueue.map(f => f.name).join(", ")}
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 11, color: T.muted }}>
+                Queued — will be processed after the current file:
+              </div>
+              {fileQueue.map((f, i) => (
+                <div
+                  key={`${f.name}-${i}`}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 6,
+                    padding: "6px 10px", fontSize: 11.5, color: T.text,
+                  }}
+                >
+                  <span>{f.name} <span style={{ color: T.muted, fontSize: 10.5 }}>({(f.size / 1024).toFixed(1)} KB)</span></span>
+                  {!uploading && (
+                    <span
+                      onClick={() => removeQueuedFile(i)}
+                      style={{ cursor: "pointer", color: T.red, fontWeight: 700, marginLeft: 8 }}
+                      title="Remove this file"
+                    >✕</span>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 
@@ -462,16 +483,22 @@ export default function BrdImport() {
                 {cancelling ? "Cancelling…" : "Cancel"}
               </SmBtn>
             )}
-                        {fileQueue.length > 0 ? (
+                        {/* {fileQueue.length > 0 ? (
               <Btn primary onClick={handleUploadMerged} disabled={!selectedFile || uploading}>
                 {uploading ? "Processing…" : `Merge & Extract (${fileQueue.length + 1} files)`}
               </Btn>
-            ) : (
+            ) : ( */}
               <Btn primary onClick={handleUpload} disabled={!selectedFile || uploading}>
                 {uploading ? "Processing…" : "Upload & Extract"}
               </Btn>
-            )}
+            {/* )} */}
           </div>
+
+                    {fileQueue.length > 0 && (
+            <div style={{ fontSize: 10.5, color: T.text, marginTop: 6, textAlign: "right" }}>
+              After this file finishes, the next queued file will load automatically for its own upload.
+            </div>
+          )}
 
           {uploading && (
             <div style={{ marginTop: 16 }}>
