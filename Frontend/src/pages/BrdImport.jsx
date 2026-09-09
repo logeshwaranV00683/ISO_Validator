@@ -1,3 +1,6 @@
+// 
+
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { T } from "../constants/theme";
@@ -547,6 +550,32 @@ export default function BrdImport() {
               <input style={cellInputStyle} maxLength={4} value={config.mti || ""}
                 onChange={e => updateMti(e.target.value)} placeholder="0200" />
             </div>
+          </Card>
+
+          <Card title="Packager XML" badge={config.embeddedPackagerXml ? "Found in document" : "Will be generated"}>
+            {config.embeddedPackagerXml ? (
+              <>
+                <div style={{ fontSize: 11, color: T.muted, marginBottom: 8 }}>
+                  This XML was found already written inside the uploaded BRD document and will be imported
+                  as-is — it takes priority over the reconstructed XML that would otherwise be built from the
+                  Field Definitions table below.
+                </div>
+                <textarea
+                  readOnly
+                  value={config.embeddedPackagerXml}
+                  style={{
+                    width: "100%", boxSizing: "border-box", minHeight: 260, resize: "vertical",
+                    background: T.bg, border: `1px solid ${T.border}`, color: T.text,
+                    padding: 10, borderRadius: 4, fontFamily: "monospace", fontSize: 11, lineHeight: 1.5,
+                  }}
+                />
+              </>
+            ) : (
+              <div style={{ fontSize: 11, color: T.muted }}>
+                No packager XML was found pasted inside this document, so one will be generated automatically
+                from the Field Definitions table below when you confirm.
+              </div>
+            )}
           </Card>
 
           <Card title="Field Definitions" badge={`${config.fieldDefinitions?.length || 0} fields`}
