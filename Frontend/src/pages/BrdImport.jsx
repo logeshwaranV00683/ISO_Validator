@@ -619,7 +619,7 @@ export default function BrdImport() {
                       <input type="checkbox" checked={!!f.isLllvar} onChange={e => updateFieldDefRow(i, "isLllvar", e.target.checked)} />
                     </td>
                     <td style={{ padding: "4px 6px", width: 50 }}>
-                      <SmBtn danger onClick={() => deleteFieldDefRow(i)}>Del</SmBtn>
+                      <SmBtn danger onClick={() => deleteFieldDefRow(i)} style={{color:T.text}}>Del</SmBtn>
                     </td>
                   </tr>
                 ))}
