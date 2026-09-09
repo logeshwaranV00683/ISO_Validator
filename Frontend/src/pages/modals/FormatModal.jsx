@@ -66,7 +66,7 @@ export default function FormatModal({ profiles = [], onClose, onSaved }) {
       onSaved?.();
       onClose?.();
     } catch (err) {
-      setErrors({ _form: err?.message || "Failed to create format" });
+      setErrors({ _form: err?.response?.data?.message|| err?.message || "Failed to create format" });
     } finally {
       setLoading(false);
     }
