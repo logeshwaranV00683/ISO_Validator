@@ -51,8 +51,6 @@ export default function FieldDefinitions() {
     [profileId, mti]
   );
 
-  // Rules for this profile+MTI — fetched once here so the edit modal can show
-  // them read-only. Not rendered anywhere in this page's table.
   const { data: rules } = useApi(
     () => (profileId && mti) ? getRules({ profileId, mti }) : Promise.resolve([]),
     [profileId, mti]
